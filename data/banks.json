@@ -1,0 +1,88 @@
+{
+  "_meta": {
+    "popis": "Databaze hypotecnich produktu 3 bank. Snapshot jaro 2026.",
+    "datum_snapshotu": "2026-06-06",
+    "upozorneni": "Sazby se meni mesicne. Pred ostrym provozem overit primo na webech bank. Hodnoty oznacene puvod=estimate jsou odhady (interni scoring bank je obchodni tajemstvi).",
+    "legenda_puvod": {
+      "public": "verejny sazebnik / oficialni web banky",
+      "estimate": "odhad - nutno overit, neni verejne"
+    }
+  },
+  "banky": [
+    {
+      "id": "kb",
+      "nazev": "Komercni banka",
+      "zdroj_sazeb": "kb.cz, ucinnost od 24.3.2026",
+      "puvod_sazeb": "public",
+      "sazby": [
+        { "fixace_roky": 1, "ltv_do": 0.80, "sazba": 0.0519, "puvod": "public" },
+        { "fixace_roky": 2, "ltv_do": 0.80, "sazba": 0.0519, "puvod": "public" },
+        { "fixace_roky": 3, "ltv_do": 0.80, "sazba": 0.0519, "puvod": "public" },
+        { "fixace_roky": 4, "ltv_do": 0.80, "sazba": 0.0559, "puvod": "public" },
+        { "fixace_roky": 5, "ltv_do": 0.80, "sazba": 0.0559, "puvod": "public" }
+      ],
+      "ltv_prirazka_nad_80": 0.01,
+      "ltv_max": 0.90,
+      "interni_dsti_limit": 0.45,
+      "interni_dti_limit": 8,
+      "_komentar_OVERIT_interni": "interni_dsti_limit a interni_dti_limit jsou ODHAD (puvod=estimate). Overit u banky / z kalkulacky.",
+      "puvod_interni_limity": "estimate",
+      "slevy_podminky": "Min. sazba plati pri domicilaci prijmu, sjednani RZP a pojisteni nemovitosti.",
+      "poplatky": {
+        "poskytnuti_vcetne_oceneni_czk": 4900,
+        "navrh_vklad_katastr_czk": 2000,
+        "sprava_uveru_mesicne_czk": 0,
+        "puvod": "public"
+      }
+    },
+    {
+      "id": "airbank",
+      "nazev": "Air Bank",
+      "zdroj_sazeb": "airbank.cz, jaro 2026",
+      "puvod_sazeb": "public",
+      "sazby": [
+        { "fixace_roky": 2, "ltv_do": 0.80, "sazba": 0.0469, "puvod": "public" },
+        { "fixace_roky": 3, "ltv_do": 0.80, "sazba": 0.0469, "puvod": "public" },
+        { "fixace_roky": 5, "ltv_do": 0.80, "sazba": 0.0479, "puvod": "public" },
+        { "fixace_roky": 7, "ltv_do": 0.80, "sazba": 0.0499, "puvod": "public" },
+        { "fixace_roky": 10, "ltv_do": 0.80, "sazba": 0.0519, "puvod": "public" }
+      ],
+      "sazba_bez_pojisteni_prirazka": 0.001,
+      "sazba_uver_pod_1_5_mil_prirazka": 0.002,
+      "ltv_max": 0.90,
+      "ltv_prirazka_nad_80_do_36_let": 0.0,
+      "_komentar_ltv": "Pro zadatele do 36 let zrusena prirazka 0,5 p.b. u LTV nad 80 %. Pro ostatni overit prirazku.",
+      "interni_dsti_limit": 0.45,
+      "interni_dti_limit": 8,
+      "_komentar_OVERIT_interni": "interni limity jsou ODHAD (puvod=estimate).",
+      "puvod_interni_limity": "estimate",
+      "slevy_podminky": "Sazba s pojistenim schopnosti splacet. Sleva 0,1 p.b. pri prevedeni z jine banky. Predcasne splaceni zdarma.",
+      "poplatky": {
+        "_komentar_OVERIT": "Air Bank deklaruje nizke poplatky, presne castky doplnit z webu.",
+        "puvod": "estimate"
+      }
+    },
+    {
+      "id": "csas",
+      "nazev": "Ceska sporitelna",
+      "zdroj_sazeb": "prehled Hypoindex unor 2026",
+      "puvod_sazeb": "estimate",
+      "_komentar_OVERIT_sazby": "Sazby CS prevzaty z prehledoveho clanku, NE z oficialniho sazebniku. Pred ostrym provozem overit na csas.cz.",
+      "sazby": [
+        { "fixace_roky": 1, "ltv_do": 0.80, "sazba": 0.0489, "puvod": "estimate" },
+        { "fixace_roky": 3, "ltv_do": 0.80, "sazba": 0.0479, "puvod": "estimate" },
+        { "fixace_roky": 5, "ltv_do": 0.80, "sazba": 0.0479, "puvod": "estimate" }
+      ],
+      "ltv_max": 0.90,
+      "interni_dsti_limit": 0.45,
+      "interni_dti_limit": 8,
+      "_komentar_OVERIT_interni": "interni limity jsou ODHAD (puvod=estimate).",
+      "puvod_interni_limity": "estimate",
+      "slevy_podminky": "OVERIT podminky slev.",
+      "poplatky": {
+        "_komentar_OVERIT": "Doplnit z oficialniho sazebniku CS.",
+        "puvod": "estimate"
+      }
+    }
+  ]
+}

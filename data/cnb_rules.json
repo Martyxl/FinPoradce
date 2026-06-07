@@ -1,0 +1,43 @@
+{
+  "_meta": {
+    "popis": "Regulatorni limity CNB pro hypotecni uvery. Sdilena napric vsemi bankami.",
+    "zdroj": "CNB tiskova zprava 27.11.2025, ucinnost od 1.4.2026 (https://www.cnb.cz)",
+    "platnost_od": "2026-04-01",
+    "puvod": "public",
+    "datum_overeni": "2026-06-06"
+  },
+  "ltv": {
+    "vlastni_bydleni": {
+      "max": 0.80,
+      "max_do_36_let": 0.90,
+      "puvod": "public",
+      "poznamka": "Jediny zavazny limit CNB. Hodnota nemovitosti = zastavni hodnota."
+    },
+    "investicni_nemovitost": {
+      "max": 0.70,
+      "puvod": "public",
+      "poznamka": "Doporuceny limit od 1.4.2026 pro 3. a dalsi nemovitost nebo nemovitost k pronajmu."
+    }
+  },
+  "dsti": {
+    "cnb_zavazny_limit": null,
+    "cnb_doporucena_obezretnost_nad": 0.40,
+    "puvod": "public",
+    "poznamka": "CNB nestanovuje zavazny DSTI limit pro standardni bydleni (deaktivovano od 2024). Doporucuje obezretnost nad 40 %. Pro vypocet se pouziva interni limit banky - viz banks.json."
+  },
+  "dti": {
+    "cnb_zavazny_limit_standardni": null,
+    "cnb_doporucena_obezretnost_nad": 8,
+    "investicni_max": 7,
+    "puvod": "public",
+    "poznamka": "DTI pro standardni bydleni deaktivovano. Investicni hypoteka max 7nasobek rocniho cisteho prijmu od 1.4.2026."
+  },
+  "zivotni_minimum": {
+    "_komentar_OVERIT": "Doplnit aktualni castky zivotniho minima dle narizeni vlady. Hodnoty nize jsou ODHAD a je nutne je overit na mpsv.cz.",
+    "jednotlivec_mesicne_czk": 4860,
+    "prvni_osoba_domacnost_czk": 4470,
+    "dalsi_osoba_czk": 4040,
+    "nezaopatrene_dite_czk": 3490,
+    "puvod": "estimate"
+  }
+}
