@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "next build",
+  "installCommand": "npm install",
   "functions": {
     "api/calculate.py": {
       "runtime": "@vercel/python@4.3.1",
