@@ -1,0 +1,125 @@
+{
+  "_meta": {
+    "popis": "Typy zivotniho a majetkoveho pojisteni v CR, doporucena krytí a podily pojistoven na trhu.",
+    "datum_snapshotu": "2026-06-06",
+    "puvod_typu_pojisteni": "public",
+    "zdroj_typu": "CAP (Ceska asociace pojistoven), MF",
+    "puvod_podilu_trhu": "public",
+    "zdroj_podilu": "CAP, rok 2023 (jedina kompletni procentni data verejne dostupna)",
+    "puvod_doporuceni_kryti": "estimate",
+    "zdroj_doporuceni": "Odborna doporuceni poradcu (Partners, KB Pojistovna), nikoli regulatorni norma"
+  },
+  "typy_zivotniho_pojisteni": [
+    {
+      "id": "rizikove_zp",
+      "nazev": "Rizikove zivotni pojisteni",
+      "popis": "Kryje smrt, invaliditu, vazna onemocneni, pracovni neschopnost. Bez sporici / investicni slozky.",
+      "stav_na_trhu": "preferovany produkt soucasne doby",
+      "danovy_odpocet": false,
+      "_pozn_danovy_odpocet": "Samotne rizikove ZP nelze odecist - chybi rezervotvorna slozka.",
+      "puvod": "public"
+    },
+    {
+      "id": "investicni_zp",
+      "nazev": "Investicni zivotni pojisteni (IZP)",
+      "popis": "Kombinace pojisteni a investovani. Vysoke poplatky, investicni slozka casto jen 10-15 %.",
+      "stav_na_trhu": "na ustupu",
+      "danovy_odpocet": true,
+      "_pozn_danovy_odpocet": "Pouze pri vyplate od 60 let a trvani min. 10 let (smlouvy od 2024 = 120 mesicu).",
+      "puvod": "public"
+    },
+    {
+      "id": "kapitalove_zp",
+      "nazev": "Kapitalove zivotni pojisteni",
+      "popis": "Garantovany vynos s rezervotvornou slozkou.",
+      "garantovany_vynos_pa": [0.01, 0.02],
+      "_pozn_vynos": "Pod inflaci.",
+      "danovy_odpocet": true,
+      "puvod": "public"
+    },
+    {
+      "id": "urazove",
+      "nazev": "Urazove pojisteni",
+      "popis": "Trvale nasledky urazu, denni odskodne, hospitalizace.",
+      "danovy_odpocet": false,
+      "puvod": "public"
+    },
+    {
+      "id": "schopnost_splacet",
+      "nazev": "Pojisteni schopnosti splacet",
+      "popis": "Vazane na uver (hypoteku / spotrebitelsky uver). Kryje vypadek prijmu (nemoc, ztrata zamestnani).",
+      "danovy_odpocet": false,
+      "puvod": "public"
+    },
+    {
+      "id": "dlouhodoba_pece",
+      "nazev": "Pojisteni dlouhodobe pece",
+      "popis": "Krytí pro pripad ztraty sobestacnosti ve stari.",
+      "danovy_odpocet": true,
+      "_pozn_danovy_odpocet": "Spolecny limit 48 000 Kc/rok s DPS, ZP a DIP.",
+      "puvod": "public"
+    }
+  ],
+  "typy_majetkoveho_pojisteni": [
+    { "id": "nemovitost", "nazev": "Pojisteni nemovitosti", "popis": "Banka vyzaduje jako zastavu k hypotece (kryje zivelni udalosti, vandalismus, krizove).", "puvod": "public" },
+    { "id": "domacnost", "nazev": "Pojisteni domacnosti", "popis": "Kryje vybaveni a movity majetek v nemovitosti.", "puvod": "public" },
+    { "id": "odpovednost", "nazev": "Pojisteni odpovednosti za skodu", "popis": "Kryje skody zpusobene treti osobe (zdravi, majetek).", "puvod": "public" }
+  ],
+  "doporucene_kryti": [
+    {
+      "kontext": "Smrt zivitele rodiny",
+      "pravidlo": "5-10x rocni (hruby) prijem nebo 20x rocnich vydaju",
+      "minimum_dle_nekterych_zdroju": "1-3x rocni prijem",
+      "_pozn_minimum": "Dle KB Pojistovny a Partners je minimum nedostatecne.",
+      "puvod": "estimate"
+    },
+    {
+      "kontext": "Hypoteka - krytí splatnosti",
+      "pravidlo": "Klesajici pojistna castka odpovidajici aktualnimu zustatku uveru",
+      "puvod": "estimate"
+    },
+    {
+      "kontext": "Invalidita",
+      "pravidlo": "Nekolikamilionove krytí (prumer ~1 mil. Kc je dle expertu nedostatecny)",
+      "puvod": "estimate"
+    }
+  ],
+  "trzni_podily_pojistovny_2023": {
+    "_komentar": "Posledni kompletni procentni data verejne dostupna (CAP 2023). Pro 2024/2025 jsou jen agregaty.",
+    "celkem": [
+      { "instituce_id": "generali_ceska", "podil_procent": 24.1 },
+      { "instituce_id": "kooperativa", "podil_procent": 23.4 },
+      { "instituce_id": "allianz", "podil_procent": 11.6 },
+      { "instituce_id": "csob_poj", "podil_procent": 9.0 },
+      { "instituce_id": "cpp", "podil_procent": 8.3 },
+      { "instituce_id": "uniqa", "podil_procent": 7.8 },
+      { "instituce_id": "nn", "podil_procent": 2.8 },
+      { "instituce_id": "cardif", "podil_procent": 2.2 },
+      { "instituce_id": "direct", "podil_procent": 2.0 },
+      { "instituce_id": "metlife", "podil_procent": 1.8 },
+      { "instituce_id": "komercni_poj", "podil_procent": 1.6 }
+    ],
+    "neziv_2023": [
+      { "instituce_id": "generali_ceska", "podil_procent": 25.9 },
+      { "instituce_id": "kooperativa", "podil_procent": 20.3 },
+      { "instituce_id": "allianz", "podil_procent": 13.3 },
+      { "instituce_id": "csob_poj", "podil_procent": 9.7 },
+      { "instituce_id": "cpp", "podil_procent": 9.4 },
+      { "instituce_id": "uniqa", "podil_procent": 7.9 }
+    ],
+    "ziv_2023": [
+      { "instituce_id": "kooperativa", "podil_procent": 30.4 },
+      { "instituce_id": "generali_ceska", "podil_procent": 20.0 },
+      { "instituce_id": "nn", "podil_procent": 9.1 },
+      { "instituce_id": "allianz", "podil_procent": 7.8 },
+      { "instituce_id": "uniqa", "podil_procent": 7.5 },
+      { "instituce_id": "csob_poj", "podil_procent": 7.4 },
+      { "instituce_id": "cpp", "podil_procent": 5.8 },
+      { "instituce_id": "metlife", "podil_procent": 5.4 },
+      { "instituce_id": "komercni_poj", "podil_procent": 3.2 }
+    ],
+    "puvod": "public",
+    "zdroj": "CAP"
+  },
+  "_caveat_zebricky": "Zebricky portalu hyponamiru.cz a podobnych srovnavacu NEJSOU trzni podily trhu, jen podily na pojistnem sjednanem pres dany srovnavac. Do databaze nepouzivat."
+}

@@ -1,0 +1,72 @@
+{
+  "_meta": {
+    "popis": "Produkty stavebniho sporeni v CR vc. statni podpory a uveru.",
+    "datum_snapshotu": "2026-06-06",
+    "puvod_regulace": "public",
+    "zdroj_regulace": "Zakon c. 96/1993 Sb. o stavebnim sporeni"
+  },
+  "regulace": {
+    "statni_podpora_2026": {
+      "procento_z_rocniho_vkladu": 0.05,
+      "max_czk_rok": 1000,
+      "max_uplatnitelny_vklad_czk_rok": 20000,
+      "vazaci_doba_let": 6,
+      "pripisuje_se_kdy": "duben",
+      "pocita_se_na": "rodne cislo (souhrn vsech smluv)",
+      "puvod": "public",
+      "_pozn_historie": "Od 2024 snizeno z 10 % / max 2 000 Kc rok."
+    },
+    "zdaneni_uroku_procent": 15,
+    "zdaneni_statni_podpory": "osvobozeno",
+    "uver_pravidla": {
+      "minimalni_doba_smlouvy_let": 2,
+      "minimalni_nasporeno_procent_cilove_castky": [0.35, 0.50],
+      "hodnotici_cislo": "dostatecne (nutne pro nárok)"
+    }
+  },
+  "sporitelny_produkty": [
+    {
+      "id": "ss_rsts_jistota",
+      "instituce_id": "ss_rsts",
+      "nazev": "Raiffeisen SS - tarif JISTOTA",
+      "garantovana_sazba_pa": 0.033,
+      "_pozn": "Nejvyssi nepodminena sazba na trhu.",
+      "puvod": "estimate",
+      "uver_sazba_pa_od": 0.0299
+    },
+    {
+      "id": "ss_modra_pyramida",
+      "instituce_id": "ss_modra_pyramida",
+      "nazev": "Modra pyramida - stavebni sporeni",
+      "garantovana_sazba_pa": 0.035,
+      "bonusovy_urok_pa": 0.03,
+      "bonus_limit_zustatek_czk": 300000,
+      "_pozn": "Bonusovy urok 3 % do zustatku 300 tis. Kc.",
+      "puvod": "estimate",
+      "uver_sazba_pa_od": 0.0349
+    },
+    {
+      "id": "ss_burinka",
+      "instituce_id": "ss_burinka",
+      "nazev": "Stavebni sporitelna CS - Burinka",
+      "modelovy_celkovy_vynos_pa_max": 0.053,
+      "_pozn": "Modelovy vynos vcetne statni podpory a bonusu pri optimalnim vkladu 1 700 Kc/mes.",
+      "puvod": "estimate"
+    },
+    {
+      "id": "ss_moneta",
+      "instituce_id": "ss_moneta",
+      "nazev": "MONETA Stavebni sporitelna",
+      "modelovy_celkovy_vynos_pa_max": 0.053,
+      "_pozn": "Modelovy vynos vcetne statni podpory a bonusu.",
+      "puvod": "estimate"
+    },
+    {
+      "id": "ss_cmss",
+      "instituce_id": "ss_cmss",
+      "nazev": "CSOB Stavebni sporitelna (CMSS)",
+      "_komentar_OVERIT": "Doplnit aktualni sazby z csobstavebni.cz.",
+      "puvod": "estimate"
+    }
+  ]
+}

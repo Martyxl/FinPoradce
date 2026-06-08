@@ -1,0 +1,147 @@
+{
+  "_meta": {
+    "popis": "Master seznam retailovych financnich instituci v CR a kategorie produktu, ktere nabizeji.",
+    "datum_snapshotu": "2026-06-06",
+    "puvod": "public",
+    "zdroj": "Verejne nabidky a registr CNB, snapshot k cervnu 2026"
+  },
+  "_kategorie_legendy": {
+    "BU": "bezne ucty",
+    "SU": "sporici ucty",
+    "TV": "terminovane vklady",
+    "HYP": "hypoteky",
+    "SU_UVER": "spotrebitelske / nezajistene uvery",
+    "SS": "stavebni sporeni",
+    "SS_UVER": "uver ze stavebniho sporeni",
+    "DPS": "doplnkove penzijni sporeni (III. pilir)",
+    "DIP": "dlouhodoby investicni produkt",
+    "INV": "investicni produkty (fondy, brokerske ucty)",
+    "POJ_ZIV": "zivotni pojisteni (vlastni nebo zprostredkovane)",
+    "POJ_NEZ": "neziv. pojisteni (vlastni nebo zprostredkovane)"
+  },
+  "banky_velke_univerzalni": [
+    {
+      "id": "csas",
+      "nazev": "Ceska sporitelna",
+      "typ": "banka_velka",
+      "kategorie": ["BU", "SU", "TV", "HYP", "SU_UVER", "DPS", "DIP", "INV", "POJ_ZIV", "POJ_NEZ"],
+      "vlastni_pojistovny_penzijni": ["pojistovna_ceske_sporitelny", "ceska_sporitelna_penzijni_spolecnost", "stavebni_sporitelna_cs_burinka"],
+      "puvod": "public"
+    },
+    {
+      "id": "csob",
+      "nazev": "CSOB (vc. Hypotecni banka a Postovni sporitelna)",
+      "typ": "banka_velka",
+      "kategorie": ["BU", "SU", "TV", "HYP", "SU_UVER", "DPS", "DIP", "INV", "POJ_ZIV", "POJ_NEZ"],
+      "vlastni_pojistovny_penzijni": ["csob_pojistovna", "csob_penzijni_spolecnost_stabilita", "csob_stavebni_sporitelna_cmss"],
+      "puvod": "public"
+    },
+    {
+      "id": "kb",
+      "nazev": "Komercni banka",
+      "typ": "banka_velka",
+      "kategorie": ["BU", "SU", "TV", "HYP", "SU_UVER", "DPS", "DIP", "INV", "POJ_ZIV", "POJ_NEZ"],
+      "vlastni_pojistovny_penzijni": ["komercni_pojistovna", "kb_penzijni_spolecnost", "modra_pyramida_stavebni_sporitelna"],
+      "puvod": "public"
+    },
+    {
+      "id": "moneta",
+      "nazev": "Moneta Money Bank",
+      "typ": "banka_velka",
+      "kategorie": ["BU", "SU", "TV", "HYP", "SU_UVER", "DPS", "INV"],
+      "vlastni_pojistovny_penzijni": ["moneta_stavebni_sporitelna"],
+      "puvod": "public"
+    },
+    {
+      "id": "raiffeisenbank",
+      "nazev": "Raiffeisenbank",
+      "typ": "banka_velka",
+      "kategorie": ["BU", "SU", "TV", "HYP", "SU_UVER", "DPS", "INV"],
+      "vlastni_pojistovny_penzijni": ["raiffeisen_stavebni_sporitelna"],
+      "puvod": "public"
+    },
+    {
+      "id": "unicredit",
+      "nazev": "UniCredit Bank",
+      "typ": "banka_velka",
+      "kategorie": ["BU", "SU", "TV", "HYP", "SU_UVER", "DPS", "INV"],
+      "puvod": "public"
+    },
+    {
+      "id": "airbank",
+      "nazev": "Air Bank",
+      "typ": "banka_velka",
+      "kategorie": ["BU", "SU", "TV", "HYP", "SU_UVER", "INV"],
+      "_pozn": "Soucast skupiny PPF / Home Credit.",
+      "puvod": "public"
+    }
+  ],
+  "banky_mensi_specializovane": [
+    { "id": "fio", "nazev": "Fio banka", "typ": "banka_mensi", "kategorie": ["BU", "SU", "TV", "HYP", "SU_UVER", "INV"], "puvod": "public" },
+    { "id": "mbank", "nazev": "mBank", "typ": "banka_mensi", "kategorie": ["BU", "SU", "TV", "HYP", "SU_UVER"], "puvod": "public" },
+    { "id": "creditas", "nazev": "Banka Creditas (vc. produktove rady Max)", "typ": "banka_mensi", "kategorie": ["BU", "SU", "TV", "HYP", "SU_UVER", "INV"], "_pozn": "Fuze s Max bankou v rijnu 2024.", "puvod": "public" },
+    { "id": "trinity", "nazev": "Trinity Bank (drive Moravsky Penezni Ustav)", "typ": "banka_mensi", "kategorie": ["BU", "SU", "TV"], "puvod": "public" },
+    { "id": "partners", "nazev": "Partners Banka", "typ": "banka_mensi", "kategorie": ["BU", "SU", "TV", "HYP", "INV"], "puvod": "public" },
+    { "id": "oberbank", "nazev": "Oberbank", "typ": "banka_mensi", "kategorie": ["BU", "SU", "TV", "HYP", "SU_UVER"], "puvod": "public" },
+    { "id": "hellobank", "nazev": "Hello bank!", "typ": "banka_mensi", "kategorie": ["BU", "SU", "SU_UVER"], "puvod": "public" },
+    { "id": "expobank", "nazev": "Expobank", "typ": "banka_mensi", "kategorie": ["BU", "SU", "TV"], "puvod": "public" },
+    { "id": "jtbanka", "nazev": "J&T Banka", "typ": "banka_mensi", "kategorie": ["BU", "TV", "INV"], "_pozn": "Privatni banka, vyssi vstupni vklady.", "puvod": "public" },
+    { "id": "revolut", "nazev": "Revolut", "typ": "banka_mensi", "kategorie": ["BU", "SU"], "_pozn": "Od cervence 2025 sporeni v CZK.", "puvod": "public" }
+  ],
+  "stavebni_sporitelny": [
+    { "id": "ss_cmss", "nazev": "CSOB Stavebni sporitelna (CMSS)", "typ": "stavebni_sporitelna", "kategorie": ["SS", "SS_UVER"], "matka": "csob", "puvod": "public" },
+    { "id": "ss_modra_pyramida", "nazev": "Modra pyramida", "typ": "stavebni_sporitelna", "kategorie": ["SS", "SS_UVER"], "matka": "kb", "puvod": "public" },
+    { "id": "ss_rsts", "nazev": "Raiffeisen stavebni sporitelna (RSTS)", "typ": "stavebni_sporitelna", "kategorie": ["SS", "SS_UVER"], "matka": "raiffeisenbank", "puvod": "public" },
+    { "id": "ss_burinka", "nazev": "Stavebni sporitelna CS - Burinka", "typ": "stavebni_sporitelna", "kategorie": ["SS", "SS_UVER"], "matka": "csas", "puvod": "public" },
+    { "id": "ss_moneta", "nazev": "MONETA Stavebni sporitelna", "typ": "stavebni_sporitelna", "kategorie": ["SS", "SS_UVER"], "matka": "moneta", "puvod": "public" }
+  ],
+  "pojistovny": [
+    { "id": "generali_ceska", "nazev": "Generali Ceska pojistovna", "typ": "pojistovna", "kategorie": ["POJ_ZIV", "POJ_NEZ"], "trzni_podil_celkem_2023_procent": 24.1, "puvod_podilu": "public", "_zdroj_podilu": "CAP 2023" },
+    { "id": "kooperativa", "nazev": "Kooperativa", "typ": "pojistovna", "kategorie": ["POJ_ZIV", "POJ_NEZ"], "trzni_podil_celkem_2023_procent": 23.4, "puvod_podilu": "public" },
+    { "id": "allianz", "nazev": "Allianz pojistovna", "typ": "pojistovna", "kategorie": ["POJ_ZIV", "POJ_NEZ"], "trzni_podil_celkem_2023_procent": 11.6, "puvod_podilu": "public" },
+    { "id": "csob_poj", "nazev": "CSOB Pojistovna", "typ": "pojistovna", "kategorie": ["POJ_ZIV", "POJ_NEZ"], "matka": "csob", "trzni_podil_celkem_2023_procent": 9.0, "puvod_podilu": "public" },
+    { "id": "cpp", "nazev": "Ceska podnikatelska pojistovna (CPP)", "typ": "pojistovna", "kategorie": ["POJ_ZIV", "POJ_NEZ"], "trzni_podil_celkem_2023_procent": 8.3, "puvod_podilu": "public" },
+    { "id": "uniqa", "nazev": "UNIQA pojistovna", "typ": "pojistovna", "kategorie": ["POJ_ZIV", "POJ_NEZ"], "trzni_podil_celkem_2023_procent": 7.8, "puvod_podilu": "public" },
+    { "id": "pojistovna_cs", "nazev": "Pojistovna Ceske sporitelny", "typ": "pojistovna", "kategorie": ["POJ_ZIV"], "matka": "csas", "_pozn": "Distribuce pres CS.", "puvod": "public" },
+    { "id": "nn", "nazev": "NN Pojistovna", "typ": "pojistovna", "kategorie": ["POJ_ZIV"], "trzni_podil_celkem_2023_procent": 2.8, "puvod_podilu": "public" },
+    { "id": "cardif", "nazev": "BNP Paribas Cardif Pojistovna", "typ": "pojistovna", "kategorie": ["POJ_ZIV", "POJ_NEZ"], "_pozn": "Specialista na pojisteni schopnosti splacet.", "trzni_podil_celkem_2023_procent": 2.2, "puvod_podilu": "public" },
+    { "id": "direct", "nazev": "Direct pojistovna", "typ": "pojistovna", "kategorie": ["POJ_NEZ"], "trzni_podil_celkem_2023_procent": 2.0, "puvod_podilu": "public" },
+    { "id": "metlife", "nazev": "MetLife", "typ": "pojistovna", "kategorie": ["POJ_ZIV"], "trzni_podil_celkem_2023_procent": 1.8, "puvod_podilu": "public" },
+    { "id": "komercni_poj", "nazev": "Komercni pojistovna", "typ": "pojistovna", "kategorie": ["POJ_ZIV"], "matka": "kb", "trzni_podil_celkem_2023_procent": 1.6, "puvod_podilu": "public" }
+  ],
+  "penzijni_spolecnosti": [
+    { "id": "allianz_ps", "nazev": "Allianz penzijni spolecnost", "typ": "penzijni_spolecnost", "kategorie": ["DPS", "DIP"], "matka_pojistovna": "allianz", "puvod": "public" },
+    { "id": "csps", "nazev": "Ceska sporitelna - penzijni spolecnost", "typ": "penzijni_spolecnost", "kategorie": ["DPS", "DIP"], "matka": "csas", "puvod": "public" },
+    { "id": "csobps_stabilita", "nazev": "CSOB Penzijni spolecnost (Stabilita)", "typ": "penzijni_spolecnost", "kategorie": ["DPS", "DIP"], "matka": "csob", "puvod": "public" },
+    { "id": "generali_ps", "nazev": "Generali penzijni spolecnost", "typ": "penzijni_spolecnost", "kategorie": ["DPS", "DIP"], "matka_pojistovna": "generali_ceska", "puvod": "public" },
+    { "id": "nn_ps", "nazev": "NN Penzijni spolecnost", "typ": "penzijni_spolecnost", "kategorie": ["DPS", "DIP"], "matka_pojistovna": "nn", "puvod": "public" },
+    { "id": "uniqa_ps", "nazev": "UNIQA penzijni spolecnost", "typ": "penzijni_spolecnost", "kategorie": ["DPS", "DIP"], "matka_pojistovna": "uniqa", "puvod": "public" },
+    { "id": "kbps", "nazev": "KB Penzijni spolecnost (vc. Modre pyramidy)", "typ": "penzijni_spolecnost", "kategorie": ["DPS", "DIP"], "matka": "kb", "puvod": "public" },
+    { "id": "conseq", "nazev": "Conseq penzijni spolecnost", "typ": "penzijni_spolecnost", "kategorie": ["DPS", "DIP"], "puvod": "public" }
+  ],
+  "agregaty_trhu": {
+    "penzijni_trh": {
+      "datum": "2025-09-30",
+      "ucastnici_celkem": 3902756,
+      "v_dps": 2131090,
+      "v_transformovanych_fondech": 1771666,
+      "sprava_majetku_mld_czk": 644.18,
+      "transformovane_fondy_mld_czk": 355.69,
+      "dps_mld_czk": 288.49,
+      "puvod": "public",
+      "zdroj": "APS CR"
+    },
+    "pojistny_trh": {
+      "predepsane_pojistne_2024_mld_czk": 209.85,
+      "neziv_2024_mld_czk": 152.1,
+      "ziv_2024_mld_czk": 57.72,
+      "predepsane_pojistne_2025_mld_czk": 226.1,
+      "neziv_2025_mld_czk": 165.0,
+      "ziv_2025_mld_czk": 61.1,
+      "meziroci_zmena_2024_procent": 8.5,
+      "meziroci_zmena_2025_procent": 7.8,
+      "puvod": "public",
+      "zdroj": "CAP (Ceska asociace pojistoven)"
+    }
+  }
+}

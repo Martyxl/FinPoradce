@@ -1,11 +1,15 @@
 {
   "_meta": {
-    "popis": "Databaze hypotecnich produktu 3 bank. Snapshot jaro 2026.",
+    "popis": "Databaze hypotecnich produktu retailovych bank v CR. Pouziva ji api/calculate.py pro vypocet zpusobilosti.",
     "datum_snapshotu": "2026-06-06",
-    "upozorneni": "Sazby se meni mesicne. Pred ostrym provozem overit primo na webech bank. Hodnoty oznacene puvod=estimate jsou odhady (interni scoring bank je obchodni tajemstvi).",
+    "upozorneni": "Sazby se meni mesicne. Pred ostrym provozem overit primo na webech bank. Hodnoty oznacene puvod=estimate jsou odhady (interni scoring bank je obchodni tajemstvi, sazby u nekterych bank prevzaty ze srovnavacich zdroju).",
+    "snapshoty": {
+      "kb_csas_airbank": "2026-06-06 (jaro 2026, primarni weby)",
+      "ostatni_banky": "2026-02-24 (Hypoindex / Swiss Life Select snapshot)"
+    },
     "legenda_puvod": {
       "public": "verejny sazebnik / oficialni web banky",
-      "estimate": "odhad - nutno overit, neni verejne"
+      "estimate": "odhad - prevzato ze srovnavacich portalu nebo interni scoring banky"
     }
   },
   "banky": [
@@ -56,7 +60,7 @@
       "interni_dti_limit": 8,
       "_komentar_OVERIT_interni": "interni limity jsou ODHAD (puvod=estimate).",
       "puvod_interni_limity": "estimate",
-      "slevy_podminky": "Sazba s pojistenim schopnosti splacet. Sleva 0,1 p.b. pri prevedeni z jine banky. Predcasne splaceni zdarma.",
+      "slevy_podminky": "Sazba s pojistenim schopnosti splacet. -0,1 p.b. za prevedeni z jine banky, -0,1 p.b. za program Vyhody za vernost (prijem >=25 000 Kc/mes + 5x platba kartou). Predcasne splaceni zdarma.",
       "poplatky": {
         "_komentar_OVERIT": "Air Bank deklaruje nizke poplatky, presne castky doplnit z webu.",
         "puvod": "estimate"
@@ -70,7 +74,7 @@
       "_komentar_OVERIT_sazby": "Sazby CS prevzaty z prehledoveho clanku, NE z oficialniho sazebniku. Pred ostrym provozem overit na csas.cz.",
       "sazby": [
         { "fixace_roky": 1, "ltv_do": 0.80, "sazba": 0.0489, "puvod": "estimate" },
-        { "fixace_roky": 3, "ltv_do": 0.80, "sazba": 0.0479, "puvod": "estimate" },
+        { "fixace_roky": 3, "ltv_do": 0.80, "sazba": 0.0459, "puvod": "estimate" },
         { "fixace_roky": 5, "ltv_do": 0.80, "sazba": 0.0479, "puvod": "estimate" }
       ],
       "ltv_max": 0.90,
@@ -78,11 +82,183 @@
       "interni_dti_limit": 8,
       "_komentar_OVERIT_interni": "interni limity jsou ODHAD (puvod=estimate).",
       "puvod_interni_limity": "estimate",
-      "slevy_podminky": "OVERIT podminky slev.",
+      "slevy_podminky": "-0,5 p.b. za aktivni Osobni ucet + pojisteni schopnosti splacet od Pojistovny Ceske sporitelny.",
       "poplatky": {
         "_komentar_OVERIT": "Doplnit z oficialniho sazebniku CS.",
         "puvod": "estimate"
       }
+    },
+    {
+      "id": "csob",
+      "nazev": "CSOB / Hypotecni banka",
+      "zdroj_sazeb": "Swiss Life Hypoindex snapshot 24.2.2026",
+      "puvod_sazeb": "estimate",
+      "_komentar_OVERIT_sazby": "Snapshot ze srovnavaciho zdroje, overit na csob.cz / hypotecnibanka.cz.",
+      "sazby": [
+        { "fixace_roky": 1, "ltv_do": 0.80, "sazba": 0.0479, "puvod": "estimate" },
+        { "fixace_roky": 3, "ltv_do": 0.80, "sazba": 0.0479, "puvod": "estimate" },
+        { "fixace_roky": 5, "ltv_do": 0.80, "sazba": 0.0499, "puvod": "estimate" }
+      ],
+      "ltv_max": 0.80,
+      "_komentar_ltv": "Tabulkove 70-80 %; do 36 let CNB umoznuje 90 % - overit u banky.",
+      "interni_dsti_limit": 0.45,
+      "interni_dti_limit": 8,
+      "puvod_interni_limity": "estimate",
+      "_komentar_OVERIT_interni": "Interni limity odhad.",
+      "slevy_podminky": "Bez uveroveho zivotniho pojisteni prirazka +0,2 p.b., bez aktivniho uctu / 3 plateb kartou prirazka +0,3 p.b.",
+      "poplatky": {
+        "_komentar_OVERIT": "Doplnit z oficialniho sazebniku CSOB / Hypotecni banky.",
+        "puvod": "estimate"
+      }
+    },
+    {
+      "id": "moneta",
+      "nazev": "Moneta Money Bank",
+      "zdroj_sazeb": "Swiss Life Hypoindex snapshot 24.2.2026",
+      "puvod_sazeb": "estimate",
+      "_komentar_OVERIT_sazby": "Overit na moneta.cz.",
+      "sazby": [
+        { "fixace_roky": 1, "ltv_do": 0.80, "sazba": 0.0399, "puvod": "estimate" },
+        { "fixace_roky": 3, "ltv_do": 0.80, "sazba": 0.0399, "puvod": "estimate" },
+        { "fixace_roky": 5, "ltv_do": 0.80, "sazba": 0.0429, "puvod": "estimate" }
+      ],
+      "ltv_max": 0.80,
+      "interni_dsti_limit": 0.45,
+      "interni_dti_limit": 8,
+      "puvod_interni_limity": "estimate",
+      "_komentar_OVERIT_interni": "Interni limity odhad.",
+      "slevy_podminky": "OVERIT podminky slev na moneta.cz.",
+      "poplatky": {
+        "_komentar_OVERIT": "Doplnit.",
+        "puvod": "estimate"
+      }
+    },
+    {
+      "id": "fio",
+      "nazev": "Fio banka",
+      "zdroj_sazeb": "Swiss Life Hypoindex snapshot 24.2.2026",
+      "puvod_sazeb": "estimate",
+      "_komentar_OVERIT_sazby": "Overit na fio.cz.",
+      "sazby": [
+        { "fixace_roky": 1, "ltv_do": 0.80, "sazba": 0.0468, "puvod": "estimate" },
+        { "fixace_roky": 3, "ltv_do": 0.80, "sazba": 0.0418, "puvod": "estimate" },
+        { "fixace_roky": 5, "ltv_do": 0.80, "sazba": 0.0418, "puvod": "estimate" }
+      ],
+      "ltv_max": 0.80,
+      "interni_dsti_limit": 0.45,
+      "interni_dti_limit": 8,
+      "puvod_interni_limity": "estimate",
+      "_komentar_OVERIT_interni": "Interni limity odhad.",
+      "slevy_podminky": "OVERIT podminky slev na fio.cz.",
+      "poplatky": {
+        "_komentar_OVERIT": "Doplnit.",
+        "puvod": "estimate"
+      }
+    },
+    {
+      "id": "unicredit",
+      "nazev": "UniCredit Bank",
+      "zdroj_sazeb": "Swiss Life Hypoindex snapshot 24.2.2026",
+      "puvod_sazeb": "estimate",
+      "_komentar_OVERIT_sazby": "Overit na unicreditbank.cz.",
+      "sazby": [
+        { "fixace_roky": 3, "ltv_do": 0.80, "sazba": 0.0429, "puvod": "estimate" },
+        { "fixace_roky": 5, "ltv_do": 0.80, "sazba": 0.0479, "puvod": "estimate" }
+      ],
+      "ltv_prirazka_nad_80": 0.005,
+      "_komentar_ltv": "LTV 80-95 % je o 0,5 p.b. drazsi.",
+      "ltv_max": 0.95,
+      "interni_dsti_limit": 0.45,
+      "interni_dti_limit": 8,
+      "puvod_interni_limity": "estimate",
+      "_komentar_OVERIT_interni": "Interni limity odhad.",
+      "slevy_podminky": "Sazba plati pri placenem pojisteni schopnosti splacet.",
+      "poplatky": {
+        "_komentar_OVERIT": "Doplnit.",
+        "puvod": "estimate"
+      }
+    },
+    {
+      "id": "raiffeisenbank",
+      "nazev": "Raiffeisenbank",
+      "zdroj_sazeb": "Swiss Life Hypoindex snapshot 24.2.2026",
+      "puvod_sazeb": "estimate",
+      "_komentar_OVERIT_sazby": "Brezen 2026 RB zvedla sazby o cca 0,5 p.b. - overit aktualizaci na rb.cz.",
+      "sazby": [
+        { "fixace_roky": 1, "ltv_do": 0.80, "sazba": 0.0459, "puvod": "estimate" },
+        { "fixace_roky": 3, "ltv_do": 0.80, "sazba": 0.0434, "puvod": "estimate" },
+        { "fixace_roky": 5, "ltv_do": 0.80, "sazba": 0.0449, "puvod": "estimate" }
+      ],
+      "ltv_max": 0.80,
+      "interni_dsti_limit": 0.45,
+      "interni_dti_limit": 8,
+      "puvod_interni_limity": "estimate",
+      "_komentar_OVERIT_interni": "Interni limity odhad.",
+      "slevy_podminky": "OVERIT podminky slev na rb.cz.",
+      "poplatky": {
+        "_komentar_OVERIT": "Doplnit.",
+        "puvod": "estimate"
+      }
+    },
+    {
+      "id": "partners",
+      "nazev": "Partners Banka",
+      "zdroj_sazeb": "Swiss Life Hypoindex snapshot 24.2.2026",
+      "puvod_sazeb": "estimate",
+      "_komentar_OVERIT_sazby": "Brezen 2026 Partners zvedla sazby o cca 0,5 p.b. - overit na partnersbanka.cz.",
+      "sazby": [
+        { "fixace_roky": 1, "ltv_do": 0.80, "sazba": 0.0459, "puvod": "estimate" },
+        { "fixace_roky": 3, "ltv_do": 0.80, "sazba": 0.0459, "puvod": "estimate" },
+        { "fixace_roky": 5, "ltv_do": 0.80, "sazba": 0.0469, "puvod": "estimate" }
+      ],
+      "ltv_max": 0.80,
+      "interni_dsti_limit": 0.45,
+      "interni_dti_limit": 8,
+      "puvod_interni_limity": "estimate",
+      "_komentar_OVERIT_interni": "Interni limity odhad.",
+      "slevy_podminky": "OVERIT podminky slev na partnersbanka.cz.",
+      "poplatky": {
+        "_komentar_OVERIT": "Doplnit.",
+        "puvod": "estimate"
+      }
+    },
+    {
+      "id": "mbank",
+      "nazev": "mBank",
+      "zdroj_sazeb": "Swiss Life Hypoindex snapshot 24.2.2026",
+      "puvod_sazeb": "estimate",
+      "_komentar_OVERIT_sazby": "Overit na mbank.cz.",
+      "sazby": [
+        { "fixace_roky": 1, "ltv_do": 0.80, "sazba": 0.0599, "puvod": "estimate" },
+        { "fixace_roky": 3, "ltv_do": 0.80, "sazba": 0.0479, "puvod": "estimate" },
+        { "fixace_roky": 5, "ltv_do": 0.80, "sazba": 0.0509, "puvod": "estimate" }
+      ],
+      "ltv_max": 0.80,
+      "interni_dsti_limit": 0.45,
+      "interni_dti_limit": 8,
+      "puvod_interni_limity": "estimate",
+      "_komentar_OVERIT_interni": "Interni limity odhad.",
+      "slevy_podminky": "OVERIT podminky slev na mbank.cz.",
+      "poplatky": {
+        "_komentar_OVERIT": "Doplnit.",
+        "puvod": "estimate"
+      }
     }
-  ]
+  ],
+  "trzni_prumery": {
+    "swiss_life_hypoindex_unor_2026": {
+      "prumerna_sazba_do_80_ltv": 0.0493,
+      "trileta_fixace": 0.0454,
+      "desetileta_fixace": 0.0552,
+      "modelova_splatka_3_5_mil_25_let_czk": 20314,
+      "puvod": "estimate",
+      "zdroj": "Swiss Life Select / Hypoindex.cz, tisk 9.2.2026"
+    },
+    "objemy_brezen_2026": {
+      "nove_hypoteky_bez_refinancovani_mld_czk": 40.3,
+      "meziroci_zmena_procent": 36,
+      "puvod": "estimate",
+      "zdroj": "CBA Hypomonitor citovany Hypoindex.cz"
+    }
+  }
 }

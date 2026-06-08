@@ -1,0 +1,182 @@
+{
+  "_meta": {
+    "popis": "Sporici ucty a terminovane vklady retailovych bank v CR.",
+    "datum_snapshotu": "2026-04-15",
+    "upozorneni": "Sazby sporicich uctu jsou silne podminene a meni se castym alertem (banka muze zmenit bonusovou sazbu bez 2mesicni vypovedni lhuty). Pred ostrym provozem aktualizovat.",
+    "puvod_primarni": "estimate",
+    "zdroj": "Srovnavace e15.cz, finance.cz, top.cz, jaro 2026",
+    "legenda_puvod": {
+      "public": "verejny sazebnik banky",
+      "estimate": "prevzato ze srovnavacich portalu"
+    }
+  },
+  "sporici_ucty": [
+    {
+      "id": "su_mbank",
+      "instituce_id": "mbank",
+      "nazev": "mBank Sporici ucet",
+      "sazba_pa": 0.0401,
+      "limit_vkladu_czk": 500000,
+      "podminky": "Po 3 mesicich vyzaduje min. prijem 15 000 Kc/mes a 5 plateb kartou.",
+      "podminena": true,
+      "puvod": "estimate"
+    },
+    {
+      "id": "su_raiffeisen_bonus",
+      "instituce_id": "raiffeisenbank",
+      "nazev": "Raiffeisenbank Bonusovy ucet",
+      "sazba_pa_min": 0.040,
+      "sazba_pa_max": 0.042,
+      "_pozn_sazba_max": "Sazba 4,2 % p.a. plati s aktivni investici.",
+      "podminena": true,
+      "puvod": "estimate"
+    },
+    {
+      "id": "su_creditas",
+      "instituce_id": "creditas",
+      "nazev": "Banka Creditas Sporici ucet",
+      "sazba_pa_zaklad": 0.030,
+      "sazba_pa_bonus": 0.010,
+      "limit_vkladu_czk": 500000,
+      "podminky": "Bonus 1 % za aktivni investice.",
+      "podminena": true,
+      "puvod": "estimate"
+    },
+    {
+      "id": "su_csob",
+      "instituce_id": "csob",
+      "nazev": "CSOB Sporici ucet",
+      "sazba_pa_max": 0.038,
+      "podminky": "Vyssi sazby s aktivnim investovanim / penzijnim sporenim.",
+      "podminena": true,
+      "puvod": "estimate"
+    },
+    {
+      "id": "su_csas",
+      "instituce_id": "csas",
+      "nazev": "Ceska sporitelna Sporici ucet",
+      "sazba_pa_max": 0.038,
+      "podminky": "Vyssi sazby s aktivnim investovanim / penzijnim sporenim.",
+      "podminena": true,
+      "puvod": "estimate"
+    },
+    {
+      "id": "su_kb",
+      "instituce_id": "kb",
+      "nazev": "KB Sporici ucet (akcni nabidka)",
+      "sazba_pa_max": 0.035,
+      "limit_vkladu_czk": 1000000,
+      "doba_trvani_mesice": 6,
+      "podminky": "Pro nove klienty na 6 mesicu.",
+      "podminena": true,
+      "puvod": "estimate"
+    },
+    {
+      "id": "su_moneta",
+      "instituce_id": "moneta",
+      "nazev": "Moneta Sporici ucet",
+      "sazba_pa": 0.026,
+      "limit_vkladu_czk": 1000000,
+      "podminena": false,
+      "puvod": "estimate"
+    },
+    {
+      "id": "su_airbank",
+      "instituce_id": "airbank",
+      "nazev": "Air Bank Sporici ucet",
+      "sazba_pa_min": 0.026,
+      "sazba_pa_max": 0.027,
+      "limit_vkladu_czk": 300000,
+      "podminky": "Vyssi sazba s prijmem 25 000 Kc/mes + 5 plateb kartou.",
+      "podminena": true,
+      "puvod": "estimate"
+    },
+    {
+      "id": "su_fio",
+      "instituce_id": "fio",
+      "nazev": "Fio Sporici ucet",
+      "sazba_pa_min": 0.027,
+      "sazba_pa_max": 0.0325,
+      "podminena": true,
+      "puvod": "estimate"
+    },
+    {
+      "id": "su_trinity",
+      "instituce_id": "trinity",
+      "nazev": "Trinity Bank Sporici ucet (akce)",
+      "sazba_pa": 0.033,
+      "limit_vkladu_czk": null,
+      "_pozn": "Bez limitu vkladu, akcni nabidka.",
+      "podminena": false,
+      "puvod": "estimate"
+    },
+    {
+      "id": "su_unicredit",
+      "instituce_id": "unicredit",
+      "nazev": "UniCredit Sporici ucet",
+      "sazba_pa_max": 0.0315,
+      "podminena": true,
+      "puvod": "estimate"
+    },
+    {
+      "id": "su_oberbank",
+      "instituce_id": "oberbank",
+      "nazev": "Oberbank Sporici ucet",
+      "sazba_pa_min": 0.030,
+      "sazba_pa_max": 0.032,
+      "_pozn": "Vyssi minimalni vklady.",
+      "podminena": true,
+      "puvod": "estimate"
+    },
+    {
+      "id": "su_revolut",
+      "instituce_id": "revolut",
+      "nazev": "Revolut Sporici plany v CZK",
+      "sazba_pa_min": 0.0125,
+      "sazba_pa_max": 0.0275,
+      "podminky": "Sazba zavisi na tarifu (Standard / Premium / Metal / Ultra).",
+      "podminena": true,
+      "puvod": "estimate"
+    }
+  ],
+  "terminovane_vklady": [
+    {
+      "id": "tv_jtbanka_2r",
+      "instituce_id": "jtbanka",
+      "nazev": "J&T Banka 2 roky",
+      "doba_mesicu": 24,
+      "sazba_pa": 0.0375,
+      "_pozn": "Vyzaduje vyssi vstupni vklad.",
+      "puvod": "estimate"
+    },
+    {
+      "id": "tv_creditas_2r",
+      "instituce_id": "creditas",
+      "nazev": "Banka Creditas / Max 2 roky",
+      "doba_mesicu": 24,
+      "sazba_pa_max": 0.0375,
+      "puvod": "estimate"
+    },
+    {
+      "id": "tv_fio_kratke",
+      "instituce_id": "fio",
+      "nazev": "Fio terminovany vklad 3/6/12 mesicu",
+      "doba_mesicu_min": 3,
+      "doba_mesicu_max": 12,
+      "sazba_pa": 0.0320,
+      "limit_vkladu_czk": null,
+      "_pozn": "Bez limitu castky.",
+      "puvod": "estimate"
+    },
+    {
+      "id": "tv_csas_3m",
+      "instituce_id": "csas",
+      "nazev": "Ceska sporitelna terminovany vklad 3 mesice",
+      "doba_mesicu": 3,
+      "sazba_pa_max": 0.0225,
+      "puvod": "estimate"
+    }
+  ],
+  "_pozn_struktura_sazby": "Vetsina bank deli urok na nizkou zakladni sazbu (cca 0,1 %) + bonus, ktery lze menit bez 2-mesicni vypovedni lhuty. Pro scoring kvality uctu sledovat podminenost (vyssi sazba podmineny aktivni ucet/investici) a limit vkladu.",
+  "_obecne_zdaneni": "Uroky podlehaji 15% srazkove dani u FO."
+}

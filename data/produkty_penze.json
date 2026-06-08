@@ -1,0 +1,78 @@
+{
+  "_meta": {
+    "popis": "Doplnkove penzijni sporeni (III. pilir) a DIP - regulatorni parametry a penzijni spolecnosti.",
+    "datum_snapshotu": "2026-06-06",
+    "puvod": "public",
+    "zdroj": "MF, Financni sprava, APS CR"
+  },
+  "dps": {
+    "nazev": "Doplnkove penzijni sporeni (III. pilir)",
+    "statni_prispevek": {
+      "procento_z_mesicniho_vkladu": 0.20,
+      "narok_od_mesicniho_vkladu_czk": 500,
+      "max_prispevek_mesicne_czk": 340,
+      "max_prispevek_rocne_czk": 4080,
+      "optimalni_vlastni_vklad_mesicne_pro_max_czk": 1700,
+      "_pozn": "Plati od 1.7.2024.",
+      "podminky": [
+        "Pocita se jen z vlastnich vkladu, ne z prispevku zamestnavatele",
+        "Po priznani staroboniho duchodu narok zanika"
+      ],
+      "puvod": "public"
+    },
+    "danovy_odpocet": {
+      "odecitatelne_od_mesicniho_vkladu_czk": 1700,
+      "max_rocni_odpocet_czk": 48000,
+      "_pozn": "Spolecny limit pro DPS + ZP + DIP + pojisteni dlouhodobe pece.",
+      "max_danova_uspora_czk": 7200,
+      "optimalni_vklad_pro_max_odpocet_mesicne_czk": 5700,
+      "puvod": "public"
+    },
+    "nove_smlouvy_od_2024": {
+      "min_doba_sporeni_mesicu": 120,
+      "min_vek_vyplaty_let": 60,
+      "_pozn_stare_smlouvy": "Smlouvy uzavrene pred 2024: 60 mesicu."
+    },
+    "povinny_prispevek_zamestnavatele_od_2026": {
+      "platnost_od": "2026-01-01",
+      "zakon": "324/2025 Sb.",
+      "procento_z_vymerovaciho_zakladu": 0.04,
+      "pro_koho": "zamestnanci v rizikove praci 3. kategorie pri min. 3 rizikovych smenach/mes",
+      "puvod": "public"
+    },
+    "prispevek_zamestnavatele_obecne": {
+      "osvobozen_od_dane_a_odvodu_do_czk_rok": 50000,
+      "puvod": "public"
+    }
+  },
+  "dip": {
+    "nazev": "Dlouhodoby investicni produkt",
+    "danovy_odpocet": {
+      "max_rocni_odpocet_czk": 48000,
+      "_pozn": "Spolecny limit s DPS, ZP a pojistenim dlouhodobe pece."
+    },
+    "rizika": "Trzni riziko - bez garance vynosu, bez statniho prispevku.",
+    "puvod": "public"
+  },
+  "penzijni_spolecnosti": [
+    { "id": "allianz_ps", "instituce_id": "allianz_ps", "nabizi": ["DPS", "DIP"] },
+    { "id": "csps", "instituce_id": "csps", "nabizi": ["DPS", "DIP"] },
+    { "id": "csobps_stabilita", "instituce_id": "csobps_stabilita", "nabizi": ["DPS", "DIP"] },
+    { "id": "generali_ps", "instituce_id": "generali_ps", "nabizi": ["DPS", "DIP"] },
+    { "id": "nn_ps", "instituce_id": "nn_ps", "nabizi": ["DPS", "DIP"] },
+    { "id": "uniqa_ps", "instituce_id": "uniqa_ps", "nabizi": ["DPS", "DIP"] },
+    { "id": "kbps", "instituce_id": "kbps", "nabizi": ["DPS", "DIP"] },
+    { "id": "conseq", "instituce_id": "conseq", "nabizi": ["DPS", "DIP"] }
+  ],
+  "agregaty_trhu_dps": {
+    "datum": "2025-09-30",
+    "ucastnici_celkem": 3902756,
+    "v_dps": 2131090,
+    "v_transformovanych_fondech_penzijniho_pripojisteni": 1771666,
+    "sprava_majetku_mld_czk": 644.18,
+    "transformovane_fondy_mld_czk": 355.69,
+    "dps_mld_czk": 288.49,
+    "puvod": "public",
+    "zdroj": "APS CR"
+  }
+}

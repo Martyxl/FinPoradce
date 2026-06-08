@@ -6,7 +6,16 @@ bez lovu kontaktů.
 
 - **Frontend:** Next.js 14 (App Router, TypeScript)
 - **Backend:** Python FastAPI jako serverless funkce v `/api` (Vercel-kompatibilní)
-- **Data MVP:** JSON v gitu (`data/banks.json`, `data/cnb_rules.json`)
+- **Data MVP:** JSON v gitu, rozdělené do produktových souborů
+  - `data/banks.json` — hypoteční produkty 10 bank
+  - `data/cnb_rules.json` — LTV/DTI/DSTI, životní minimum, repo sazba
+  - `data/instituce.json` — master seznam 15+ retailových institucí, pojišťoven, penzijních společností, stavebních spořitelen
+  - `data/produkty_sporeni.json` — spořicí účty + termínované vklady
+  - `data/produkty_stavebni_sporeni.json` — stavební spoření + úvěr ze SS
+  - `data/produkty_pojisteni.json` — typy ŽP/majetkového, doporučené krytí, tržní podíly pojišťoven
+  - `data/produkty_penze.json` — DPS (III. pilíř), DIP, penzijní společnosti
+  - `data/regulatorni_parametry_2026.json` — paušální výdaje, paušální daň, daňové odpočty, DPS, OSVČ
+  - `data/scoring_pravidla.json` — CFPB rámec, poměrové ukazatele, OSVČ větev se 4 metodami
 
 > Výpočet je předběžný odhad. Závazné podmínky určí banka po posouzení.
 > Sazby = snapshot jaro 2026, mění se měsíčně.
@@ -139,24 +148,81 @@ Toto je **seznam k ověření** před ostrým provozem. Hodnoty pocházejí
 z přehledových zdrojů nebo jsou odhady — interní scoring bank je obchodní
 tajemstvi a sazby/poplatky se mění.
 
-### `data/banks.json`
+### `data/banks.json` — hypoteční sazby a interní scoring
 
 | Banka | Pole | Stav |
 | --- | --- | --- |
-| Komerční banka | `interni_dsti_limit`, `interni_dti_limit` | **estimate** — ověřit u banky |
-| Air Bank | `interni_dsti_limit`, `interni_dti_limit` | **estimate** — ověřit u banky |
+| KB, Air Bank | `interni_dsti_limit`, `interni_dti_limit` | **estimate** — interní scoring je obchodní tajemství |
+| KB | sazby, poplatky | **public** — sazebník KB |
+| Air Bank | sazby | **public** — `airbank.cz`, jaro 2026 |
 | Air Bank | `poplatky` | **estimate** — doplnit z `airbank.cz` |
-| Air Bank | `_komentar_ltv` — přirážka nad 80 % pro žadatele 36+ | ověřit |
-| Česká spořitelna | celé `sazby` | **estimate** — převzato z přehledu Hypoindex, ne z `csas.cz` |
-| Česká spořitelna | `interni_dsti_limit`, `interni_dti_limit` | **estimate** |
-| Česká spořitelna | `slevy_podminky` | **OVERIT** — doplnit z oficiálních materiálů |
-| Česká spořitelna | `poplatky` | **OVERIT** — doplnit ze sazebníku |
+| Česká spořitelna | celé `sazby` | **estimate** — Hypoindex snapshot, ne `csas.cz` |
+| Česká spořitelna | `poplatky`, interní limity | **estimate / OVERIT** |
+| ČSOB / Hypoteční banka | sazby, poplatky, limity | **estimate** — Hypoindex 24.2.2026 |
+| Moneta Money Bank | sazby, poplatky, limity | **estimate** — Hypoindex 24.2.2026 |
+| Fio banka | sazby, poplatky, limity | **estimate** — Hypoindex 24.2.2026 |
+| UniCredit Bank | sazby, poplatky, limity | **estimate** — Hypoindex 24.2.2026 |
+| Raiffeisenbank | sazby, poplatky, limity | **estimate** — Hypoindex 24.2.2026 (březen 2026 zvedla o 0,5 p.b.) |
+| Partners Banka | sazby, poplatky, limity | **estimate** — Hypoindex 24.2.2026 (březen 2026 zvedla o 0,5 p.b.) |
+| mBank | sazby, poplatky, limity | **estimate** — Hypoindex 24.2.2026 |
+| `trzni_prumery.*` | Swiss Life Hypoindex, ČBA Hypomonitor | **estimate** — sekundární zdroj |
 
-### `data/cnb_rules.json`
+### `data/cnb_rules.json` — CNB / MPSV regulace
 
 | Pole | Stav |
 | --- | --- |
-| `zivotni_minimum.*` | **OVERIT** — částky životního minima dle nařízení vlády (`mpsv.cz`) |
+| LTV vlastní bydlení 80/90 %, investiční 70 % | **public** — ČNB |
+| DSTI/DTI (deaktivováno pro standardní bydlení) | **public** — ČNB |
+| Repo sazba 3,50 % | **public** — ČNB bankovní rada |
+| Životní minimum (do 30.4.2026 a od 1.5.2026) | **public** — zákon č. 152/2025 Sb. |
+
+### `data/instituce.json` — master seznam institucí
+
+| Kategorie | Počet | Stav |
+| --- | --- | --- |
+| Velké univerzální banky | 7 | **public** |
+| Menší / specializované banky | 10 | **public** |
+| Stavební spořitelny | 5 | **public** |
+| Pojišťovny | 12 | **public** (tržní podíly z ČAP 2023) |
+| Penzijní společnosti | 8 | **public** |
+
+> Tržní podíly pojišťoven jsou za 2023 (poslední kompletní procentní data od ČAP). Pro 2024/2025 jsou veřejné jen agregáty — pro produkční nasazení stáhnout XLSX z `cap.cz` ručně.
+
+### `data/produkty_sporeni.json`
+
+- **13 spořicích účtů** a **4 termínované vklady** ze snapshotu jaro 2026 — všechny tagované `estimate`, zdroj srovnávače e15/finance.cz/top.cz.
+- Pro produkci nutno aktualizovat ze sazebníků bank — bonusové sazby lze měnit bez 2měsíční výpovědní lhůty.
+
+### `data/produkty_stavebni_sporeni.json`
+
+- Státní podpora 5 % / max 1 000 Kč rok — **public** (zákon).
+- Sazby tarifů (Raiffeisen SS, Modrá pyramida, Buřinka, MONETA SS) — **estimate** snapshot jaro 2026.
+- ČSOB Stavební spořitelna (ČMSS) — sazby **OVERIT**, nedoplněno.
+
+### `data/produkty_pojisteni.json`
+
+- Typy ŽP / majetkového — **public** (regulace, ČAP definice).
+- Doporučené krytí (5–10× příjem pro živitele, klesající PČ při hypotéce) — **estimate**, odborná doporučení.
+- Tržní podíly 2023 — **public** ČAP.
+
+### `data/produkty_penze.json`
+
+- DPS, státní příspěvek 340 Kč/měs, daňové odpočty 48 000 Kč/rok — **public**.
+- Povinný příspěvek zaměstnavatele 4 % od 1.1.2026 pro rizikovou práci 3. kategorie — **public** (zákon č. 324/2025 Sb.).
+- Agregáty trhu (3,9 mil. účastníků, 644 mld. Kč) — **public** APS ČR.
+
+### `data/regulatorni_parametry_2026.json`
+
+- Paušální výdaje (80/60/40/30 %) — **public** (zákon o daních z příjmů).
+- Paušální daň (I/II/III pásmo: 9 984 / 16 745 / 27 139 Kč) — **public** Finanční správa. Novela snížení záloh OSVČ na 35 % průměrné mzdy — **OVERIT** finální částky.
+- DPS, stavební spoření, daňové odpočty — **public**.
+
+### `data/scoring_pravidla.json`
+
+- CFPB Financial Well-Being Scale (USA) — **public** metodika.
+- Poměrové ukazatele (DSTI < 40 %, DTI < 8, rezerva 3–6 měs, savings rate 10–20 %) — **public** ČNB + **estimate** Vanguard/EMH.
+- **OSVČ větev** (4 metody hodnocení bank, koeficienty reálných nákladů dle oboru) — **estimate**, před produkcí kalibrovat s hypotečními specialisty.
+- Váhy skóre (0–100) — **estimate**, kalibrovat na reálných datech.
 
 ### Obecné
 

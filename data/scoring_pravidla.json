@@ -1,0 +1,143 @@
+{
+  "_meta": {
+    "popis": "Pravidla scoringu financniho zdraví domacnosti - kombinace mezinarodniho ramce CFPB (Consumer Financial Protection Bureau) a poměrovych ukazatelu finančniho planovani, adaptovano na CR.",
+    "datum_snapshotu": "2026-06-06",
+    "puvod_metodiky": "public",
+    "zdroj_metodiky": "CFPB Financial Well-Being Scale (USA), Vanguard finanční planovani, ČNB pro DSTI/DTI",
+    "puvod_doporucenych_hodnot": "estimate",
+    "zdroj_doporucenych": "Odborna doporucení financnich poradcu, EMH typologie (Khashadourian 2024)"
+  },
+  "cfpb_ramec": {
+    "nazev": "Financial Well-Being Scale",
+    "zdroj": "Consumer Financial Protection Bureau (USA)",
+    "skala": "0-100",
+    "polozek": "10 (zkracena 5)",
+    "definice_finančniho_zdraví": [
+      "Schopnost plnit běžné zavazky",
+      "Schopnost absorbovat finančni šok",
+      "Být na cestě k cilum",
+      "Mít svobodu volby"
+    ],
+    "_caveat": "CFPB škála meří subjektivní vnimani - pro CR doplnit objektivními pomerovymi ukazateli.",
+    "puvod": "public"
+  },
+  "pomerove_ukazatele": {
+    "nouzova_rezerva": {
+      "doporuceno_mesicu_vydaju": [3, 6],
+      "minimum_pro_snizeni_delikvence": "1 měsíc příjmu",
+      "_pozn": "CFPB prokazuje: 40 % bez rezervy vs. 5 % delikventniho dluhu u nejvyssi skupiny.",
+      "puvod": "estimate"
+    },
+    "mira_uspor": {
+      "doporuceno_procent_prijmu": [0.10, 0.20],
+      "_pozn": "Pozitivni savings rate je první stavební kámen finančniho zdraví (EMH typologie).",
+      "puvod": "estimate"
+    },
+    "fixni_vydaje": {
+      "max_procent_rozpoctu": 0.65,
+      "puvod": "estimate"
+    },
+    "nehypotecni_dluh": {
+      "max_procent_prijmu_mesicne": 0.15,
+      "puvod": "estimate"
+    },
+    "dsti": {
+      "max_procent_cisteho_prijmu": 0.40,
+      "_pozn": "Shoda s doporucením ČNB.",
+      "puvod": "public"
+    },
+    "dti": {
+      "max_nasobek_rocniho_cisteho_prijmu": 8,
+      "investicni_hypoteka_max": 7,
+      "_pozn": "ČNB obezřetnost.",
+      "puvod": "public"
+    },
+    "krytí_rizik": {
+      "rizikove_zp": "uměrne prijmu a zavazkum (5-10x rocni prijem pro zivitele)",
+      "pojisteni_nemovitosti": "povinne pri hypotece",
+      "pojisteni_odpovednosti": "doporuceno",
+      "puvod": "estimate"
+    },
+    "zajisteni_na_penzi": {
+      "ucast_v_iii_piliri_dps": "doporuceno s max statnim prispevkem (vklad 1 700 Kc/mes)",
+      "alternativa_dip": "pro pokrocile investory",
+      "puvod": "estimate"
+    }
+  },
+  "adaptace_na_cr": {
+    "vydajovy_floor": "zivotni minimum domacnosti (od 1.5.2026 dle cnb_rules.json)",
+    "rezervu_a_savings_rate_pocitat_z": "ciste disponibilni prijem",
+    "osvc_vyjimka": "Pouzit realny prijem, ne danovy zaklad - viz scoring_pravidla.osvc_vetev.",
+    "limity_dsti_dti": "Prevzato z CNB (cnb_rules.json)",
+    "bonifikace_danove_zvyhodnenych_produktu": ["DPS", "ZP_rezervotvorne", "stavebni_sporeni"]
+  },
+  "osvc_vetev": {
+    "popis": "Specialni metoda hodnoceni bonity pro OSVC. Banky standardne pouzivaji danovy zaklad (po odecteni pausalu), coz u IT zivnostnika na 60% pausalu vykazuje jen 40 % obratu, prestoze realne naklady jsou nizke.",
+    "problem": "Spravedlivejsi OSVC scoring musi pracovat s typem podnikani a strukturou DP, nikoli s vykazanym ziskem.",
+    "puvod_problemu": "public",
+    "zdroj_problemu": "Petr Jermar (banky.cz), Broker Trust, Hypotecni banka",
+    "metody_hodnoceni_bank": [
+      {
+        "id": "z_danoveho_zakladu",
+        "nazev": "Z danoveho zakladu (radek 37/104 DP)",
+        "popis": "Banka vezme dilci zaklad dane, odecte dan a odvody, vydeli 12. Akceptuji vsechny banky.",
+        "vhodne_pro": ["vysoky_zisk_male_pausaly"],
+        "nevyhodne_pro": ["IT", "kreativni_obory", "remesla_na_60_80_pausalu"]
+      },
+      {
+        "id": "obratova_hypoteka",
+        "nazev": "Z obratu (obratova hypoteka)",
+        "popis": "Banka zapocita 15-30 % rocniho obratu jako cisty prijem.",
+        "priklad": "20 % z 1,6 mil. -> ~27 000 Kc/mes",
+        "podminky": ["min. 24 mesicu podnikani bez ztraty", "max ~80 % LTV"],
+        "akceptuji_jen_nektere_banky": true
+      },
+      {
+        "id": "interni_uprava_pausalu",
+        "nazev": "Interni uprava pausalu",
+        "popis": "Banka snizi uplatneny pausal (napr. 60 % -> 50/40/35 %) a tim navysi pouzitelny prijem."
+      },
+      {
+        "id": "cestne_prohlaseni_realnych_nakladu",
+        "nazev": "Cestne prohlaseni o realnych nakladech",
+        "popis": "U vybranych profesi (IT, marketing, advokacie) lze pausal snizit az na 15-20 % a vyrazne zlepsit bonitu."
+      }
+    ],
+    "doporucene_koeficienty_realnych_nakladu_pro_odhad": {
+      "_komentar": "ESTIMATE - odhadci nakladu dle typu cinnosti. Pro produkcni nasazeni overit s hypotecnimi specialisty.",
+      "puvod": "estimate",
+      "it_programovani": 0.20,
+      "marketing_poradenstvi_kreativa": 0.25,
+      "advokacie_lekar_notarstvi": 0.30,
+      "obecne_volne_zivnosti": 0.40,
+      "remeslne_zivnosti": 0.50,
+      "zemedelska_vyroba": 0.65
+    },
+    "pausalni_dan_a_bonita": {
+      "popis": "Platce pausalni dane nepodava DP, banka posuzuje prijem z vypisu z uctu (3-12 mesicu).",
+      "akceptuji_pausalni_rezim": ["csas", "csob", "kb", "raiffeisenbank", "unicredit"],
+      "zdroj": "Broker Trust",
+      "puvod": "estimate",
+      "_pozn": "Hypotecni banka u pausalistu hlida obrat za 6 mesicu do 500 tis. Kc."
+    },
+    "vyhody_profesnich_komor": {
+      "popis": "Lekari, advokati, notari - lepsi pozice u bank, moznost prodlouzit splatnost do vyssiho veku.",
+      "puvod": "public"
+    }
+  },
+  "skore_navrh": {
+    "rozsah": "0-100",
+    "vahy": {
+      "dsti": 0.20,
+      "dti": 0.15,
+      "rezerva": 0.15,
+      "savings_rate": 0.15,
+      "fixni_vydaje": 0.10,
+      "krytí_rizik_zp": 0.10,
+      "krytí_rizik_majetek": 0.05,
+      "zajisteni_penze": 0.10
+    },
+    "puvod": "estimate",
+    "_komentar": "Vahy jsou navrh - pred produkcnim nasazenim kalibrovat na realnych datech."
+  }
+}

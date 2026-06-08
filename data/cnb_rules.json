@@ -1,7 +1,7 @@
 {
   "_meta": {
-    "popis": "Regulatorni limity CNB pro hypotecni uvery. Sdilena napric vsemi bankami.",
-    "zdroj": "CNB tiskova zprava 27.11.2025, ucinnost od 1.4.2026 (https://www.cnb.cz)",
+    "popis": "Regulatorni limity CNB pro hypotecni uvery + zivotni a existencni minimum (MPSV). Sdilena napric vsemi bankami a vypocty.",
+    "zdroj": "CNB tiskova zprava 27.11.2025 (LTV/DTI), MPSV / zakon c. 152/2025 Sb. (zivotni minimum), CNB bankovni rada 19.3.2026 (sazby)",
     "platnost_od": "2026-04-01",
     "puvod": "public",
     "datum_overeni": "2026-06-06"
@@ -22,22 +22,50 @@
   "dsti": {
     "cnb_zavazny_limit": null,
     "cnb_doporucena_obezretnost_nad": 0.40,
+    "interni_limity_bank_typicke": [0.40, 0.45],
+    "interni_limity_bank_do_36_let_az": 0.50,
     "puvod": "public",
-    "poznamka": "CNB nestanovuje zavazny DSTI limit pro standardni bydleni (deaktivovano od 2024). Doporucuje obezretnost nad 40 %. Pro vypocet se pouziva interni limit banky - viz banks.json."
+    "poznamka": "CNB nestanovuje zavazny DSTI limit pro standardni bydleni (deaktivovano od 2024). Doporucuje obezretnost nad 40 %. Banky interne pouzivaji 40-45 %, do 36 let az 50 %. Az 5 % novych hypotek nemusi limity splnovat. Pro vypocet se pouziva interni limit banky - viz banks.json."
   },
   "dti": {
     "cnb_zavazny_limit_standardni": null,
     "cnb_doporucena_obezretnost_nad": 8,
     "investicni_max": 7,
+    "investicni_platnost_od": "2026-04-01",
     "puvod": "public",
     "poznamka": "DTI pro standardni bydleni deaktivovano. Investicni hypoteka max 7nasobek rocniho cisteho prijmu od 1.4.2026."
   },
+  "repo_sazba": {
+    "hodnota_pa": 0.0350,
+    "platnost_od": "2025-05-09",
+    "naposledy_potvrzena": "2026-03-19",
+    "diskontni_pa": 0.0250,
+    "lombardni_pa": 0.0450,
+    "puvod": "public",
+    "zdroj": "CNB bankovni rada"
+  },
   "zivotni_minimum": {
-    "_komentar_OVERIT": "Doplnit aktualni castky zivotniho minima dle narizeni vlady. Hodnoty nize jsou ODHAD a je nutne je overit na mpsv.cz.",
-    "jednotlivec_mesicne_czk": 4860,
-    "prvni_osoba_domacnost_czk": 4470,
-    "dalsi_osoba_czk": 4040,
-    "nezaopatrene_dite_czk": 3490,
-    "puvod": "estimate"
+    "_komentar_OVERENO_kveten_2026": "Od 1.5.2026 plati narust o cca 13 % dle zakona c. 152/2025 Sb. (navazuje na zakon o davce statni socialni pomoci c. 151/2025 Sb.).",
+    "puvod": "public",
+    "zdroj": "MPSV, zakon c. 110/2006 Sb. ve zneni zakona c. 152/2025 Sb.",
+    "existencni_minimum_mesicne_czk": 3130,
+    "existencni_minimum_pozn": "Beze zmeny. Nelze u nezaopatreneho ditete, staroboniho duchodce, invalidity 3. stupne, osob nad 68 let.",
+    "do_30_4_2026": {
+      "jednotlivec_mesicne_czk": 4860,
+      "prvni_osoba_domacnost_czk": 4470,
+      "dalsi_osoba_15_let_czk": 4040,
+      "nezaopatrene_dite_15_26_let_czk": 3490,
+      "nezaopatrene_dite_6_15_let_czk": 3050,
+      "nezaopatrene_dite_do_6_let_czk": 2480
+    },
+    "od_1_5_2026": {
+      "jednotlivec_mesicne_czk": 5500,
+      "prvni_osoba_domacnost_czk": 5000,
+      "dalsi_osoba_15_let_czk": 3750,
+      "nezaopatrene_dite_15_26_let_czk": 3490,
+      "nezaopatrene_dite_6_15_let_czk": 3050,
+      "nezaopatrene_dite_do_6_let_czk": 2480
+    },
+    "poznamka": "Zivotni minimum se nepouziva na naklady na bydleni - ty se hodnoti zvlast."
   }
 }

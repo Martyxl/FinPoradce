@@ -1,0 +1,109 @@
+{
+  "_meta": {
+    "popis": "Komplexni regulatorni a danovy ramec pro retailove financni produkty v CR pro rok 2026. Rozsiruje cnb_rules.json o danove parametry (pausalni vydaje, pausalni dan), DPS prispevek a stavebni sporeni.",
+    "datum_snapshotu": "2026-06-06",
+    "puvod": "public",
+    "zdroj": "Financni sprava CR, MF CR, MPSV, CNB, Ministerstvo prace a socialnich veci, zakon o danich z prijmu (586/1992 Sb. ve zneni novel 2026)"
+  },
+  "pausalni_vydaje_2026": {
+    "popis": "Vydajove pausaly podle §7 zakona o danich z prijmu - klicove pro hodnoceni bonity OSVC.",
+    "pasma": [
+      {
+        "pausal_procent": 80,
+        "pro_koho": ["zemedelska_vyroba", "lesni_a_vodni_hospodarstvi", "remeslne_zivnosti"],
+        "max_uplatnitelne_vydaje_czk_rok": 1600000,
+        "puvod": "public"
+      },
+      {
+        "pausal_procent": 60,
+        "pro_koho": ["volne_zivnosti", "vazane_zivnosti", "koncesovane_zivnosti"],
+        "priklady": ["IT", "programovani", "marketing", "financni_poradci"],
+        "max_uplatnitelne_vydaje_czk_rok": 1200000,
+        "puvod": "public"
+      },
+      {
+        "pausal_procent": 40,
+        "pro_koho": ["svobodna_povolani", "autorska_prava", "jine_podnikani_dle_zvlastnich_predpisu"],
+        "priklady": ["lekari", "advokati", "notari", "znalci"],
+        "max_uplatnitelne_vydaje_czk_rok": 800000,
+        "puvod": "public"
+      },
+      {
+        "pausal_procent": 30,
+        "pro_koho": ["najem_majetku"],
+        "max_uplatnitelne_vydaje_czk_rok": 600000,
+        "puvod": "public"
+      }
+    ]
+  },
+  "pausalni_dan_2026": {
+    "popis": "Pausalni rezim pro OSVC - neplatce DPH s prijmy do 2 mil. Kc.",
+    "termin_prihlaseni": "2026-01-12",
+    "puvod": "public",
+    "zdroj": "Financni sprava, CSSZ",
+    "_pozn_zmena": "Novela vraci minimalni zalohu na socialni pojisteni z 40 % na 35 % prumerne mzdy zpetne od 1.1.2026 - vyse pausalni dane v I. pasmu se muze snizit.",
+    "pasma": [
+      {
+        "pasmo": "I",
+        "mesicne_czk": 9984,
+        "_pozn_meziroci_narust": "Z 8 716 Kc v 2025.",
+        "rozklad": {
+          "dan_czk": 100,
+          "socialni_duchodove_czk": 6578,
+          "zdravotni_czk": 3306
+        },
+        "podminky": [
+          "Prijmy do 1 mil. Kc",
+          "Prijmy do 1,5 mil. pri >=75 % z 80%/60% pausalu",
+          "Prijmy do 2 mil. pri >=75 % z 80% pausalu"
+        ]
+      },
+      {
+        "pasmo": "II",
+        "mesicne_czk": 16745,
+        "_pozn": "Beze zmeny oproti 2025.",
+        "podminky": [
+          "Prijmy 1-1,5 mil. (bez ohledu na cinnost)",
+          "Prijmy do 2 mil. s 75 % z 80/60% pausalu"
+        ]
+      },
+      {
+        "pasmo": "III",
+        "mesicne_czk": 27139,
+        "_pozn": "Beze zmeny.",
+        "podminky": ["Prijmy 1,5-2 mil."]
+      }
+    ]
+  },
+  "danove_odpocty": {
+    "spolecny_limit_dlouhodobe_uspory_czk_rok": 48000,
+    "_pozn_limit": "Spolecny limit pro DPS + zivotni pojisteni + DIP + pojisteni dlouhodobe pece. Maximalni danova uspora 7 200 Kc.",
+    "uroky_z_hypoteky_a_uveru_ss": "Odecitatelne samostatne (na bydleni)",
+    "puvod": "public",
+    "zdroj": "Zakon o danich z prijmu"
+  },
+  "stavebni_sporeni_2026": {
+    "statni_podpora_procento_z_vkladu": 0.05,
+    "statni_podpora_max_czk_rok": 1000,
+    "max_uplatnitelny_vklad_czk_rok": 20000,
+    "vazaci_doba_let": 6,
+    "zdaneni_uroku_procent": 15,
+    "puvod": "public",
+    "_pozn_historie": "Od 2024 snizeno z 10 % / max 2 000 Kc rok."
+  },
+  "dps_2026": {
+    "statni_prispevek_procento_z_vkladu": 0.20,
+    "narok_od_mesicniho_vkladu_czk": 500,
+    "max_prispevek_mesicne_czk": 340,
+    "optimalni_vlastni_vklad_mesicne_pro_max_czk": 1700,
+    "min_doba_sporeni_mesicu_nove_smlouvy": 120,
+    "min_vek_vyplaty_let": 60,
+    "puvod": "public",
+    "platnost_od": "2024-07-01"
+  },
+  "osvc_minimalni_zalohy_2026": {
+    "_komentar_OVERIT": "Novela zpetne od 1.1.2026 snizila minimalni zalohu na socialni pojisteni ze 40 % na 35 % prumerne mzdy. Doplnit aktualni castky z csz.cz.",
+    "socialni_minimum_zaloha_procento_prumerne_mzdy": 0.35,
+    "puvod": "public"
+  }
+}
