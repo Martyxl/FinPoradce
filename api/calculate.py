@@ -396,12 +396,12 @@ class RecommendationEngine:
             nadpis="Chytré zajištění hypotéky: rizikové životní pojištění",
             popis=(
                 "K hypotéce je životní pojištění zásadní. Místo bankovního "
-                "„pojištění schopnosti splácet" doporučujeme komplexní rizikové "
+                "pojištění schopnosti splácet doporučujeme komplexní rizikové "
                 "životní pojištění od nezávislé pojišťovny."
             ),
             proc=[
                 "Hypotéka je závazek na 25–30 let. Vážná nemoc, úraz nebo úmrtí mohou rodině znemožnit splácení.",
-                "Banka nabídne „pojištění schopnosti splácet". To je vázané jen na tento úvěr, dražší v poměru ke krytí a zaniká při refinancování.",
+                "Banka nabídne pojištění schopnosti splácet. To je vázané jen na tento úvěr, dražší v poměru ke krytí a zaniká při refinancování.",
                 "Komplexní rizikové ŽP kryje smrt, invaliditu I.–III. stupně, vážná onemocnění a pracovní neschopnost. Není vázané na konkrétní banku.",
                 "Doporučená pojistná částka odpovídá výši hypotéky a klesá s tím, jak ji splácíte → pojistné v čase nižší.",
             ],
@@ -504,7 +504,7 @@ class RecommendationEngine:
                 nadpis="Doplňkové penzijní spoření (III. pilíř)",
                 popis=(
                     "Stát přispívá až 340 Kč/měs (4 080 Kč/rok) k vašemu vkladu. "
-                    "Jeden z nejlepších „lehkých" produktů na zajištění na penzi."
+                    "Jeden z nejlepších lehkých produktů na zajištění na penzi."
                 ),
                 proc=[
                     "Státní příspěvek 20 % z vlastního vkladu, max. 340 Kč/měs při vkladu 1 700 Kč/měs.",
