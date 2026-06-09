@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { CalculationResult } from "@/lib/types";
 import VysledekKarta from "@/components/VysledekKarta";
 import { formatCZK } from "@/lib/api";
+import { najdiKategorii } from "@/lib/categories";
 
 export default function VysledkyPage() {
   const [result, setResult] = useState<CalculationResult | null>(null);
@@ -21,6 +22,11 @@ export default function VysledkyPage() {
     }
     setLoaded(true);
   }, []);
+
+  const stavajiciProdukty = useMemo(
+    () => result?.profile_echo.existujici_produkty ?? [],
+    [result],
+  );
 
   if (!loaded) return null;
 
@@ -60,6 +66,31 @@ export default function VysledkyPage() {
           <VysledekKarta key={b.bank_id} b={b} />
         ))}
       </div>
+
+      {stavajiciProdukty.length > 0 && (
+        <section style={{ marginTop: 32 }}>
+          <h2>Vaše stávající produkty ({stavajiciProdukty.length})</h2>
+          <p className="lead">
+            Shrnutí toho, co máte dnes. Slouží jako podklad pro pozdější
+            doporučení, kde máte v zajištění mezery.
+          </p>
+          <ul className="produkty-prehled">
+            {stavajiciProdukty.map((p, i) => {
+              const kat = najdiKategorii(p.kategorie);
+              return (
+                <li key={i}>
+                  <strong>{kat?.nazev ?? p.kategorie}</strong>
+                  {p.instituce_id && <> · {p.instituce_id}</>}
+                  {p.nazev_produktu && <> · {p.nazev_produktu}</>}
+                  <span style={{ float: "right" }}>
+                    {formatCZK(p.mesicni_castka_czk)} / měs
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       <div style={{ marginTop: 24 }}>
         <Link href="/" className="btn secondary">

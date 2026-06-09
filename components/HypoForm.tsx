@@ -1,23 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { CustomerProfile, TypPrijmu, Ucel } from "@/lib/types";
-import { vypocitej } from "@/lib/api";
+import type {
+  CustomerProfile,
+  ExistingProduct,
+  Instituce,
+  ProduktKategorie,
+  TypPrijmu,
+  Ucel,
+} from "@/lib/types";
+import { fetchInstituce, vypocitej } from "@/lib/api";
+import { SEKCE, VSECHNY_KATEGORIE } from "@/lib/categories";
 
 type FormState = {
+  // Krok 1
   cisty_prijem_mesicne: string;
   typ_prijmu: TypPrijmu;
   vek: string;
+  // Krok 2
   pocet_osob_domacnost: string;
   pocet_deti: string;
   stavajici_splatky_mesicne: string;
+  // Krok 4 (Nemovitost)
   ucel: Ucel;
   hodnota_nemovitosti: string;
   vlastni_zdroje: string;
+  // Krok 5 (Úvěr)
   splatnost_roky: string;
   fixace_roky: string;
 };
+
+type ProduktyState = Record<
+  ProduktKategorie,
+  {
+    aktivni: boolean;
+    instituce_id: string;
+    nazev_produktu: string;
+    mesicni_castka: string;
+  }
+>;
 
 const initialState: FormState = {
   cisty_prijem_mesicne: "",
@@ -33,25 +55,65 @@ const initialState: FormState = {
   fixace_roky: "5",
 };
 
-const TOTAL_STEPS = 4;
+function initProduktyState(): ProduktyState {
+  const out = {} as ProduktyState;
+  for (const k of VSECHNY_KATEGORIE) {
+    out[k.id] = {
+      aktivni: false,
+      instituce_id: "",
+      nazev_produktu: "",
+      mesicni_castka: "",
+    };
+  }
+  return out;
+}
+
+const TOTAL_STEPS = 5;
 
 export default function HypoForm() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<FormState>(initialState);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>(
-    {},
-  );
+  const [produkty, setProdukty] = useState<ProduktyState>(initProduktyState());
+  const [instituce, setInstituce] = useState<Instituce[]>([]);
+  const [institucniChyba, setInstitucniChyba] = useState<string | null>(null);
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof FormState, string>> & {
+      produkty?: Partial<Record<ProduktKategorie, string>>;
+    }
+  >({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Načti seznam institucí na pozadí
+  useEffect(() => {
+    fetchInstituce()
+      .then(setInstituce)
+      .catch((err) => {
+        setInstitucniChyba(
+          err instanceof Error ? err.message : "Nepodařilo se načíst seznam institucí",
+        );
+      });
+  }, []);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setData((d) => ({ ...d, [key]: value }));
     setErrors((e) => ({ ...e, [key]: undefined }));
   }
 
+  function updateProdukt(
+    kategorie: ProduktKategorie,
+    patch: Partial<ProduktyState[ProduktKategorie]>,
+  ) {
+    setProdukty((p) => ({ ...p, [kategorie]: { ...p[kategorie], ...patch } }));
+    setErrors((e) => ({
+      ...e,
+      produkty: { ...(e.produkty ?? {}), [kategorie]: undefined },
+    }));
+  }
+
   function validateStep(s: number): boolean {
-    const e: Partial<Record<keyof FormState, string>> = {};
+    const e: typeof errors = {};
     const num = (v: string) => Number(v.replace(/\s/g, ""));
 
     if (s === 1) {
@@ -68,6 +130,21 @@ export default function HypoForm() {
         e.stavajici_splatky_mesicne = "Nemůže být záporné.";
     }
     if (s === 3) {
+      // Pro každý zapnutý produkt vyžadujeme platnou částku
+      const produktyErrors: Partial<Record<ProduktKategorie, string>> = {};
+      for (const k of VSECHNY_KATEGORIE) {
+        const p = produkty[k.id];
+        if (!p.aktivni) continue;
+        const castka = num(p.mesicni_castka);
+        if (!p.mesicni_castka || isNaN(castka) || castka <= 0) {
+          produktyErrors[k.id] = "Zadejte měsíční částku v CZK.";
+        }
+      }
+      if (Object.keys(produktyErrors).length > 0) {
+        e.produkty = produktyErrors;
+      }
+    }
+    if (s === 4) {
       if (!data.hodnota_nemovitosti || num(data.hodnota_nemovitosti) <= 0)
         e.hodnota_nemovitosti = "Zadejte hodnotu nemovitosti.";
       if (num(data.vlastni_zdroje) < 0)
@@ -75,14 +152,16 @@ export default function HypoForm() {
       if (num(data.vlastni_zdroje) > num(data.hodnota_nemovitosti))
         e.vlastni_zdroje = "Vlastní zdroje > hodnota nemovitosti.";
     }
-    if (s === 4) {
+    if (s === 5) {
       const sp = num(data.splatnost_roky);
       if (sp < 5 || sp > 30) e.splatnost_roky = "Splatnost 5–30 let.";
       const fx = num(data.fixace_roky);
       if (fx < 1 || fx > 10) e.fixace_roky = "Fixace 1–10 let.";
     }
     setErrors(e);
-    return Object.keys(e).length === 0;
+    const hasFieldError = Object.keys(e).filter((k) => k !== "produkty").length > 0;
+    const hasProduktError = e.produkty && Object.keys(e.produkty).length > 0;
+    return !hasFieldError && !hasProduktError;
   }
 
   function next() {
@@ -92,6 +171,21 @@ export default function HypoForm() {
 
   function prev() {
     setStep((s) => Math.max(1, s - 1));
+  }
+
+  function vyrobExistingProductList(): ExistingProduct[] {
+    const out: ExistingProduct[] = [];
+    for (const k of VSECHNY_KATEGORIE) {
+      const p = produkty[k.id];
+      if (!p.aktivni) continue;
+      out.push({
+        kategorie: k.id,
+        instituce_id: p.instituce_id || null,
+        nazev_produktu: p.nazev_produktu.trim() || null,
+        mesicni_castka_czk: Number(p.mesicni_castka.replace(/\s/g, "")),
+      });
+    }
+    return out;
   }
 
   async function submit() {
@@ -111,6 +205,7 @@ export default function HypoForm() {
       vlastni_zdroje: Number(data.vlastni_zdroje),
       splatnost_roky: Number(data.splatnost_roky),
       fixace_roky: Number(data.fixace_roky),
+      existujici_produkty: vyrobExistingProductList(),
     };
 
     try {
@@ -128,7 +223,7 @@ export default function HypoForm() {
   return (
     <div className="form-card">
       <div className="step-indicator">
-        {[1, 2, 3, 4].map((s) => (
+        {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((s) => (
           <span
             key={s}
             className={
@@ -246,8 +341,9 @@ export default function HypoForm() {
               placeholder="např. 3000"
             />
             <span className="hint">
-              Spotřebitelské úvěry, leasing, kreditní karty. Nezapočítávejte
-              běžné výdaje.
+              Souhrn měsíčních splátek úvěrů, leasingu a kreditních karet.
+              Použije se pro výpočet DSTI. Detailní rozpis vyplníte v dalším
+              kroku.
             </span>
             {errors.stavajici_splatky_mesicne && (
               <span className="error">
@@ -259,6 +355,16 @@ export default function HypoForm() {
       )}
 
       {step === 3 && (
+        <ProduktyKrok
+          produkty={produkty}
+          instituce={instituce}
+          institucniChyba={institucniChyba}
+          updateProdukt={updateProdukt}
+          chyby={errors.produkty ?? {}}
+        />
+      )}
+
+      {step === 4 && (
         <>
           <h2>Nemovitost</h2>
           <div className="field">
@@ -311,7 +417,7 @@ export default function HypoForm() {
         </>
       )}
 
-      {step === 4 && (
+      {step === 5 && (
         <>
           <h2>Parametry úvěru</h2>
           <div className="row">
@@ -378,5 +484,167 @@ export default function HypoForm() {
         )}
       </div>
     </div>
+  );
+}
+
+// ----------- Krok 3: Stávající produkty -----------
+
+interface ProduktyKrokProps {
+  produkty: ProduktyState;
+  instituce: Instituce[];
+  institucniChyba: string | null;
+  updateProdukt: (
+    kategorie: ProduktKategorie,
+    patch: Partial<ProduktyState[ProduktKategorie]>,
+  ) => void;
+  chyby: Partial<Record<ProduktKategorie, string>>;
+}
+
+function ProduktyKrok({
+  produkty,
+  instituce,
+  institucniChyba,
+  updateProdukt,
+  chyby,
+}: ProduktyKrokProps) {
+  const pocetAktivnich = useMemo(
+    () => Object.values(produkty).filter((p) => p.aktivni).length,
+    [produkty],
+  );
+
+  return (
+    <>
+      <h2>Stávající produkty</h2>
+      <p className="hint" style={{ marginBottom: 16 }}>
+        Vyberte produkty, které už máte. Společnost a název jsou volitelné,
+        <strong> měsíční částku potřebujeme vždy</strong> (vklad / splátka /
+        pojistné). Stávající produkty se použijí pro pozdější doporučení, kde
+        máte mezery v zajištění.
+        {pocetAktivnich > 0 && (
+          <>
+            <br />
+            <strong>Vybráno produktů: {pocetAktivnich}</strong>
+          </>
+        )}
+      </p>
+
+      {institucniChyba && (
+        <div className="error" style={{ marginBottom: 12 }}>
+          Seznam institucí se nepodařilo načíst ({institucniChyba}). Můžete
+          pokračovat, instituce zůstanou nevyplněné.
+        </div>
+      )}
+
+      {SEKCE.map((sekce) => (
+        <section key={sekce.id} className="produkty-sekce">
+          <h3 className="produkty-sekce-nadpis">{sekce.nazev}</h3>
+          <p className="hint" style={{ marginTop: -4 }}>
+            {sekce.popis}
+          </p>
+          <div className="produkty-list">
+            {sekce.kategorie.map((kat) => {
+              const p = produkty[kat.id];
+              const filtrovaneInstituce = instituce.filter((i) =>
+                kat.relevantni_typy.includes(i.typ),
+              );
+              const chyba = chyby[kat.id];
+              return (
+                <div
+                  key={kat.id}
+                  className={"produkt-radek " + (p.aktivni ? "active" : "")}
+                >
+                  <label className="produkt-toggle">
+                    <input
+                      type="checkbox"
+                      checked={p.aktivni}
+                      onChange={(e) =>
+                        updateProdukt(kat.id, { aktivni: e.target.checked })
+                      }
+                    />
+                    <span>
+                      <strong>{kat.nazev}</strong>
+                      {kat.popis && (
+                        <span className="hint"> — {kat.popis}</span>
+                      )}
+                    </span>
+                  </label>
+
+                  {p.aktivni && (
+                    <div className="produkt-detail">
+                      <div className="field">
+                        <label
+                          htmlFor={`inst-${kat.id}`}
+                          style={{ fontSize: 13 }}
+                        >
+                          Společnost (volitelné)
+                        </label>
+                        <select
+                          id={`inst-${kat.id}`}
+                          value={p.instituce_id}
+                          onChange={(e) =>
+                            updateProdukt(kat.id, {
+                              instituce_id: e.target.value,
+                            })
+                          }
+                          disabled={filtrovaneInstituce.length === 0}
+                        >
+                          <option value="">— vyberte —</option>
+                          {filtrovaneInstituce.map((i) => (
+                            <option key={i.id} value={i.id}>
+                              {i.nazev}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="field">
+                        <label
+                          htmlFor={`nazev-${kat.id}`}
+                          style={{ fontSize: 13 }}
+                        >
+                          Název produktu (volitelné)
+                        </label>
+                        <input
+                          id={`nazev-${kat.id}`}
+                          type="text"
+                          value={p.nazev_produktu}
+                          onChange={(e) =>
+                            updateProdukt(kat.id, {
+                              nazev_produktu: e.target.value,
+                            })
+                          }
+                          placeholder="např. KB Garant Plus"
+                        />
+                      </div>
+                      <div className="field">
+                        <label
+                          htmlFor={`castka-${kat.id}`}
+                          style={{ fontSize: 13 }}
+                        >
+                          {kat.castka_label} <span className="required">*</span>
+                        </label>
+                        <input
+                          id={`castka-${kat.id}`}
+                          type="number"
+                          inputMode="numeric"
+                          value={p.mesicni_castka}
+                          onChange={(e) =>
+                            updateProdukt(kat.id, {
+                              mesicni_castka: e.target.value,
+                            })
+                          }
+                          placeholder="CZK"
+                          aria-invalid={chyba ? "true" : undefined}
+                        />
+                        {chyba && <span className="error">{chyba}</span>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      ))}
+    </>
   );
 }

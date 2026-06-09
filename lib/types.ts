@@ -2,6 +2,45 @@ export type TypPrijmu = "zamestnanec" | "osvc" | "jiny";
 export type Ucel = "vlastni_bydleni" | "investicni";
 export type LimitingFactor = "LTV" | "DSTI" | "DTI" | "ZADOST";
 
+export type ProduktKategorie =
+  | "hypoteka_jina"
+  | "spotrebitelsky_uver"
+  | "leasing"
+  | "kreditni_karta"
+  | "stavebni_sporeni"
+  | "dps"
+  | "dip"
+  | "investice"
+  | "sporici_ucet"
+  | "zp_rizikove"
+  | "zp_investicni"
+  | "zp_kapitalove"
+  | "urazove"
+  | "schopnost_splacet"
+  | "poj_nemovitosti"
+  | "poj_domacnosti"
+  | "poj_odpovednosti";
+
+export type InstituceTyp =
+  | "banka_velka"
+  | "banka_mensi"
+  | "stavebni_sporitelna"
+  | "pojistovna"
+  | "penzijni_spolecnost";
+
+export interface Instituce {
+  id: string;
+  nazev: string;
+  typ: InstituceTyp;
+}
+
+export interface ExistingProduct {
+  kategorie: ProduktKategorie;
+  instituce_id?: string | null;
+  nazev_produktu?: string | null;
+  mesicni_castka_czk: number;
+}
+
 export interface CustomerProfile {
   cisty_prijem_mesicne: number;
   typ_prijmu: TypPrijmu;
@@ -14,6 +53,7 @@ export interface CustomerProfile {
   vlastni_zdroje: number;
   splatnost_roky: number;
   fixace_roky: number;
+  existujici_produkty: ExistingProduct[];
 }
 
 export interface BankResult {

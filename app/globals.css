@@ -257,3 +257,89 @@ p.lead {
 .warnings strong {
   color: var(--warning);
 }
+
+/* ---- Stávající produkty (krok 3) ---- */
+.produkty-sekce {
+  margin: 20px 0;
+}
+.produkty-sekce-nadpis {
+  font-size: 16px;
+  margin: 0 0 4px;
+  color: var(--text);
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--border);
+}
+.produkty-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 8px;
+}
+.produkt-radek {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #fafbfc;
+  transition: background 0.15s, border-color 0.15s;
+}
+.produkt-radek.active {
+  background: white;
+  border-color: var(--accent);
+}
+.produkt-toggle {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+}
+.produkt-toggle input[type="checkbox"] {
+  margin-top: 4px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--accent);
+}
+.produkt-toggle .hint {
+  display: inline;
+  font-size: 13px;
+}
+.produkt-detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--border);
+}
+@media (max-width: 700px) {
+  .produkt-detail {
+    grid-template-columns: 1fr;
+  }
+}
+.produkt-detail .field {
+  margin: 0;
+}
+.produkt-detail input,
+.produkt-detail select {
+  font-size: 14px;
+  padding: 8px 10px;
+}
+.required {
+  color: #b00020;
+  font-weight: 700;
+}
+
+.produkty-prehled {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+}
+.produkty-prehled li {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  margin-bottom: 6px;
+  background: var(--surface);
+  font-size: 14px;
+}

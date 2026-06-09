@@ -1,4 +1,8 @@
-import type { CalculationResult, CustomerProfile } from "./types";
+import type {
+  CalculationResult,
+  CustomerProfile,
+  Instituce,
+} from "./types";
 
 export async function vypocitej(
   profile: CustomerProfile,
@@ -13,6 +17,15 @@ export async function vypocitej(
     throw new Error(`Chyba ${res.status}: ${text}`);
   }
   return res.json();
+}
+
+export async function fetchInstituce(): Promise<Instituce[]> {
+  const res = await fetch("/api/instituce");
+  if (!res.ok) {
+    throw new Error(`Chyba ${res.status} při načítání seznamu institucí`);
+  }
+  const data = (await res.json()) as { instituce: Instituce[] };
+  return data.instituce;
 }
 
 export function formatCZK(n: number): string {

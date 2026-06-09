@@ -20,6 +20,40 @@ ROOT = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT / "data"
 
 
+# -------- Datovy model: stavajici produkt klienta --------
+ProduktKategorie = Literal[
+    # Uvery
+    "hypoteka_jina",
+    "spotrebitelsky_uver",
+    "leasing",
+    "kreditni_karta",
+    # Sporeni a investice
+    "stavebni_sporeni",
+    "dps",
+    "dip",
+    "investice",
+    "sporici_ucet",
+    # Pojisteni
+    "zp_rizikove",
+    "zp_investicni",
+    "zp_kapitalove",
+    "urazove",
+    "schopnost_splacet",
+    "poj_nemovitosti",
+    "poj_domacnosti",
+    "poj_odpovednosti",
+]
+
+
+class ExistingProduct(BaseModel):
+    """Stavajici produkt klienta. instituce a nazev jsou volitelne,
+    mesicni_castka je vzdy povinna (vklad/splatka/pojistne)."""
+    kategorie: ProduktKategorie
+    instituce_id: str | None = None
+    nazev_produktu: str | None = None
+    mesicni_castka_czk: float = Field(gt=0, description="Pravidelna mesicni castka v CZK")
+
+
 # -------- Datovy model: vstup od zakaznika --------
 class CustomerProfile(BaseModel):
     cisty_prijem_mesicne: float = Field(gt=0, description="CZK / mesic")
@@ -33,6 +67,10 @@ class CustomerProfile(BaseModel):
     vlastni_zdroje: float = Field(ge=0)
     splatnost_roky: int = Field(ge=5, le=30)
     fixace_roky: int = Field(ge=1, le=10)
+    existujici_produkty: list[ExistingProduct] = Field(
+        default_factory=list,
+        description="Volitelny seznam stavajicich produktu klienta pro pozdejsi recommendation engine.",
+    )
 
 
 # -------- Datovy model: vystup --------
@@ -68,6 +106,11 @@ def load_banks() -> dict:
 
 def load_cnb_rules() -> dict:
     with open(DATA_DIR / "cnb_rules.json", "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def load_instituce() -> dict:
+    with open(DATA_DIR / "instituce.json", "r", encoding="utf-8") as f:
         return json.load(f)
 
 
@@ -264,6 +307,35 @@ def banks_metadata() -> dict:
             for b in data["banky"]
         ]
     }
+
+
+@app.get("/api/instituce")
+def instituce_seznam() -> dict:
+    """Vrati plochy seznam vsech retailovych instituci pro vyber v formulari.
+
+    Kazda instituce ma id, nazev a typ (banka_velka, banka_mensi,
+    stavebni_sporitelna, pojistovna, penzijni_spolecnost). Frontend
+    filtruje podle typu pro konkretni kategorii produktu.
+    """
+    data = load_instituce()
+    flat: list[dict] = []
+    skupiny = [
+        ("banky_velke_univerzalni", "banka_velka"),
+        ("banky_mensi_specializovane", "banka_mensi"),
+        ("stavebni_sporitelny", "stavebni_sporitelna"),
+        ("pojistovny", "pojistovna"),
+        ("penzijni_spolecnosti", "penzijni_spolecnost"),
+    ]
+    for skupina_klic, default_typ in skupiny:
+        for inst in data.get(skupina_klic, []):
+            flat.append(
+                {
+                    "id": inst["id"],
+                    "nazev": inst["nazev"],
+                    "typ": inst.get("typ", default_typ),
+                }
+            )
+    return {"instituce": flat}
 
 
 @app.post("/api/calculate", response_model=CalculationResult)
