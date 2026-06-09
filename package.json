@@ -3,9 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "concurrently -k -n NEXT,API -c blue,green \"next dev\" \"npm run dev:api\"",
-    "dev:next": "next dev",
-    "dev:api": "uvicorn api.calculate:app --host 127.0.0.1 --port 8000 --reload",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
@@ -19,7 +17,6 @@
     "@types/node": "20.14.10",
     "@types/react": "18.3.3",
     "@types/react-dom": "18.3.0",
-    "concurrently": "8.2.2",
     "typescript": "5.5.3"
   }
 }

@@ -1,11 +1,4 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "builds": [
-    { "src": "package.json", "use": "@vercel/next" },
-    {
-      "src": "api/calculate.py",
-      "use": "@vercel/python",
-      "config": { "includeFiles": "data/**" }
-    }
-  ]
+  "framework": "nextjs"
 }

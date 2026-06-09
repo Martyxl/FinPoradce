@@ -1,11 +1,11 @@
 # FinPoradce — orientační kalkulačka hypotéky (MVP)
 
 Webová aplikace, která ze základních vstupů spočítá předběžnou způsobilost
-na hypotéku u **Komerční banky, Air Bank a České spořitelny**. Zdarma, online,
-bez lovu kontaktů.
+na hypotéku u **10 retailových bank** a doporučí "chytré zajištění" — co
+sjednat / vylepšit, aby byla hypotéka bezpečná. Zdarma, online, bez lovu kontaktů.
 
 - **Frontend:** Next.js 14 (App Router, TypeScript)
-- **Backend:** Python FastAPI jako serverless funkce v `/api` (Vercel-kompatibilní)
+- **Backend:** Next.js Route Handlers (`app/api/*/route.ts`) — Node.js runtime na Vercelu
 - **Data MVP:** JSON v gitu, rozdělené do produktových souborů
   - `data/banks.json` — hypoteční produkty 10 bank
   - `data/cnb_rules.json` — LTV/DTI/DSTI, životní minimum, repo sazba
@@ -26,35 +26,46 @@ bez lovu kontaktů.
 
 ```
 repo/
-├── api/
-│   └── calculate.py     # FastAPI app + izolovaný BonitaCalculator
-├── app/                 # Next.js App Router
+├── app/                          # Next.js App Router
+│   ├── api/
+│   │   ├── calculate/route.ts    # POST: výpočet hypotéky + doporučení
+│   │   ├── instituce/route.ts    # GET: ploché instituce pro form
+│   │   ├── banks/route.ts        # GET: pouze id+název bank
+│   │   └── health/route.ts       # GET: liveness probe
 │   ├── layout.tsx
-│   ├── page.tsx         # progresivní formulář (4 kroky)
+│   ├── page.tsx                  # progresivní formulář (5 kroků)
 │   ├── vysledky/page.tsx
 │   └── globals.css
 ├── components/
 │   ├── HypoForm.tsx
-│   └── VysledekKarta.tsx
+│   ├── VysledekKarta.tsx
+│   └── DoporuceniKarta.tsx
 ├── lib/
-│   ├── api.ts           # fetch helper + formátování
-│   └── types.ts         # TS zrcadlo Pydantic modelů
-├── data/
+│   ├── bonita.ts                 # BonitaCalculator (izolovaný modul)
+│   ├── recommendations.ts        # RecommendationEngine (izolovaný modul)
+│   ├── data.ts                   # JSON loadery (fs read)
+│   ├── categories.ts             # katalog 17 kategorií produktů + mapping
+│   ├── api.ts                    # fetch helper + formátování CZK/%
+│   └── types.ts                  # sdílené TS interfaces
+├── data/                         # JSON datová vrstva (commitnutá v gitu)
 │   ├── banks.json
-│   └── cnb_rules.json
+│   ├── cnb_rules.json
+│   ├── instituce.json
+│   ├── produkty_*.json
+│   ├── regulatorni_parametry_2026.json
+│   └── scoring_pravidla.json
 ├── package.json
 ├── tsconfig.json
 ├── next.config.js
-├── vercel.json
-└── requirements.txt
+└── vercel.json
 ```
 
 ### Izolace bonitního modulu
 
-Třída `BonitaCalculator` v `api/calculate.py` má pevné rozhraní:
+Třída `BonitaCalculator` v `lib/bonita.ts` má pevné rozhraní:
 
-```python
-calculate(profile: CustomerProfile) -> CalculationResult
+```ts
+calculate(profile: CustomerProfile): CalculationResult
 ```
 
 `CalculationResult.per_bank[i]` obsahuje pro každou banku:
@@ -62,7 +73,19 @@ calculate(profile: CustomerProfile) -> CalculationResult
 
 Modul lze nahradit přesnějším modelem (přesný interní scoring, regresní model
 na historických datech…) **beze změny formuláře nebo prezentace** — stačí
-implementovat stejné rozhraní a v `calculate` endpointu vyměnit instanci.
+implementovat stejné rozhraní a v `app/api/calculate/route.ts` vyměnit instanci.
+
+### Izolace doporučovacího modulu
+
+Třída `RecommendationEngine` v `lib/recommendations.ts` má pevné rozhraní:
+
+```ts
+evaluate(profile: CustomerProfile, calculation: CalculationResult): Doporuceni[]
+```
+
+Pravidla jsou samostatné metody `pravidlo*`. Přidání nového pravidla = jedna
+nová metoda v `evaluate()` listu. Pravidla jsou seřazena podle priority a
+kategorie (CHYBI > NEOPTIMALNI > UPOZORNENI > OK).
 
 ### Výpočetní logika
 
@@ -89,55 +112,30 @@ Anuitní vzorec: `splátka = jistina × (i/12) / (1 − (1+i/12)^(−n))`.
 ### Předpoklady
 
 - Node.js ≥ 18
-- Python ≥ 3.11
 
-### Instalace
+### Instalace + dev server
 
 ```bash
 npm install
-python -m venv .venv
-# Windows:
-.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
-pip install -r requirements.txt
-```
-
-### Dev server
-
-```bash
 npm run dev
 ```
 
-Spustí paralelně:
-
-- `next dev` na <http://localhost:3000> (frontend)
-- `uvicorn api.calculate:app` na <http://127.0.0.1:8000> (Python backend)
-
-`next.config.js` v development módu přepisuje `/api/*` na `http://127.0.0.1:8000/api/*`,
-takže frontend volá `/api/calculate` a Next.js to proxy-uje na FastAPI.
-
-Pokud chcete spustit jen frontend nebo jen backend:
-
-```bash
-npm run dev:next
-npm run dev:api
-```
+Otevři <http://localhost:3000>. Žádný separátní Python proces — Route Handlers
+běží přímo v Next.js dev serveru.
 
 ---
 
 ## Nasazení na Vercel
 
-Projekt je Vercel-ready. Po importu repozitáře:
+Projekt je čistý Next.js. Po importu repozitáře Vercel automaticky:
 
-1. Vercel detekuje **Next.js** automaticky.
-2. `vercel.json` říká, že `api/calculate.py` se má buildit jako Python serverless
-   funkce (`@vercel/python@4.3.1`) a má do balíčku zahrnout `data/**`.
-3. `requirements.txt` v rootu zajistí, že se nainstaluje `fastapi`, `pydantic`,
-   `uvicorn`.
-4. Po deploy je endpoint `POST /api/calculate` živý a frontend ho volá přímo
-   (na Vercelu se `/api/*` nepoužívá rewrite — FastAPI běží jako serverless).
+1. Detekuje **Next.js** preset.
+2. Spustí `next build`.
+3. Route Handlers v `app/api/*/route.ts` se nasadí jako Node.js serverless
+   funkce. JSON soubory v `/data` jsou součástí buildu — `fs.readFileSync`
+   funguje bez konfigurace.
 
+`vercel.json` obsahuje jen `framework: nextjs` jako pojistka pro auto-detekci.
 Žádné ENV proměnné nejsou potřeba pro MVP.
 
 ---
