@@ -71,6 +71,24 @@ export interface BankResult {
   poznamky: string[];
 }
 
+export type DoporuceniKategorie =
+  | "CHYBI"
+  | "NEOPTIMALNI"
+  | "OK"
+  | "UPOZORNENI";
+
+export interface Doporuceni {
+  id: string;
+  kategorie: DoporuceniKategorie;
+  priorita: number;
+  nadpis: string;
+  popis: string;
+  proc: string[];
+  doporucena_akce?: string | null;
+  doporucena_castka_czk?: number | null;
+  souvisejici_kategorie_produktu: string[];
+}
+
 export interface CalculationResult {
   max_loan: number;
   max_monthly_payment: number;
@@ -78,4 +96,5 @@ export interface CalculationResult {
   per_bank: BankResult[];
   profile_echo: CustomerProfile;
   upozorneni: string[];
+  doporuceni: Doporuceni[];
 }

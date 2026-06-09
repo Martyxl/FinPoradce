@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { CalculationResult } from "@/lib/types";
 import VysledekKarta from "@/components/VysledekKarta";
+import DoporuceniKarta from "@/components/DoporuceniKarta";
 import { formatCZK } from "@/lib/api";
 import { najdiKategorii } from "@/lib/categories";
 
@@ -66,6 +67,22 @@ export default function VysledkyPage() {
           <VysledekKarta key={b.bank_id} b={b} />
         ))}
       </div>
+
+      {result.doporuceni && result.doporuceni.length > 0 && (
+        <section style={{ marginTop: 40 }}>
+          <h2>Chytré zajištění v případě neočekávaných událostí</h2>
+          <p className="lead">
+            Hypotéka je dlouhodobý závazek — vyplatí se mít k ní stavebnice
+            ochrany, které drží i bez ní. Doporučení vychází z vašich stávajících
+            produktů a jsou seřazena podle priority.
+          </p>
+          <div className="doporuceni-grid">
+            {result.doporuceni.map((d) => (
+              <DoporuceniKarta key={d.id} d={d} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {stavajiciProdukty.length > 0 && (
         <section style={{ marginTop: 32 }}>

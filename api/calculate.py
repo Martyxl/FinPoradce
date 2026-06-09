@@ -89,6 +89,29 @@ class BankResult(BaseModel):
     poznamky: list[str]
 
 
+DoporuceniKategorie = Literal["CHYBI", "NEOPTIMALNI", "OK", "UPOZORNENI"]
+
+
+class Doporuceni(BaseModel):
+    """Strukturovane doporuceni pro chytre zajisteni klienta.
+
+    kategorie:
+      - CHYBI       = nema, doporucujeme sjednat
+      - NEOPTIMALNI = ma, ale lepe vymenit / upravit
+      - OK          = ma a je v poradku
+      - UPOZORNENI  = obecne upozorneni (napr. drahy produkt)
+    """
+    id: str
+    kategorie: DoporuceniKategorie
+    priorita: int = Field(ge=1, le=5, description="1 = nejvyssi priorita")
+    nadpis: str
+    popis: str
+    proc: list[str] = Field(default_factory=list)
+    doporucena_akce: str | None = None
+    doporucena_castka_czk: float | None = None
+    souvisejici_kategorie_produktu: list[str] = Field(default_factory=list)
+
+
 class CalculationResult(BaseModel):
     max_loan: float
     max_monthly_payment: float
@@ -96,6 +119,7 @@ class CalculationResult(BaseModel):
     per_bank: list[BankResult]
     profile_echo: CustomerProfile
     upozorneni: list[str]
+    doporuceni: list[Doporuceni] = Field(default_factory=list)
 
 
 # -------- Nacitani dat --------
@@ -281,6 +305,289 @@ class BonitaCalculator:
         )
 
 
+# -------- IZOLOVANY DOPORUCOVACI MODUL --------
+class RecommendationEngine:
+    """Izolovany modul doporuceni "chytreho zajisteni" na zaklade stavajicich
+    produktu klienta a parametru hypoteky. Pro pozdejsi nahrazeni pokrocilejsim
+    pravidlovym systemem (nebo ML modelem) staci implementovat stejne rozhrani.
+
+    Verejne rozhrani:
+      evaluate(profile, calculation) -> list[Doporuceni]
+    """
+
+    def __init__(self) -> None:
+        pass
+
+    # ---- Pomocne ----
+    @staticmethod
+    def _najdi_produkt(profile: CustomerProfile, kategorie: str) -> ExistingProduct | None:
+        for p in profile.existujici_produkty:
+            if p.kategorie == kategorie:
+                return p
+        return None
+
+    @staticmethod
+    def _ma_jakoukoliv(profile: CustomerProfile, kategorie_list: list[str]) -> bool:
+        return any(p.kategorie in kategorie_list for p in profile.existujici_produkty)
+
+    # ---- Pravidla ----
+    def _pravidlo_rzp_k_hypotece(
+        self, profile: CustomerProfile, calc: CalculationResult
+    ) -> Doporuceni:
+        ma_komplexni_zp = self._ma_jakoukoliv(
+            profile, ["zp_rizikove", "zp_investicni", "zp_kapitalove"]
+        )
+        schopnost_splacet = self._najdi_produkt(profile, "schopnost_splacet")
+        doporucena_pc = calc.max_loan if calc.max_loan > 0 else 0.0
+
+        if ma_komplexni_zp:
+            return Doporuceni(
+                id="rzp_k_hypotece",
+                kategorie="OK",
+                priorita=1,
+                nadpis="Životní pojištění k hypotéce máte",
+                popis=(
+                    "Máte komplexní životní pojištění, které kryje výpadek "
+                    "příjmu při neočekávané události."
+                ),
+                proc=[
+                    "Ověřte, že pojistná částka pro případ smrti pokrývá výši hypotéky.",
+                    "Ideálně klesající pojistná částka odpovídající zůstatku úvěru — pojistné je v čase nižší.",
+                    "Pojistka není vázaná na konkrétní banku → při refinancování ji ponecháte.",
+                ],
+                doporucena_castka_czk=doporucena_pc,
+                souvisejici_kategorie_produktu=[
+                    "zp_rizikove",
+                    "zp_investicni",
+                    "zp_kapitalove",
+                ],
+            )
+
+        if schopnost_splacet is not None:
+            return Doporuceni(
+                id="rzp_k_hypotece",
+                kategorie="NEOPTIMALNI",
+                priorita=1,
+                nadpis="Pojištění schopnosti splácet — lepší je nezávislé rizikové ŽP",
+                popis=(
+                    "Pojištění schopnosti splácet od banky kryje jen tuto jednu "
+                    "hypotéku a v poměru cena/krytí je obvykle horší než "
+                    "samostatné rizikové životní pojištění."
+                ),
+                proc=[
+                    "Bankovní pojistka zaniká při refinancování — zaplacené pojistné se vám nikam nepřevádí.",
+                    "Komplexní rizikové ŽP kryje smrt, invaliditu I.–III. stupně, vážná onemocnění i pracovní neschopnost — ne jen splátku úvěru.",
+                    "Rizikové ŽP s klesající pojistnou částkou kopíruje zůstatek hypotéky → pojistné v čase klesá.",
+                    "Hypotéka je dlouhodobý závazek (25–30 let). Komplexní pojistka chrání celou rodinu, ne jen tento jeden úvěr.",
+                ],
+                doporucena_akce=(
+                    "Nahradit pojištění schopnosti splácet samostatným rizikovým "
+                    "životním pojištěním s klesající pojistnou částkou ve výši hypotéky."
+                ),
+                doporucena_castka_czk=doporucena_pc,
+                souvisejici_kategorie_produktu=["schopnost_splacet", "zp_rizikove"],
+            )
+
+        # Klient nema zadne ZP
+        return Doporuceni(
+            id="rzp_k_hypotece",
+            kategorie="CHYBI",
+            priorita=1,
+            nadpis="Chytré zajištění hypotéky: rizikové životní pojištění",
+            popis=(
+                "K hypotéce je životní pojištění zásadní. Místo bankovního "
+                "„pojištění schopnosti splácet" doporučujeme komplexní rizikové "
+                "životní pojištění od nezávislé pojišťovny."
+            ),
+            proc=[
+                "Hypotéka je závazek na 25–30 let. Vážná nemoc, úraz nebo úmrtí mohou rodině znemožnit splácení.",
+                "Banka nabídne „pojištění schopnosti splácet". To je vázané jen na tento úvěr, dražší v poměru ke krytí a zaniká při refinancování.",
+                "Komplexní rizikové ŽP kryje smrt, invaliditu I.–III. stupně, vážná onemocnění a pracovní neschopnost. Není vázané na konkrétní banku.",
+                "Doporučená pojistná částka odpovídá výši hypotéky a klesá s tím, jak ji splácíte → pojistné v čase nižší.",
+            ],
+            doporucena_akce=(
+                "Sjednat samostatné rizikové životní pojištění s klesající "
+                "pojistnou částkou ve výši hypotéky a klesajícím profilem dle splátkového kalendáře."
+            ),
+            doporucena_castka_czk=doporucena_pc,
+            souvisejici_kategorie_produktu=["zp_rizikove"],
+        )
+
+    def _pravidlo_pojisteni_nemovitosti(
+        self, profile: CustomerProfile, calc: CalculationResult
+    ) -> Doporuceni:
+        if self._najdi_produkt(profile, "poj_nemovitosti"):
+            return Doporuceni(
+                id="pojisteni_nemovitosti",
+                kategorie="OK",
+                priorita=2,
+                nadpis="Pojištění nemovitosti máte",
+                popis="Pojištění nemovitosti splňuje podmínku banky pro čerpání hypotéky.",
+                proc=[
+                    "Ověřte, že pojistná částka odpovídá aktuální reprodukční (nové) hodnotě nemovitosti, ne tržní ceně.",
+                    "Bance je třeba dodat vinkulaci pojistného plnění ve prospěch hypotečního úvěru.",
+                ],
+                souvisejici_kategorie_produktu=["poj_nemovitosti"],
+            )
+        return Doporuceni(
+            id="pojisteni_nemovitosti",
+            kategorie="CHYBI",
+            priorita=2,
+            nadpis="Pojištění nemovitosti — povinné pro čerpání hypotéky",
+            popis="Banka pojištění nemovitosti vyžaduje jako zástavu k úvěru. Bez něj peníze neuvolní.",
+            proc=[
+                "Pojistná částka by měla odpovídat reprodukční (nové) hodnotě nemovitosti, ne tržní ceně.",
+                "Vinkulace ve prospěch banky je standardní požadavek.",
+                "I bez hypotéky chrání majetek proti živelním událostem (oheň, voda, vichřice).",
+            ],
+            doporucena_akce="Sjednat pojištění nemovitosti s pojistnou částkou rovnou hodnotě nemovitosti.",
+            doporucena_castka_czk=profile.hodnota_nemovitosti,
+            souvisejici_kategorie_produktu=["poj_nemovitosti"],
+        )
+
+    def _pravidlo_pojisteni_domacnosti(
+        self, profile: CustomerProfile, calc: CalculationResult
+    ) -> Doporuceni | None:
+        if self._najdi_produkt(profile, "poj_domacnosti"):
+            return None  # neuvadime OK pro vsechno
+        return Doporuceni(
+            id="pojisteni_domacnosti",
+            kategorie="CHYBI",
+            priorita=3,
+            nadpis="Pojištění domácnosti — vybavení a movitý majetek",
+            popis=(
+                "Pojištění nemovitosti kryje budovu, ale ne vybavení. "
+                "Pojištění domácnosti kryje nábytek, elektroniku, oblečení a další "
+                "movitý majetek proti krádeži, požáru a vodě."
+            ),
+            proc=[
+                "Často se kombinuje s pojištěním nemovitosti u stejné pojišťovny se slevou.",
+                "Pojistná částka by měla odpovídat odhadní hodnotě vybavení (typicky 300–800 tis. Kč).",
+            ],
+            doporucena_akce="Sjednat pojištění domácnosti (typicky v balíčku s pojištěním nemovitosti).",
+            souvisejici_kategorie_produktu=["poj_domacnosti"],
+        )
+
+    def _pravidlo_pojisteni_odpovednosti(
+        self, profile: CustomerProfile, calc: CalculationResult
+    ) -> Doporuceni | None:
+        if self._najdi_produkt(profile, "poj_odpovednosti"):
+            return None
+        return Doporuceni(
+            id="pojisteni_odpovednosti",
+            kategorie="CHYBI",
+            priorita=3,
+            nadpis="Pojištění odpovědnosti za škodu",
+            popis=(
+                "Kryje škody, které způsobíte třetí osobě (zdraví nebo na majetku). "
+                "Levné pojištění s vysokým potenciálním dopadem."
+            ),
+            proc=[
+                "Roční pojistné typicky 1–3 tis. Kč, krytí v řádu milionů.",
+                "Bez něj může jedna nehoda (např. způsobená dětmi nebo psem) finančně zničit rodinu.",
+            ],
+            doporucena_akce="Sjednat pojištění odpovědnosti za škodu v běžném životě, ideálně s limitem 5–10 mil. Kč.",
+            souvisejici_kategorie_produktu=["poj_odpovednosti"],
+        )
+
+    def _pravidlo_dps(
+        self, profile: CustomerProfile, calc: CalculationResult
+    ) -> Doporuceni | None:
+        if profile.vek >= 60:
+            return None
+        dps = self._najdi_produkt(profile, "dps")
+        if dps is None:
+            return Doporuceni(
+                id="dps",
+                kategorie="CHYBI",
+                priorita=4,
+                nadpis="Doplňkové penzijní spoření (III. pilíř)",
+                popis=(
+                    "Stát přispívá až 340 Kč/měs (4 080 Kč/rok) k vašemu vkladu. "
+                    "Jeden z nejlepších „lehkých" produktů na zajištění na penzi."
+                ),
+                proc=[
+                    "Státní příspěvek 20 % z vlastního vkladu, max. 340 Kč/měs při vkladu 1 700 Kč/měs.",
+                    "Vklady nad 1 700 Kč/měs jsou daňově odčitatelné (společný limit 48 000 Kč/rok s ŽP, DIP a poj. dlouhodobé péče).",
+                    "Příspěvek zaměstnavatele je osvobozen od daně a odvodů do 50 000 Kč/rok — využijte, pokud nabízí.",
+                ],
+                doporucena_akce="Sjednat DPS u penzijní společnosti a vkládat min. 1 700 Kč/měs pro maximální státní příspěvek.",
+                doporucena_castka_czk=1700,
+                souvisejici_kategorie_produktu=["dps"],
+            )
+        if dps.mesicni_castka_czk < 1700:
+            return Doporuceni(
+                id="dps",
+                kategorie="NEOPTIMALNI",
+                priorita=4,
+                nadpis="DPS — vkládáte méně než pro maximální státní příspěvek",
+                popis=(
+                    f"Vkládáte {int(dps.mesicni_castka_czk)} Kč/měs. Maximální státní "
+                    "příspěvek 340 Kč/měs získáte při vkladu 1 700 Kč/měs."
+                ),
+                proc=[
+                    "Stát přispívá 20 % z vašeho vkladu, max. 340 Kč/měs (4 080 Kč/rok).",
+                    "Navýšení vkladu z dnešní úrovně na 1 700 Kč/měs přidá až 340 Kč státního příspěvku každý měsíc.",
+                ],
+                doporucena_akce="Navýšit vlastní vklad na 1 700 Kč/měs pro maximum státního příspěvku.",
+                doporucena_castka_czk=1700,
+                souvisejici_kategorie_produktu=["dps"],
+            )
+        return Doporuceni(
+            id="dps",
+            kategorie="OK",
+            priorita=4,
+            nadpis="DPS s maximálním státním příspěvkem",
+            popis="Vkládáte dostatečně pro plné využití státního příspěvku 340 Kč/měs.",
+            proc=[
+                "Při vyšších vkladech zvažte daňový odpočet (společný limit 48 000 Kč/rok).",
+            ],
+            souvisejici_kategorie_produktu=["dps"],
+        )
+
+    def _pravidlo_investicni_zp_warning(
+        self, profile: CustomerProfile, calc: CalculationResult
+    ) -> Doporuceni | None:
+        if not self._najdi_produkt(profile, "zp_investicni"):
+            return None
+        return Doporuceni(
+            id="investicni_zp_warning",
+            kategorie="UPOZORNENI",
+            priorita=3,
+            nadpis="Investiční životní pojištění (IŽP) — zvažte rozdělení",
+            popis=(
+                "IŽP kombinuje pojištění s investováním, ale obvykle za cenu "
+                "vysokých poplatků. Investiční složka často tvoří jen 10–15 % "
+                "z toho, co platíte."
+            ),
+            proc=[
+                "Levnější varianta: samostatné rizikové ŽP + samostatný DIP nebo podílový fond.",
+                "Při zachování stejného krytí a vyšší investiční složky často získáte více.",
+                "Tuto úvahu doporučujeme zkonzultovat nezávisle (mimo banku a mimo pojišťovnu).",
+            ],
+            doporucena_akce="Spočítat, zda by rozdělení na samostatné rizikové ŽP + DIP nebylo výhodnější.",
+            souvisejici_kategorie_produktu=["zp_investicni", "zp_rizikove", "dip"],
+        )
+
+    # ---- Verejne rozhrani ----
+    def evaluate(
+        self, profile: CustomerProfile, calculation: CalculationResult
+    ) -> list[Doporuceni]:
+        kandidati: list[Doporuceni | None] = [
+            self._pravidlo_rzp_k_hypotece(profile, calculation),
+            self._pravidlo_pojisteni_nemovitosti(profile, calculation),
+            self._pravidlo_pojisteni_domacnosti(profile, calculation),
+            self._pravidlo_pojisteni_odpovednosti(profile, calculation),
+            self._pravidlo_dps(profile, calculation),
+            self._pravidlo_investicni_zp_warning(profile, calculation),
+        ]
+        # Razeni: CHYBI a NEOPTIMALNI nahoru, OK dolu; v ramci skupiny dle priority
+        order = {"CHYBI": 0, "NEOPTIMALNI": 1, "UPOZORNENI": 2, "OK": 3}
+        result = [d for d in kandidati if d is not None]
+        result.sort(key=lambda d: (order.get(d.kategorie, 9), d.priorita))
+        return result
+
+
 # -------- FastAPI app --------
 app = FastAPI(title="FinPoradce API", version="0.1.0")
 
@@ -347,4 +654,10 @@ def calculate(profile: CustomerProfile) -> CalculationResult:
         raise HTTPException(status_code=500, detail=f"Chybi datovy soubor: {e}")
 
     calc = BonitaCalculator(banks_data=banks_data, cnb_rules=cnb_rules)
-    return calc.calculate(profile)
+    result = calc.calculate(profile)
+
+    # Doporuceni "chytreho zajisteni" - izolovany modul, lze nahradit
+    engine = RecommendationEngine()
+    result.doporuceni = engine.evaluate(profile, result)
+
+    return result
