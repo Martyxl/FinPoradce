@@ -137,7 +137,46 @@
       "krytí_rizik_majetek": 0.05,
       "zajisteni_penze": 0.10
     },
+    "urovne": [
+      { "od_skore": 80, "label": "výborná", "puvod": "estimate" },
+      { "od_skore": 65, "label": "dobrá", "puvod": "estimate" },
+      { "od_skore": 50, "label": "uspokojivá", "puvod": "estimate" },
+      { "od_skore": 30, "label": "nízká", "puvod": "estimate" },
+      { "od_skore": 0,  "label": "kritická", "puvod": "estimate" }
+    ],
     "puvod": "estimate",
     "_komentar": "Vahy jsou navrh - pred produkcnim nasazenim kalibrovat na realnych datech."
+  },
+  "pojistne_koeficienty": {
+    "_komentar": "ESTIMATE - tabulkove koeficienty pro odhad mesicniho pojistneho RZP s klesajici pojistnou castkou. Pred produkcnim nasazenim overit s konkretni pojistovnou.",
+    "puvod": "estimate",
+    "rocni_pojistne_z_pojistne_castky_base": 0.0050,
+    "_pozn": "Zaklad: 0,5 % z pojistne castky rocne pro 35leteho cloveka, RZP klesajici, bez vaznych onemocneni v rodine.",
+    "vek_nasobky": [
+      { "vek_do": 25, "nasobek": 0.6 },
+      { "vek_do": 30, "nasobek": 0.7 },
+      { "vek_do": 35, "nasobek": 1.0 },
+      { "vek_do": 40, "nasobek": 1.3 },
+      { "vek_do": 45, "nasobek": 1.7 },
+      { "vek_do": 50, "nasobek": 2.2 },
+      { "vek_do": 55, "nasobek": 3.0 },
+      { "vek_do": 99, "nasobek": 4.0 }
+    ],
+    "obor_pojisteni_nemovitosti": {
+      "rocni_pojistne_z_pojistne_castky": 0.0010,
+      "_pozn": "Orientacne 0,1 % rocne z hodnoty nemovitosti pro standardni objekt v CR."
+    }
+  },
+  "osvc_obory": {
+    "_komentar": "Seznam oboru pro vyber v formulari pri OSVC. Koeficient = realne naklady jako podil z obratu (nizsi = vetsi disponibilni prijem).",
+    "puvod": "estimate",
+    "polozky": [
+      { "id": "it_programovani",                 "label": "IT, programování, datová analytika",  "koeficient_realnych_nakladu": 0.20, "pausal_dp_procent": 60 },
+      { "id": "marketing_poradenstvi_kreativa",  "label": "Marketing, poradenství, kreativa",     "koeficient_realnych_nakladu": 0.25, "pausal_dp_procent": 60 },
+      { "id": "advokacie_lekar_notarstvi",       "label": "Advokacie, lékaři, notáři, znalci",    "koeficient_realnych_nakladu": 0.30, "pausal_dp_procent": 40 },
+      { "id": "obecne_volne_zivnosti",           "label": "Ostatní volné živnosti (služby)",      "koeficient_realnych_nakladu": 0.40, "pausal_dp_procent": 60 },
+      { "id": "remeslne_zivnosti",               "label": "Řemeslné živnosti",                    "koeficient_realnych_nakladu": 0.50, "pausal_dp_procent": 80 },
+      { "id": "zemedelska_vyroba",               "label": "Zemědělství, lesnictví",               "koeficient_realnych_nakladu": 0.65, "pausal_dp_procent": 80 }
+    ]
   }
 }

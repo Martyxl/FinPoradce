@@ -61,6 +61,31 @@ export interface InstituceData {
   penzijni_spolecnosti?: InstituceItem[];
 }
 
+export interface ScoringPravidla {
+  pomerove_ukazatele: Record<string, unknown>;
+  skore_navrh: {
+    rozsah: string;
+    vahy: Record<string, number>;
+    urovne: { od_skore: number; label: string }[];
+  };
+  pojistne_koeficienty: {
+    rocni_pojistne_z_pojistne_castky_base: number;
+    vek_nasobky: { vek_do: number; nasobek: number }[];
+    obor_pojisteni_nemovitosti: { rocni_pojistne_z_pojistne_castky: number };
+  };
+  osvc_obory: {
+    polozky: {
+      id: string;
+      label: string;
+      koeficient_realnych_nakladu: number;
+      pausal_dp_procent: number;
+    }[];
+  };
+  osvc_vetev: {
+    metody_hodnoceni_bank: Array<{ id: string; nazev: string; popis: string }>;
+  };
+}
+
 export function loadBanks(): BanksData {
   return loadJson<BanksData>("banks.json");
 }
@@ -71,4 +96,8 @@ export function loadCnbRules(): CnbRules {
 
 export function loadInstituce(): InstituceData {
   return loadJson<InstituceData>("instituce.json");
+}
+
+export function loadScoringPravidla(): ScoringPravidla {
+  return loadJson<ScoringPravidla>("scoring_pravidla.json");
 }

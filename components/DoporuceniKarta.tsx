@@ -47,6 +47,41 @@ export default function DoporuceniKarta({ d }: { d: Doporuceni }) {
             <strong>{formatCZK(d.doporucena_castka_czk)}</strong>
           </div>
         )}
+
+      {typeof d.odhadovane_pojistne_mesicne_czk === "number" &&
+        d.odhadovane_pojistne_mesicne_czk > 0 && (
+          <div className="doporuceni-pojistne">
+            Odhad měsíčního pojistného:{" "}
+            <strong>{formatCZK(d.odhadovane_pojistne_mesicne_czk)}</strong>
+            {" "}
+            <small>(orientační, ESTIMATE)</small>
+          </div>
+        )}
+
+      {d.uspora_popis && (
+        <div className="doporuceni-uspora">
+          {typeof d.uspora_mesicne_czk === "number" && d.uspora_mesicne_czk > 0 ? (
+            <>
+              <strong>Úspora {formatCZK(d.uspora_mesicne_czk)} / měs.</strong>{" "}
+            </>
+          ) : null}
+          {d.uspora_popis}
+        </div>
+      )}
+
+      {d.navrhovane_instituce && d.navrhovane_instituce.length > 0 && (
+        <div className="doporuceni-instituce">
+          <strong>Doporučené instituce:</strong>
+          <ul>
+            {d.navrhovane_instituce.map((i) => (
+              <li key={i.id}>
+                {i.nazev}
+                {i.duvod && <span className="hint"> — {i.duvod}</span>}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </article>
   );
 }

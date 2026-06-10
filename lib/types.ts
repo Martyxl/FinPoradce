@@ -41,6 +41,14 @@ export interface ExistingProduct {
   mesicni_castka_czk: number;
 }
 
+export type OsvcObor =
+  | "it_programovani"
+  | "marketing_poradenstvi_kreativa"
+  | "advokacie_lekar_notarstvi"
+  | "obecne_volne_zivnosti"
+  | "remeslne_zivnosti"
+  | "zemedelska_vyroba";
+
 export interface CustomerProfile {
   cisty_prijem_mesicne: number;
   typ_prijmu: TypPrijmu;
@@ -54,6 +62,38 @@ export interface CustomerProfile {
   splatnost_roky: number;
   fixace_roky: number;
   existujici_produkty: ExistingProduct[];
+  // OSVČ-specifické, volitelné
+  osvc_obor?: OsvcObor | null;
+  osvc_rocni_obrat_czk?: number | null;
+}
+
+export interface OsvcAnalyza {
+  obor: OsvcObor;
+  obor_label: string;
+  rocni_obrat_czk: number;
+  metody: {
+    nazev: "deklarovany_prijem" | "z_danoveho_zakladu_pausal" | "obratova_15_30" | "realisticky_dle_oboru";
+    label: string;
+    mesicni_prijem_czk: number;
+    popis: string;
+  }[];
+  realisticky_prijem_mesicne_czk: number;
+  doporuceni: string;
+}
+
+export interface FinancialHealthDimenze {
+  klic: string;
+  label: string;
+  skore_0_100: number;
+  vaha: number;
+  komentar: string;
+}
+
+export interface FinancialHealthScore {
+  skore_0_100: number;
+  uroven: string;
+  dimenze: FinancialHealthDimenze[];
+  shrnuti: string;
 }
 
 export interface BankResult {
@@ -77,6 +117,12 @@ export type DoporuceniKategorie =
   | "OK"
   | "UPOZORNENI";
 
+export interface NavrhovanaInstituce {
+  id: string;
+  nazev: string;
+  duvod?: string;
+}
+
 export interface Doporuceni {
   id: string;
   kategorie: DoporuceniKategorie;
@@ -87,6 +133,10 @@ export interface Doporuceni {
   doporucena_akce?: string | null;
   doporucena_castka_czk?: number | null;
   souvisejici_kategorie_produktu: string[];
+  navrhovane_instituce?: NavrhovanaInstituce[];
+  odhadovane_pojistne_mesicne_czk?: number | null;
+  uspora_mesicne_czk?: number | null;
+  uspora_popis?: string | null;
 }
 
 export interface CalculationResult {
@@ -97,4 +147,8 @@ export interface CalculationResult {
   profile_echo: CustomerProfile;
   upozorneni: string[];
   doporuceni: Doporuceni[];
+  osvc_analyza?: OsvcAnalyza | null;
+  financni_zdravi?: FinancialHealthScore | null;
+  prijem_pouzity_czk?: number;
+  splatky_pouzite_czk?: number;
 }

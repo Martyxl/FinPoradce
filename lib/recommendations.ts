@@ -1,19 +1,65 @@
 /**
  * Izolovany modul doporuceni "chytreho zajisteni" — pravidlovy system
- * pracujici se stavajicimi produkty klienta a vysledkem hypotecniho vypoctu.
+ * pracujici se stavajicimi produkty klienta, vysledkem hypoteky a databazi
+ * instituci. Vraci konkretni instituce + odhady pojistneho.
  *
- * Pro nahrazeni jinym systemem (rozsireny pravidlovy strom, ML) staci
- * implementovat stejne rozhrani: evaluate(profile, calculation) -> Doporuceni[].
+ * Pravidla jsou samostatne metody. Pro nahrazeni systemem (pokrocily
+ * pravidlovy strom, ML) staci implementovat stejne rozhrani:
+ *   evaluate(profile, calculation) -> Doporuceni[].
  */
 import type {
   CalculationResult,
   CustomerProfile,
   Doporuceni,
   ExistingProduct,
+  NavrhovanaInstituce,
   ProduktKategorie,
 } from "./types";
+import type { InstituceData, InstituceItem, ScoringPravidla } from "./data";
+import { PremiumEstimator } from "./premiumEstimator";
+
+// ---- Mapy podilu pojistoven dle CAP 2023 (jen pro razeni) ----
+// Hodnoty primo ze synced instituce.json -> trzni_podil_celkem_2023_procent
+const POJISTOVNY_PODIL_CELKEM: Record<string, number> = {
+  generali_ceska: 24.1,
+  kooperativa: 23.4,
+  allianz: 11.6,
+  csob_poj: 9.0,
+  cpp: 8.3,
+  uniqa: 7.8,
+  nn: 2.8,
+  cardif: 2.2,
+  direct: 2.0,
+  metlife: 1.8,
+  komercni_poj: 1.6,
+};
+// Pro životní pojištění silnější hráči
+const POJISTOVNY_PODIL_ZIV: Record<string, number> = {
+  kooperativa: 30.4,
+  generali_ceska: 20.0,
+  nn: 9.1,
+  allianz: 7.8,
+  uniqa: 7.5,
+  csob_poj: 7.4,
+  cpp: 5.8,
+  metlife: 5.4,
+  komercni_poj: 3.2,
+};
 
 export class RecommendationEngine {
+  private estimator: PremiumEstimator;
+  private vsechnyPojistovny: InstituceItem[];
+  private vsechnePenzijni: InstituceItem[];
+  private vsechnyStavebniSporitelny: InstituceItem[];
+
+  constructor(instituce: InstituceData, scoring: ScoringPravidla) {
+    this.estimator = new PremiumEstimator(scoring);
+    this.vsechnyPojistovny = instituce.pojistovny ?? [];
+    this.vsechnePenzijni = instituce.penzijni_spolecnosti ?? [];
+    this.vsechnyStavebniSporitelny = instituce.stavebni_sporitelny ?? [];
+  }
+
+  // ---- Pomocne ----
   private najdiProdukt(
     profile: CustomerProfile,
     kategorie: ProduktKategorie,
@@ -30,6 +76,53 @@ export class RecommendationEngine {
     );
   }
 
+  private topPojistovnyZiv(n = 3): NavrhovanaInstituce[] {
+    return this.vsechnyPojistovny
+      .filter((p) => POJISTOVNY_PODIL_ZIV[p.id] !== undefined)
+      .sort(
+        (a, b) =>
+          (POJISTOVNY_PODIL_ZIV[b.id] ?? 0) - (POJISTOVNY_PODIL_ZIV[a.id] ?? 0),
+      )
+      .slice(0, n)
+      .map((p) => ({
+        id: p.id,
+        nazev: p.nazev,
+        duvod: `Tržní podíl v ŽP ${POJISTOVNY_PODIL_ZIV[p.id]} % (ČAP 2023)`,
+      }));
+  }
+
+  private topPojistovnyNez(n = 3): NavrhovanaInstituce[] {
+    return this.vsechnyPojistovny
+      .filter((p) => POJISTOVNY_PODIL_CELKEM[p.id] !== undefined)
+      .sort(
+        (a, b) =>
+          (POJISTOVNY_PODIL_CELKEM[b.id] ?? 0) -
+          (POJISTOVNY_PODIL_CELKEM[a.id] ?? 0),
+      )
+      .slice(0, n)
+      .map((p) => ({
+        id: p.id,
+        nazev: p.nazev,
+        duvod: `Tržní podíl ${POJISTOVNY_PODIL_CELKEM[p.id]} % (ČAP 2023)`,
+      }));
+  }
+
+  private topPenzijni(n = 3): NavrhovanaInstituce[] {
+    // Penzijni spolecnosti - bez konkretnich procent, vybereme overene znacky
+    const priority = ["csps", "csobps_stabilita", "kbps", "allianz_ps", "nn_ps"];
+    return this.vsechnePenzijni
+      .sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id))
+      .filter((_p, i) => i < n)
+      .map((p) => ({ id: p.id, nazev: p.nazev }));
+  }
+
+  private topStavebniSporitelny(n = 3): NavrhovanaInstituce[] {
+    return this.vsechnyStavebniSporitelny.slice(0, n).map((s) => ({
+      id: s.id,
+      nazev: s.nazev,
+    }));
+  }
+
   // ---- Pravidla ----
   private pravidloRzpKHypotece(
     profile: CustomerProfile,
@@ -42,6 +135,11 @@ export class RecommendationEngine {
     ]);
     const schopnostSplacet = this.najdiProdukt(profile, "schopnost_splacet");
     const doporucenaPc = calc.max_loan > 0 ? calc.max_loan : 0;
+
+    const odhadRzpMesicne = this.estimator.rzpKlesajiciMesicne(
+      profile.vek,
+      doporucenaPc,
+    );
 
     if (maKomplexniZp) {
       return {
@@ -66,6 +164,8 @@ export class RecommendationEngine {
     }
 
     if (schopnostSplacet) {
+      const bankovniMesicne = schopnostSplacet.mesicni_castka_czk;
+      const usporaMesicne = bankovniMesicne - odhadRzpMesicne;
       return {
         id: "rzp_k_hypotece",
         kategorie: "NEOPTIMALNI",
@@ -83,6 +183,13 @@ export class RecommendationEngine {
           "Nahradit pojištění schopnosti splácet samostatným rizikovým životním pojištěním s klesající pojistnou částkou ve výši hypotéky.",
         doporucena_castka_czk: doporucenaPc,
         souvisejici_kategorie_produktu: ["schopnost_splacet", "zp_rizikove"],
+        navrhovane_instituce: this.topPojistovnyZiv(3),
+        odhadovane_pojistne_mesicne_czk: odhadRzpMesicne,
+        uspora_mesicne_czk: usporaMesicne,
+        uspora_popis:
+          usporaMesicne > 0
+            ? `Při srovnatelném krytí ušetříte cca ${Math.round(usporaMesicne)} Kč/měs proti bankovní pojistce a získáte navíc krytí invalidity a vážných onemocnění.`
+            : `Pojistné je podobné, ale RŽP kryje výrazně víc rizik a zůstává i při refinancování. Reálná hodnota je vyšší.`,
       };
     }
 
@@ -103,6 +210,8 @@ export class RecommendationEngine {
         "Sjednat samostatné rizikové životní pojištění s klesající pojistnou částkou ve výši hypotéky a klesajícím profilem dle splátkového kalendáře.",
       doporucena_castka_czk: doporucenaPc,
       souvisejici_kategorie_produktu: ["zp_rizikove"],
+      navrhovane_instituce: this.topPojistovnyZiv(3),
+      odhadovane_pojistne_mesicne_czk: odhadRzpMesicne,
     };
   }
 
@@ -125,6 +234,9 @@ export class RecommendationEngine {
         souvisejici_kategorie_produktu: ["poj_nemovitosti"],
       };
     }
+    const odhad = this.estimator.pojisteniNemovitostiMesicne(
+      profile.hodnota_nemovitosti,
+    );
     return {
       id: "pojisteni_nemovitosti",
       kategorie: "CHYBI",
@@ -141,6 +253,8 @@ export class RecommendationEngine {
         "Sjednat pojištění nemovitosti s pojistnou částkou rovnou hodnotě nemovitosti.",
       doporucena_castka_czk: profile.hodnota_nemovitosti,
       souvisejici_kategorie_produktu: ["poj_nemovitosti"],
+      navrhovane_instituce: this.topPojistovnyNez(3),
+      odhadovane_pojistne_mesicne_czk: odhad,
     };
   }
 
@@ -163,6 +277,7 @@ export class RecommendationEngine {
       doporucena_akce:
         "Sjednat pojištění domácnosti (typicky v balíčku s pojištěním nemovitosti).",
       souvisejici_kategorie_produktu: ["poj_domacnosti"],
+      navrhovane_instituce: this.topPojistovnyNez(3),
     };
   }
 
@@ -185,6 +300,7 @@ export class RecommendationEngine {
       doporucena_akce:
         "Sjednat pojištění odpovědnosti za škodu v běžném životě, ideálně s limitem 5–10 mil. Kč.",
       souvisejici_kategorie_produktu: ["poj_odpovednosti"],
+      navrhovane_instituce: this.topPojistovnyNez(3),
     };
   }
 
@@ -212,6 +328,7 @@ export class RecommendationEngine {
           "Sjednat DPS u penzijní společnosti a vkládat min. 1 700 Kč/měs pro maximální státní příspěvek.",
         doporucena_castka_czk: 1700,
         souvisejici_kategorie_produktu: ["dps"],
+        navrhovane_instituce: this.topPenzijni(3),
       };
     }
 
@@ -274,6 +391,69 @@ export class RecommendationEngine {
     };
   }
 
+  // ---- Nova pravidla ----
+  private pravidloNouzovaRezerva(
+    profile: CustomerProfile,
+    calc: CalculationResult,
+  ): Doporuceni | null {
+    const maSporici = !!this.najdiProdukt(profile, "sporici_ucet");
+    const prijem = calc.prijem_pouzity_czk ?? profile.cisty_prijem_mesicne;
+    const odhadovaneVydaje = prijem * 0.65;
+    const rezervaPokrytaMesicu =
+      odhadovaneVydaje > 0 ? profile.vlastni_zdroje / odhadovaneVydaje : 0;
+    const maRezervu = maSporici || rezervaPokrytaMesicu >= 3;
+
+    if (maRezervu) {
+      return null; // OK karty pro vsechno nezobrazujeme
+    }
+
+    return {
+      id: "nouzova_rezerva",
+      kategorie: "CHYBI",
+      priorita: 2,
+      nadpis: "Nouzová rezerva 3–6 měsíců výdajů",
+      popis:
+        "Před hypotékou si vytvořte likvidní rezervu na 3–6 měsíců výdajů. Kryje výpadky příjmu, opravy nebo nečekané výdaje, aniž byste museli sahat po dalším úvěru.",
+      proc: [
+        `Odhad vašich měsíčních výdajů: ${Math.round(odhadovaneVydaje).toLocaleString("cs-CZ")} Kč (65 % příjmu).`,
+        `Cílová rezerva: ${Math.round(odhadovaneVydaje * 3).toLocaleString("cs-CZ")} – ${Math.round(odhadovaneVydaje * 6).toLocaleString("cs-CZ")} Kč.`,
+        "Bez rezervy je riziko delikventního dluhu 40 % vs. 5 % u lidí s plnou rezervou (data CFPB).",
+        "Doporučený nástroj: spořicí účet s vysokou bonusovou sazbou (do 4 % p.a. v ČR).",
+      ],
+      doporucena_akce:
+        "Otevřít spořicí účet u banky a nastavit trvalý příkaz alespoň 5–10 % příjmu měsíčně, dokud nedosáhnete 3 měsíční rezervy.",
+      doporucena_castka_czk: Math.round(odhadovaneVydaje * 3),
+      souvisejici_kategorie_produktu: ["sporici_ucet"],
+    };
+  }
+
+  private pravidloStavebniSporeniDeti(
+    profile: CustomerProfile,
+    _calc: CalculationResult,
+  ): Doporuceni | null {
+    if (profile.pocet_deti <= 0) return null;
+    if (this.najdiProdukt(profile, "stavebni_sporeni")) return null;
+
+    return {
+      id: "stavebni_sporeni_deti",
+      kategorie: "CHYBI",
+      priorita: 4,
+      nadpis: `Stavební spoření pro děti (${profile.pocet_deti} ${profile.pocet_deti === 1 ? "dítě" : profile.pocet_deti < 5 ? "děti" : "dětí"})`,
+      popis:
+        "Státní podpora 5 % / max 1 000 Kč/rok na jedno rodné číslo. Pro každé dítě samostatná smlouva = samostatný roční bonus. Vázací doba 6 let.",
+      proc: [
+        `Pro ${profile.pocet_deti} ${profile.pocet_deti === 1 ? "dítě" : "dětí"} až ${profile.pocet_deti * 1000} Kč/rok státní podpory navíc.`,
+        "Vklad 20 000 Kč/rok plně využije státní podporu. Pak peníze pracují v garantované sazbě.",
+        "Po 6 letech jsou peníze plně volné — vhodný startovní balíček na studia nebo první bydlení.",
+        "Úroky podléhají 15 % srážkové dani, státní podpora ne.",
+      ],
+      doporucena_akce: `Otevřít stavební spoření pro každé dítě a vkládat min. 1 700 Kč/měs na maximální státní podporu.`,
+      doporucena_castka_czk: 1700 * profile.pocet_deti,
+      souvisejici_kategorie_produktu: ["stavebni_sporeni"],
+      navrhovane_instituce: this.topStavebniSporitelny(3),
+    };
+  }
+
   // ---- Verejne rozhrani ----
   evaluate(
     profile: CustomerProfile,
@@ -282,9 +462,11 @@ export class RecommendationEngine {
     const kandidati: (Doporuceni | null)[] = [
       this.pravidloRzpKHypotece(profile, calculation),
       this.pravidloPojisteniNemovitosti(profile, calculation),
+      this.pravidloNouzovaRezerva(profile, calculation),
       this.pravidloPojisteniDomacnosti(profile, calculation),
       this.pravidloPojisteniOdpovednosti(profile, calculation),
       this.pravidloDps(profile, calculation),
+      this.pravidloStavebniSporeniDeti(profile, calculation),
       this.pravidloInvesticniZpWarning(profile, calculation),
     ];
     const order: Record<string, number> = {

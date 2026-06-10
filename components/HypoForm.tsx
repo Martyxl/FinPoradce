@@ -6,6 +6,7 @@ import type {
   CustomerProfile,
   ExistingProduct,
   Instituce,
+  OsvcObor,
   ProduktKategorie,
   TypPrijmu,
   Ucel,
@@ -13,11 +14,22 @@ import type {
 import { fetchInstituce, vypocitej } from "@/lib/api";
 import { SEKCE, VSECHNY_KATEGORIE } from "@/lib/categories";
 
+const OSVC_OBORY: { id: OsvcObor; label: string }[] = [
+  { id: "it_programovani", label: "IT, programování, datová analytika" },
+  { id: "marketing_poradenstvi_kreativa", label: "Marketing, poradenství, kreativa" },
+  { id: "advokacie_lekar_notarstvi", label: "Advokacie, lékaři, notáři, znalci" },
+  { id: "obecne_volne_zivnosti", label: "Ostatní volné živnosti (služby)" },
+  { id: "remeslne_zivnosti", label: "Řemeslné živnosti" },
+  { id: "zemedelska_vyroba", label: "Zemědělství, lesnictví" },
+];
+
 type FormState = {
   // Krok 1
   cisty_prijem_mesicne: string;
   typ_prijmu: TypPrijmu;
   vek: string;
+  osvc_obor: OsvcObor | "";
+  osvc_rocni_obrat_czk: string;
   // Krok 2
   pocet_osob_domacnost: string;
   pocet_deti: string;
@@ -45,6 +57,8 @@ const initialState: FormState = {
   cisty_prijem_mesicne: "",
   typ_prijmu: "zamestnanec",
   vek: "",
+  osvc_obor: "",
+  osvc_rocni_obrat_czk: "",
   pocet_osob_domacnost: "1",
   pocet_deti: "0",
   stavajici_splatky_mesicne: "0",
@@ -121,6 +135,13 @@ export default function HypoForm() {
         e.cisty_prijem_mesicne = "Zadejte čistý měsíční příjem (CZK).";
       if (!data.vek || num(data.vek) < 18 || num(data.vek) > 99)
         e.vek = "Věk 18–99.";
+      // OSVČ: pokud zadali obrat, musí vybrat i obor (a naopak — oboje vyžaduje druhé)
+      if (data.typ_prijmu === "osvc") {
+        const maObrat = data.osvc_rocni_obrat_czk && num(data.osvc_rocni_obrat_czk) > 0;
+        const maObor = !!data.osvc_obor;
+        if (maObrat && !maObor) e.osvc_obor = "Vyberte obor podnikání.";
+        if (maObor && !maObrat) e.osvc_rocni_obrat_czk = "Zadejte roční obrat.";
+      }
     }
     if (s === 2) {
       if (num(data.pocet_osob_domacnost) < 1)
@@ -193,6 +214,7 @@ export default function HypoForm() {
     setSubmitting(true);
     setSubmitError(null);
 
+    const obratNum = Number(data.osvc_rocni_obrat_czk || "0");
     const profile: CustomerProfile = {
       cisty_prijem_mesicne: Number(data.cisty_prijem_mesicne),
       typ_prijmu: data.typ_prijmu,
@@ -206,6 +228,10 @@ export default function HypoForm() {
       splatnost_roky: Number(data.splatnost_roky),
       fixace_roky: Number(data.fixace_roky),
       existujici_produkty: vyrobExistingProductList(),
+      osvc_obor:
+        data.typ_prijmu === "osvc" && data.osvc_obor ? data.osvc_obor : null,
+      osvc_rocni_obrat_czk:
+        data.typ_prijmu === "osvc" && obratNum > 0 ? obratNum : null,
     };
 
     try {
@@ -271,10 +297,62 @@ export default function HypoForm() {
               <option value="jiny">Jiný (důchod, rodičovský…)</option>
             </select>
             <span className="hint">
-              Pro tuto verzi typ příjmu ovlivňuje pouze informativní hodnocení.
-              Banky mají různé požadavky na doložení.
+              Banky mají různé požadavky na doložení a OSVČ často podhodnocují
+              příjem podle daňového přiznání.
             </span>
           </div>
+
+          {data.typ_prijmu === "osvc" && (
+            <div className="osvc-blok">
+              <div className="osvc-blok-nadpis">
+                <strong>OSVČ — pomozte nám správně odhadnout bonitu</strong>
+                <p className="hint" style={{ margin: "4px 0 0" }}>
+                  Pokud vyplníte obor a roční obrat, použijeme realistický
+                  příjem podle vašeho oboru místo daňového základu. (Volitelné.)
+                </p>
+              </div>
+              <div className="row">
+                <div className="field">
+                  <label htmlFor="osvc_obor">Obor podnikání</label>
+                  <select
+                    id="osvc_obor"
+                    value={data.osvc_obor}
+                    onChange={(e) =>
+                      update("osvc_obor", e.target.value as OsvcObor | "")
+                    }
+                  >
+                    <option value="">— nevyplněno —</option>
+                    {OSVC_OBORY.map((o) => (
+                      <option key={o.id} value={o.id}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                  {errors.osvc_obor && (
+                    <span className="error">{errors.osvc_obor}</span>
+                  )}
+                </div>
+                <div className="field">
+                  <label htmlFor="osvc_obrat">Roční obrat (CZK)</label>
+                  <input
+                    id="osvc_obrat"
+                    type="number"
+                    inputMode="numeric"
+                    value={data.osvc_rocni_obrat_czk}
+                    onChange={(e) =>
+                      update("osvc_rocni_obrat_czk", e.target.value)
+                    }
+                    placeholder="např. 1500000"
+                  />
+                  {errors.osvc_rocni_obrat_czk && (
+                    <span className="error">
+                      {errors.osvc_rocni_obrat_czk}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
           <div className="field">
             <label htmlFor="vek">Věk žadatele</label>
             <input

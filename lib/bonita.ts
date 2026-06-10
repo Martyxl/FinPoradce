@@ -15,15 +15,31 @@ import type {
   CustomerProfile,
   LimitingFactor,
 } from "./types";
-import type { BankData, BanksData, CnbRules } from "./data";
+import type { BankData, BanksData, CnbRules, ScoringPravidla } from "./data";
+import { osvcAnalyzaProfilu } from "./osvc";
 
 export class BonitaCalculator {
   private banks: BankData[];
   private cnb: CnbRules;
+  private scoring: ScoringPravidla;
 
-  constructor(banksData: BanksData, cnbRules: CnbRules) {
+  constructor(
+    banksData: BanksData,
+    cnbRules: CnbRules,
+    scoring: ScoringPravidla,
+  ) {
     this.banks = banksData.banky;
     this.cnb = cnbRules;
+    this.scoring = scoring;
+  }
+
+  // ---- OSVČ pomoc: kterou hodnotu příjmu použít ----
+  private efektivniPrijemMesicne(profile: CustomerProfile): number {
+    if (profile.typ_prijmu === "osvc") {
+      const a = osvcAnalyzaProfilu(profile, this.scoring);
+      if (a) return a.realisticky_prijem_mesicne_czk;
+    }
+    return profile.cisty_prijem_mesicne;
   }
 
   // ---- Anuitni vzorce ----
@@ -98,6 +114,8 @@ export class BonitaCalculator {
   private spoctiBanku(
     bank: BankData,
     profile: CustomerProfile,
+    prijemMesicne: number,
+    splatkyMesicne: number,
   ): BankResult {
     const poznamky: string[] = [];
     const n = profile.splatnost_roky * 12;
@@ -130,8 +148,7 @@ export class BonitaCalculator {
     const dstiLimit = bank.interni_dsti_limit ?? 0.45;
     const maxSplatkaDsti = Math.max(
       0,
-      profile.cisty_prijem_mesicne * dstiLimit -
-        profile.stavajici_splatky_mesicne,
+      prijemMesicne * dstiLimit - splatkyMesicne,
     );
     const uverDleDsti = BonitaCalculator.anuitaJistina(
       maxSplatkaDsti,
@@ -141,9 +158,9 @@ export class BonitaCalculator {
 
     // 4) DTI (interni limit banky)
     const dtiLimit = bank.interni_dti_limit ?? 8;
-    const rocniPrijem = profile.cisty_prijem_mesicne * 12;
+    const rocniPrijem = prijemMesicne * 12;
     const maxDluhDti = rocniPrijem * dtiLimit;
-    const stavajiciDluhAprox = profile.stavajici_splatky_mesicne * 12 * 5;
+    const stavajiciDluhAprox = splatkyMesicne * 12 * 5;
     const uverDleDti = Math.max(0, maxDluhDti - stavajiciDluhAprox);
 
     // Minimum z LTV/DSTI/DTI
@@ -204,7 +221,26 @@ export class BonitaCalculator {
 
   // ---- Verejne rozhrani ----
   calculate(profile: CustomerProfile): CalculationResult {
-    const perBank = this.banks.map((b) => this.spoctiBanku(b, profile));
+    // Efektivni prijem (OSVC bonus pokud relevantni)
+    const prijemMesicne = this.efektivniPrijemMesicne(profile);
+
+    // Splatky = MAX z manualne zadanych (krok 2) a sumy uveru ze stavajicich
+    // produktu (krok 3). Tim klient nemuze omylem zapomenout nahlasit splatky.
+    const sumaUverovychProduktu = profile.existujici_produkty
+      .filter((p) =>
+        ["hypoteka_jina", "spotrebitelsky_uver", "leasing", "kreditni_karta"].includes(
+          p.kategorie,
+        ),
+      )
+      .reduce((acc, p) => acc + p.mesicni_castka_czk, 0);
+    const splatkyMesicne = Math.max(
+      profile.stavajici_splatky_mesicne,
+      sumaUverovychProduktu,
+    );
+
+    const perBank = this.banks.map((b) =>
+      this.spoctiBanku(b, profile, prijemMesicne, splatkyMesicne),
+    );
     const nejlepsi =
       perBank.length > 0
         ? perBank.reduce((a, b) => (a.max_loan >= b.max_loan ? a : b))
@@ -216,6 +252,17 @@ export class BonitaCalculator {
       "ČNB má od 2024 DSTI a DTI pro standardní bydlení deaktivované — závazný je jen LTV.",
     ];
 
+    if (sumaUverovychProduktu > profile.stavajici_splatky_mesicne) {
+      upozorneni.push(
+        `Použili jsme ${Math.round(sumaUverovychProduktu).toLocaleString("cs-CZ")} Kč/měs splátek (suma z kroku 3), protože je vyšší než zadaná hodnota v kroku 2.`,
+      );
+    }
+    if (prijemMesicne > profile.cisty_prijem_mesicne) {
+      upozorneni.push(
+        `OSVČ analýza: pro výpočet bonity jsme použili realistický příjem ${Math.round(prijemMesicne).toLocaleString("cs-CZ")} Kč/měs odvozený z obratu a oboru.`,
+      );
+    }
+
     return {
       max_loan: nejlepsi?.max_loan ?? 0,
       max_monthly_payment: nejlepsi?.max_monthly_payment ?? 0,
@@ -224,6 +271,8 @@ export class BonitaCalculator {
       profile_echo: profile,
       upozorneni,
       doporuceni: [],
+      prijem_pouzity_czk: Math.round(prijemMesicne),
+      splatky_pouzite_czk: Math.round(splatkyMesicne),
     };
   }
 }

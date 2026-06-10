@@ -44,14 +44,48 @@ export default function VysledkyPage() {
     );
   }
 
+  const fh = result.financni_zdravi;
+  const fhUroven = fh ? fh.uroven.normalize("NFD").replace(/[̀-ͯ]/g, "") : "";
+  const osvc = result.osvc_analyza;
+
   return (
     <>
-      <h1>Předběžný odhad — porovnání 3 bank</h1>
+      <h1>Předběžný odhad — porovnání bank</h1>
       <p className="lead">
         Nejvyšší dosažitelný úvěr ve vašem profilu:{" "}
         <strong>{formatCZK(result.max_loan)}</strong> (měsíční splátka{" "}
         <strong>{formatCZK(result.max_monthly_payment)}</strong>).
       </p>
+
+      {fh && (
+        <div className="fh-card">
+          <div className={`fh-circle fh-uroven-${fhUroven}`}>
+            {fh.skore_0_100}
+          </div>
+          <div className="fh-info">
+            <h2>Finanční zdraví: {fh.uroven}</h2>
+            <p className="fh-shrnuti">{fh.shrnuti}</p>
+            <div className="fh-dimenze">
+              {fh.dimenze.map((d) => {
+                const cls =
+                  d.skore_0_100 >= 70
+                    ? "dobre"
+                    : d.skore_0_100 >= 40
+                      ? "stredni"
+                      : "spatne";
+                return (
+                  <div key={d.klic} className="fh-dimenze-radek">
+                    <span>{d.label}</span>
+                    <span className={"fh-dimenze-skore " + cls}>
+                      {d.skore_0_100}/100
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="warnings">
         <strong>Co tato čísla znamenají:</strong>
@@ -62,6 +96,33 @@ export default function VysledkyPage() {
         </ul>
       </div>
 
+      {osvc && (
+        <section className="osvc-analyza">
+          <h2 style={{ marginTop: 0 }}>OSVČ analýza — {osvc.obor_label}</h2>
+          <p>
+            Roční obrat <strong>{formatCZK(osvc.rocni_obrat_czk)}</strong>{" "}
+            přepočítaný 4 metodami, kterými banky hodnotí příjem OSVČ:
+          </p>
+          <div className="osvc-metody">
+            {osvc.metody.map((m) => (
+              <div className="osvc-metoda" key={m.nazev}>
+                <strong>{m.label}</strong>
+                <div className="osvc-prijem">
+                  {formatCZK(m.mesicni_prijem_czk)} / měs
+                </div>
+                <div className="hint" style={{ marginTop: 4 }}>
+                  {m.popis}
+                </div>
+              </div>
+            ))}
+          </div>
+          <p style={{ margin: 0 }}>
+            <strong>Doporučení:</strong> {osvc.doporuceni}
+          </p>
+        </section>
+      )}
+
+      <h2 style={{ marginTop: 32 }}>Porovnání 10 retailových bank</h2>
       <div className="bank-grid">
         {result.per_bank.map((b) => (
           <VysledekKarta key={b.bank_id} b={b} />

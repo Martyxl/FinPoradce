@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { BonitaCalculator } from "@/lib/bonita";
 import { RecommendationEngine } from "@/lib/recommendations";
-import { loadBanks, loadCnbRules } from "@/lib/data";
+import { FinancialHealthCalculator } from "@/lib/financialHealth";
+import {
+  loadBanks,
+  loadCnbRules,
+  loadInstituce,
+  loadScoringPravidla,
+} from "@/lib/data";
+import { osvcAnalyzaProfilu } from "@/lib/osvc";
 import type { CustomerProfile } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -38,12 +45,22 @@ export async function POST(req: Request) {
 
     const banksData = loadBanks();
     const cnbRules = loadCnbRules();
+    const instituce = loadInstituce();
+    const scoring = loadScoringPravidla();
 
-    const calc = new BonitaCalculator(banksData, cnbRules);
+    const calc = new BonitaCalculator(banksData, cnbRules, scoring);
     const result = calc.calculate(body);
 
-    const engine = new RecommendationEngine();
+    // OSVC analyza pro frontend (pokud je relevantni)
+    result.osvc_analyza = osvcAnalyzaProfilu(body, scoring);
+
+    // Doporuceni
+    const engine = new RecommendationEngine(instituce, scoring);
     result.doporuceni = engine.evaluate(body, result);
+
+    // Skore financniho zdravi
+    const fh = new FinancialHealthCalculator(scoring);
+    result.financni_zdravi = fh.evaluate(body, result);
 
     return NextResponse.json(result);
   } catch (err) {
