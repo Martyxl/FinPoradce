@@ -278,6 +278,8 @@ export class RecommendationEngine {
         "Sjednat pojištění domácnosti (typicky v balíčku s pojištěním nemovitosti).",
       souvisejici_kategorie_produktu: ["poj_domacnosti"],
       navrhovane_instituce: this.topPojistovnyNez(3),
+      odhadovane_pojistne_mesicne_czk:
+        this.estimator.pojisteniDomacnostiMesicne(500000),
     };
   }
 
@@ -301,6 +303,8 @@ export class RecommendationEngine {
         "Sjednat pojištění odpovědnosti za škodu v běžném životě, ideálně s limitem 5–10 mil. Kč.",
       souvisejici_kategorie_produktu: ["poj_odpovednosti"],
       navrhovane_instituce: this.topPojistovnyNez(3),
+      odhadovane_pojistne_mesicne_czk:
+        this.estimator.pojisteniOdpovednostiMesicne(10000000),
     };
   }
 
@@ -368,7 +372,10 @@ export class RecommendationEngine {
     profile: CustomerProfile,
     _calc: CalculationResult,
   ): Doporuceni | null {
-    if (!this.najdiProdukt(profile, "zp_investicni")) return null;
+    const izp = this.najdiProdukt(profile, "zp_investicni");
+    if (!izp) return null;
+    // Stredni odhad uspory pri rozdeleni RZP + DIP (20-40 % -> 30 %)
+    const usporaMesicne = Math.round(izp.mesicni_castka_czk * 0.3);
     return {
       id: "investicni_zp_warning",
       kategorie: "UPOZORNENI",
@@ -377,8 +384,9 @@ export class RecommendationEngine {
       popis:
         "IŽP kombinuje pojištění s investováním, ale obvykle za cenu vysokých poplatků. Investiční složka často tvoří jen 10–15 % z toho, co platíte.",
       proc: [
+        "V prvních 2 letech jde až 80 % pojistného na počáteční náklady smlouvy.",
         "Levnější varianta: samostatné rizikové ŽP + samostatný DIP nebo podílový fond.",
-        "Při zachování stejného krytí a vyšší investiční složky často získáte více.",
+        "Při rozdělení na čisté RŽP + DIP klient typicky ušetří 20–40 % při stejném krytí.",
         "Tuto úvahu doporučujeme zkonzultovat nezávisle (mimo banku a mimo pojišťovnu).",
       ],
       doporucena_akce:
@@ -388,6 +396,8 @@ export class RecommendationEngine {
         "zp_rizikove",
         "dip",
       ],
+      uspora_mesicne_czk: usporaMesicne,
+      uspora_popis: `Při rozdělení na RŽP + DIP byste při stejném krytí mohli ušetřit odhadem ${usporaMesicne} Kč/měs (20–40 % ze současných ${Math.round(izp.mesicni_castka_czk)} Kč), které místo poplatků skutečně investujete.`,
     };
   }
 

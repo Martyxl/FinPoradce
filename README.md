@@ -235,13 +235,14 @@ tajemstvi a sazby/poplatky se mění.
 
 **ANO**
 
-- datová vrstva produktů (`data/*.json`)
-- progresivní formulář (4 kroky, validace)
-- izolovaný výpočetní modul (`BonitaCalculator`)
-- výsledková stránka s porovnáním 3 bank
+- datová vrstva produktů (`data/*.json`) vč. matice životních situací a cenových koeficientů
+- progresivní formulář (5 kroků, validace, OSVČ větev, stávající produkty)
+- izolované moduly: `BonitaCalculator`, `RecommendationEngine`, `FinancialHealthCalculator`, `PremiumEstimator`
+- výsledková stránka: porovnání 10 bank, skóre finančního zdraví, OSVČ analýza, doporučení
 
 **NE** (struktura připravena, neimplementováno)
 
+- AI analyzátor — 3 balíčky nejlevnější/standard/luxus (Fáze 10; data připravena v `zivotni_situace.json`)
 - konverze / předání žádosti do banky
 - uživatelské účty, ukládání žádostí (sessionStorage pouze)
 - platby
@@ -249,12 +250,28 @@ tajemstvi a sazby/poplatky se mění.
 - admin rozhraní
 - přechod z JSON na PostgreSQL
 
+---
+
+## Backlog datových mezer (menší díry — doplnit v dalších iteracích)
+
+Tyto mezery neblokují AI analyzátor, ale snižují přesnost. Vedeno zde, aby se nezapomnělo:
+
+| # | Mezera | Dopad | Akce |
+|---|---|---|---|
+| 1 | **Poplatky hypoték u 8 z 10 bank** (jen KB má kompletní) | balíček nemůže započítat jednorázové náklady (odhad, katastr, vedení) | doplnit ze sazebníků bank do `banks.json` → `poplatky` |
+| 2 | **ČMSS (ČSOB Stavební spořitelna) — chybí sazby** | neúplné srovnání stavebního spoření | doplnit z `csobstavebni.cz` do `produkty_stavebni_sporeni.json` |
+| 3 | **DPS: poplatky penzijních fondů a strategie** (konzervativní/vyvážená/dynamická) | „luxus" balíček nemůže doporučit konkrétní strategii dle věku | doplnit nový blok do `produkty_penze.json` (úplata za správu, zhodnocení fondů) |
+| 4 | **ČAP tržní podíly jsou za 2023** | řazení doporučených pojišťoven může být zastaralé | stáhnout XLSX z `cap.cz` (podíly 2024/2025), aktualizovat `instituce.json` + `produkty_pojisteni.json` |
+| 5 | **IŽP poplatkovost jen orientačně** | argument „rozdělte na RŽP + DIP" je odhad 20–40 % | doplnit reálné nákladové ukazatele (PER/TER) z dokumentů pojišťoven |
+| 6 | **Vlajkové produkty s jistotou „nízká"** (`produkty_vlajkove.json`) | AI je nesmí jmenovat, dokud se neověří | ověřit názvy na webech pojišťoven (UNIQA, ČSOB Poj., ČPP majetek, KP) |
+| 7 | **LTV přirážky nad 80 % u bank kromě KB/UniCredit** | mírně nepřesná sazba pro LTV 80–90 % | ověřit sazebníky |
+
 ### Budoucí migrace na PostgreSQL
 
-Stačí přepsat funkce `load_banks()` a `load_cnb_rules()` v `api/calculate.py`,
-aby četly z DB místo z JSON. `BonitaCalculator` ani frontend se nemění.
+Stačí přepsat loadery v `lib/data.ts`, aby četly z DB místo z JSON.
+`BonitaCalculator`, `RecommendationEngine` ani frontend se nemění.
 
 ### Budoucí výměna bonitního modulu
 
-Implementovat třídu se stejným rozhraním a v endpointu `calculate` vyměnit
-instanci `BonitaCalculator(...)` za novou implementaci.
+Implementovat třídu se stejným rozhraním a v `app/api/calculate/route.ts`
+vyměnit instanci `BonitaCalculator(...)` za novou implementaci.

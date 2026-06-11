@@ -54,4 +54,45 @@ export class PremiumEstimator {
     if (pojistnaCastka <= 0) return 0;
     return Math.round((pojistnaCastka / 100000) * 90);
   }
+
+  /** Pojisteni domacnosti — 0,4 % rocne z hodnoty vybaveni */
+  pojisteniDomacnostiMesicne(pojistnaCastka: number): number {
+    if (pojistnaCastka <= 0) return 0;
+    const koef =
+      this.scoring.pojistne_koeficienty.pojisteni_domacnosti
+        .rocni_pojistne_z_pojistne_castky;
+    return Math.round((pojistnaCastka * koef) / 12);
+  }
+
+  /** Pojisteni odpovednosti — tabulkove dle limitu (vraci nejblizsi vyssi limit) */
+  pojisteniOdpovednostiMesicne(limitCzk: number): number {
+    const tabulka =
+      this.scoring.pojistne_koeficienty.pojisteni_odpovednosti
+        .rocni_pojistne_dle_limitu;
+    if (tabulka.length === 0) return 0;
+    const radek =
+      tabulka.find((r) => limitCzk <= r.limit_czk) ?? tabulka[tabulka.length - 1];
+    return Math.round(radek.rocni_pojistne_czk / 12);
+  }
+
+  /** Urazove pojisteni — orientacni pausal pro dospeleho / dite */
+  urazoveMesicne(jeDite = false): number {
+    const k = this.scoring.pojistne_koeficienty.urazove_pojisteni;
+    return jeDite
+      ? k.mesicni_pojistne_orientacni_dite_czk
+      : k.mesicni_pojistne_orientacni_dospely_czk;
+  }
+
+  /** Pojisteni dlouhodobe pece — base 40 let × vekovy nasobek */
+  dlouhodobaPeceMesicne(vek: number): number {
+    const k = this.scoring.pojistne_koeficienty.pojisteni_dlouhodobe_pece;
+    let nasobek = k.vek_nasobky[k.vek_nasobky.length - 1]?.nasobek ?? 1;
+    for (const r of k.vek_nasobky) {
+      if (vek <= r.vek_do) {
+        nasobek = r.nasobek;
+        break;
+      }
+    }
+    return Math.round(k.mesicni_pojistne_base_40let_czk * nasobek);
+  }
 }

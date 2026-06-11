@@ -1,0 +1,365 @@
+{
+  "_meta": {
+    "popis": "Matice zivotnich situaci -> priority produktu -> doporucene parametry. Primarni vstup pro AI analyzator (Faze 10) a pro rozsirovani RecommendationEngine. Kazda situace definuje poradi dulezitosti produktu a vodítka pro 3 urovne balicku (nejlevnejsi / standard / luxus).",
+    "datum_snapshotu": "2026-06-11",
+    "puvod": "estimate",
+    "zdroj": "Odborna doporuceni financniho planovani (Partners, KB Pojistovna, CFPB adaptace) - NENI regulatorni norma. Pred produkcnim nasazenim validovat s licencovanym poradcem.",
+    "_pouziti": "Situace se vyhodnocuji podle 'podminky' (AND logika). Klient muze spadat do prave jedne zakladni situace + 0..N modifikatoru. Modifikatory upravuji priority a parametry zakladni situace."
+  },
+  "zakladni_situace": [
+    {
+      "id": "single_hypoteka",
+      "nazev": "Jednotlivec s hypotékou",
+      "podminky": { "pocet_osob_domacnost_max": 1, "pocet_deti_max": 0 },
+      "uvaha": "Nikdo dalsi neni zavisly na prijmu, ale take nikdo nepomuze se splatkami pri vypadku. Klicova je invalidita a pracovni neschopnost - smrt ohrozuje 'jen' dedice nemovitosti.",
+      "priority_produktu": [
+        {
+          "kategorie": "poj_nemovitosti",
+          "priorita": 1,
+          "parametry": { "pojistna_castka": "reprodukcni hodnota nemovitosti", "vinkulace": true },
+          "zduvodneni": "Povinne pro cerpani hypoteky."
+        },
+        {
+          "kategorie": "zp_rizikove",
+          "priorita": 2,
+          "parametry": {
+            "kryti_smrt": "zustatek hypoteky (klesajici)",
+            "kryti_invalidita": "2-3x rocni prijem, min. do vyse hypoteky",
+            "kryti_pracovni_neschopnost": "od 29. dne, denni davka ~60 % ciste denni mzdy"
+          },
+          "zduvodneni": "U singla je invalidita horsi scenar nez smrt - splatky nezmizi a prijem ano. Dimenzovat primarne na invaliditu a PN."
+        },
+        {
+          "kategorie": "sporici_ucet",
+          "priorita": 3,
+          "parametry": { "cilova_castka": "3-6 mesicnich vydaju" },
+          "zduvodneni": "Bez druheho prijmu v domacnosti je rezerva jedina obrana proti kratkodobemu vypadku."
+        },
+        {
+          "kategorie": "poj_domacnosti",
+          "priorita": 4,
+          "parametry": { "pojistna_castka_czk": [300000, 500000] },
+          "zduvodneni": "Mensi domacnost = nizsi PC."
+        },
+        {
+          "kategorie": "poj_odpovednosti",
+          "priorita": 5,
+          "parametry": { "limit_czk": 5000000 },
+          "zduvodneni": "Levna ochrana proti skodam tretim osobam."
+        },
+        {
+          "kategorie": "dps",
+          "priorita": 6,
+          "parametry": { "vklad_mesicne_czk": 1700 },
+          "zduvodneni": "Max statni prispevek. U singla bez deti je dlouhodobe zajisteni vlastni penze jeste dulezitejsi."
+        }
+      ],
+      "balicky": {
+        "nejlevnejsi": ["poj_nemovitosti"],
+        "standard": ["poj_nemovitosti", "zp_rizikove", "sporici_ucet", "poj_odpovednosti"],
+        "luxus": ["poj_nemovitosti", "zp_rizikove", "sporici_ucet", "poj_domacnosti", "poj_odpovednosti", "dps", "dip"]
+      }
+    },
+    {
+      "id": "par_bez_deti_hypoteka",
+      "nazev": "Pár bez dětí s hypotékou",
+      "podminky": { "pocet_osob_domacnost_min": 2, "pocet_deti_max": 0 },
+      "uvaha": "Dva prijmy = prirozena pojistka. Kryti dimenzovat na vypadek vyssiho prijmu; druhy partner musi utahnout splatky sam.",
+      "priority_produktu": [
+        {
+          "kategorie": "poj_nemovitosti",
+          "priorita": 1,
+          "parametry": { "pojistna_castka": "reprodukcni hodnota nemovitosti", "vinkulace": true },
+          "zduvodneni": "Povinne pro cerpani hypoteky."
+        },
+        {
+          "kategorie": "zp_rizikove",
+          "priorita": 2,
+          "parametry": {
+            "kryti_smrt": "50-70 % zustatku hypoteky na kazdeho partnera (klesajici)",
+            "kryti_invalidita": "2x rocni prijem",
+            "pozn": "Pojistit oba partnery, vahove dle podilu na prijmech. Parove slevy u vetsiny pojistoven."
+          },
+          "zduvodneni": "Po vypadku jednoho prijmu musi druhy zvladnout splatky + naklady. Neni nutne krýt 100 % hypoteky na kazdeho."
+        },
+        {
+          "kategorie": "sporici_ucet",
+          "priorita": 3,
+          "parametry": { "cilova_castka": "3 mesicni vydaje" },
+          "zduvodneni": "Dva prijmy snizuji potrebnou rezervu."
+        },
+        {
+          "kategorie": "poj_domacnosti",
+          "priorita": 4,
+          "parametry": { "pojistna_castka_czk": [400000, 600000] },
+          "zduvodneni": "Spolecna domacnost."
+        },
+        {
+          "kategorie": "poj_odpovednosti",
+          "priorita": 5,
+          "parametry": { "limit_czk": 10000000, "pozn": "Rodinna smlouva kryje oba." },
+          "zduvodneni": "Levna ochrana."
+        },
+        {
+          "kategorie": "dps",
+          "priorita": 6,
+          "parametry": { "vklad_mesicne_czk": 1700, "pozn": "Pro oba partnery = 2x statni prispevek." },
+          "zduvodneni": "Max statni prispevek pro oba."
+        }
+      ],
+      "balicky": {
+        "nejlevnejsi": ["poj_nemovitosti"],
+        "standard": ["poj_nemovitosti", "zp_rizikove", "sporici_ucet", "poj_odpovednosti"],
+        "luxus": ["poj_nemovitosti", "zp_rizikove", "sporici_ucet", "poj_domacnosti", "poj_odpovednosti", "dps", "dip"]
+      }
+    },
+    {
+      "id": "rodina_s_detmi_hypoteka",
+      "nazev": "Rodina s dětmi s hypotékou",
+      "podminky": { "pocet_deti_min": 1 },
+      "uvaha": "Nejvyssi naroky na kryti: vypadek prijmu ohrozuje deti. Pojistna castka smrti zivitele = pravidlo 5-10x rocni prijem NEBO hypoteka + naklady na deti do osamostatneni - co je vyssi.",
+      "priority_produktu": [
+        {
+          "kategorie": "poj_nemovitosti",
+          "priorita": 1,
+          "parametry": { "pojistna_castka": "reprodukcni hodnota nemovitosti", "vinkulace": true },
+          "zduvodneni": "Povinne pro cerpani hypoteky."
+        },
+        {
+          "kategorie": "zp_rizikove",
+          "priorita": 1,
+          "parametry": {
+            "kryti_smrt": "MAX(zustatek hypoteky, 5x rocni prijem zivitele) - klesajici slozka na hypoteku + konstantni na deti",
+            "kryti_invalidita": "3x rocni prijem, min. do vyse hypoteky",
+            "kryti_vazna_onemocneni": "1-2x rocni prijem",
+            "kryti_pracovni_neschopnost": "od 29. dne",
+            "pozn": "Kombinace klesajici (hypoteka) + konstantni (zajisteni deti) pojistne castky je nejefektivnejsi."
+          },
+          "zduvodneni": "U rodiny s detmi je ZP stejne dulezite jako pojisteni nemovitosti - deti jsou zavisle na prijmu zivitele 15-25 let."
+        },
+        {
+          "kategorie": "sporici_ucet",
+          "priorita": 2,
+          "parametry": { "cilova_castka": "6 mesicnich vydaju" },
+          "zduvodneni": "Rodina s detmi ma vyssi fixni naklady a mensi flexibilitu - rezerva na 6 mesicu."
+        },
+        {
+          "kategorie": "poj_odpovednosti",
+          "priorita": 2,
+          "parametry": { "limit_czk": 10000000, "pozn": "Rodinna smlouva - kryje i skody zpusobene detmi." },
+          "zduvodneni": "Deti = vyssi pravdepodobnost skody treti osobe. Rodinna smlouva je nutnost."
+        },
+        {
+          "kategorie": "poj_domacnosti",
+          "priorita": 3,
+          "parametry": { "pojistna_castka_czk": [500000, 800000] },
+          "zduvodneni": "Vetsi domacnost, vice vybaveni."
+        },
+        {
+          "kategorie": "urazove",
+          "priorita": 3,
+          "parametry": { "pro_koho": "deti", "pozn": "Trvale nasledky urazu od 1 %, progresivni plneni." },
+          "zduvodneni": "Urazove pojisteni deti je levne a urazy jsou u deti nejcastejsi riziko. Dospeli maji uraz v RZP."
+        },
+        {
+          "kategorie": "stavebni_sporeni",
+          "priorita": 4,
+          "parametry": { "vklad_mesicne_czk": 1700, "pro_koho": "kazde dite" },
+          "zduvodneni": "Statni podpora 1 000 Kc/rok na rodne cislo ditete. Startovni kapital na studia/bydleni."
+        },
+        {
+          "kategorie": "dps",
+          "priorita": 5,
+          "parametry": { "vklad_mesicne_czk": 1700 },
+          "zduvodneni": "Po zajisteni rizik a deti mysli na vlastni penzi."
+        }
+      ],
+      "balicky": {
+        "nejlevnejsi": ["poj_nemovitosti", "zp_rizikove"],
+        "standard": ["poj_nemovitosti", "zp_rizikove", "sporici_ucet", "poj_odpovednosti", "urazove"],
+        "luxus": ["poj_nemovitosti", "zp_rizikove", "sporici_ucet", "poj_odpovednosti", "poj_domacnosti", "urazove", "stavebni_sporeni", "dps", "dip"]
+      },
+      "_pozn_nejlevnejsi": "U rodiny s detmi NIKDY nevynechavat RZP ani v nejlevnejsim balicku - vypadek zivitele bez kryti je pro rodinu fatalni."
+    },
+    {
+      "id": "starsi_50plus_hypoteka",
+      "nazev": "Žadatel 50+ s hypotékou",
+      "podminky": { "vek_min": 50 },
+      "uvaha": "Kratsi splatnost (banky omezi do 65-70 let veku), vyssi pojistne RZP, blizici se penze. Klicove je nepodcenit zajisteni na penzi a pripravit splaceni hypoteky pred koncem aktivniho prijmu.",
+      "priority_produktu": [
+        {
+          "kategorie": "poj_nemovitosti",
+          "priorita": 1,
+          "parametry": { "pojistna_castka": "reprodukcni hodnota nemovitosti", "vinkulace": true },
+          "zduvodneni": "Povinne pro cerpani hypoteky."
+        },
+        {
+          "kategorie": "zp_rizikove",
+          "priorita": 2,
+          "parametry": {
+            "kryti_smrt": "zustatek hypoteky (klesajici)",
+            "kryti_invalidita": "do vyse hypoteky",
+            "pozn": "Pojistne je v tomto veku 2-4x vyssi nez ve 35. Porovnat s variantou vyssich vlastnich zdroju / kratsi splatnosti."
+          },
+          "zduvodneni": "Stale dulezite, ale ekonomika pojistneho je horsi - zvazit zkraceni splatnosti misto vysokeho kryti."
+        },
+        {
+          "kategorie": "dps",
+          "priorita": 2,
+          "parametry": { "vklad_mesicne_czk": 5700, "pozn": "Max vklad pro statni prispevek + danovy odpocet. Do 60 let jeste stihne 10+ let sporeni." },
+          "zduvodneni": "Posledni dekada pro danove zvyhodnene sporeni na penzi. Vyssi vklad nez u mladsich."
+        },
+        {
+          "kategorie": "pojisteni_dlouhodobe_pece",
+          "priorita": 3,
+          "parametry": {},
+          "zduvodneni": "V tomto veku zacina davat smysl - pojistne jeste unosne, riziko ztraty sobestacnosti realne. Danove odcitatelne."
+        },
+        {
+          "kategorie": "sporici_ucet",
+          "priorita": 3,
+          "parametry": { "cilova_castka": "6 mesicnich vydaju" },
+          "zduvodneni": "Rezerva pred penzi."
+        },
+        {
+          "kategorie": "poj_domacnosti",
+          "priorita": 4,
+          "parametry": { "pojistna_castka_czk": [400000, 700000] },
+          "zduvodneni": "Standard."
+        },
+        {
+          "kategorie": "poj_odpovednosti",
+          "priorita": 4,
+          "parametry": { "limit_czk": 5000000 },
+          "zduvodneni": "Standard."
+        }
+      ],
+      "balicky": {
+        "nejlevnejsi": ["poj_nemovitosti"],
+        "standard": ["poj_nemovitosti", "zp_rizikove", "dps", "sporici_ucet"],
+        "luxus": ["poj_nemovitosti", "zp_rizikove", "dps", "pojisteni_dlouhodobe_pece", "sporici_ucet", "poj_domacnosti", "poj_odpovednosti"]
+      }
+    },
+    {
+      "id": "investor_hypoteka",
+      "nazev": "Investiční nemovitost",
+      "podminky": { "ucel": "investicni" },
+      "uvaha": "Nemovitost generuje prijem - kryti se dimenzuje jinak. Najemne casto pokryje splatku, takze smrt/invalidita vlastnika neohrozi splaceni stejne fatalne. Klicova je ochrana majetku a odpovednost pronajimatele.",
+      "priority_produktu": [
+        {
+          "kategorie": "poj_nemovitosti",
+          "priorita": 1,
+          "parametry": { "pojistna_castka": "reprodukcni hodnota", "vinkulace": true, "pozn": "Vcetne kryti pro pripad pronajmu (odpovednost pronajimatele, ztrata najmu po pojistne udalosti)." },
+          "zduvodneni": "Povinne + specificke kryti pronajmu."
+        },
+        {
+          "kategorie": "poj_odpovednosti",
+          "priorita": 2,
+          "parametry": { "limit_czk": 10000000, "pozn": "Odpovednost vlastnika nemovitosti - skody najemcum a tretim osobam." },
+          "zduvodneni": "Pronajimatel nese odpovednost za stav nemovitosti."
+        },
+        {
+          "kategorie": "zp_rizikove",
+          "priorita": 3,
+          "parametry": { "kryti_smrt": "zustatek hypoteky minus 12x mesicni najemne (klesajici)" },
+          "zduvodneni": "Najemne castecne kryje splatky i pri vypadku - kryti muze byt nizsi nez u vlastniho bydleni."
+        },
+        {
+          "kategorie": "sporici_ucet",
+          "priorita": 3,
+          "parametry": { "cilova_castka": "6 mesicnich splatek hypoteky", "pozn": "Rezerva na vypadek najemce / neobsazenost." },
+          "zduvodneni": "Neobsazenost je nejcastejsi riziko investicni nemovitosti."
+        }
+      ],
+      "balicky": {
+        "nejlevnejsi": ["poj_nemovitosti"],
+        "standard": ["poj_nemovitosti", "poj_odpovednosti", "sporici_ucet"],
+        "luxus": ["poj_nemovitosti", "poj_odpovednosti", "sporici_ucet", "zp_rizikove", "dip"]
+      }
+    }
+  ],
+  "modifikatory": [
+    {
+      "id": "osvc",
+      "nazev": "OSVČ",
+      "podminka": { "typ_prijmu": "osvc" },
+      "zmeny": [
+        {
+          "kategorie": "zp_rizikove",
+          "uprava": "zvysit_prioritu",
+          "parametry_navic": {
+            "kryti_pracovni_neschopnost": "od 15. dne, denni davka 60-80 % cisteho denniho prijmu",
+            "pozn": "OSVC nema narok na nemocenskou od zamestnavatele - prvnich 14 dni nemoci je bez prijmu uplne, pak jen davky z dobrovolneho nemocenskeho pojisteni (pokud si plati)."
+          },
+          "zduvodneni": "Pracovni neschopnost je pro OSVC kriticke riziko - zadna nemocenska, fixni naklady podnikani bezi dal."
+        },
+        {
+          "kategorie": "sporici_ucet",
+          "uprava": "zvysit_cilovou_castku",
+          "parametry_navic": { "cilova_castka": "6-9 mesicnich vydaju" },
+          "zduvodneni": "Prijem OSVC je volatilnejsi nez mzda - vetsi rezerva."
+        },
+        {
+          "kategorie": "dps",
+          "uprava": "zvysit_prioritu",
+          "parametry_navic": { "pozn": "OSVC nema zamestnavatelsky prispevek - vlastni zajisteni na penzi je jen na nem. Danovy odpocet az 48 000 Kc/rok je pro OSVC s vyssim zakladem dane cenny." },
+          "zduvodneni": "Zadny II. pilir od zamestnavatele."
+        }
+      ]
+    },
+    {
+      "id": "jediny_zivitel",
+      "nazev": "Jediný živitel domácnosti",
+      "podminka": { "popis": "Domacnost 2+ osob, kde zadatel nese >80 % prijmu. Z formulare nepoznatelne primo - AI muze odvodit z poctu osob a vyse prijmu, jinak se ptat.", "heuristika": "pocet_osob_domacnost >= 2 AND (typ_prijmu != dva_prijmy)" },
+      "zmeny": [
+        {
+          "kategorie": "zp_rizikove",
+          "uprava": "zvysit_kryti",
+          "parametry_navic": {
+            "kryti_smrt": "horni hranice pravidla: 10x rocni prijem nebo 20x rocnich vydaju",
+            "kryti_invalidita": "3-4x rocni prijem"
+          },
+          "zduvodneni": "Cela domacnost stoji na jednom prijmu - kryti na horni hranici doporuceni."
+        }
+      ]
+    },
+    {
+      "id": "vysoky_dsti",
+      "nazev": "Napjaty rozpočet (DSTI nad 35 %)",
+      "podminka": { "dsti_s_hypotekou_min": 0.35 },
+      "zmeny": [
+        {
+          "kategorie": "vse",
+          "uprava": "preferovat_nejlevnejsi_balicek",
+          "zduvodneni": "Pri DSTI nad 35 % je rozpocet napjaty - doporucit zakladni kryti a budovat postupne. Nezatezovat dalsimi produkty, dokud neni rezerva."
+        },
+        {
+          "kategorie": "sporici_ucet",
+          "uprava": "zvysit_prioritu",
+          "zduvodneni": "Rezerva je pri napjatem rozpoctu dulezitejsi nez dodatecne pojisteni."
+        }
+      ]
+    },
+    {
+      "id": "izp_drzitel",
+      "nazev": "Drží investiční ŽP",
+      "podminka": { "ma_produkt": "zp_investicni" },
+      "zmeny": [
+        {
+          "kategorie": "zp_investicni",
+          "uprava": "navrhnout_revizi",
+          "zduvodneni": "Viz pravidlo investicni_zp_warning - rozdeleni na RZP + DIP typicky usetri 20-40 %. POZOR: nikdy nerusit stavajici IZP pred sjednanim noveho kryti (vekova/zdravotni prirazka u nove smlouvy)."
+        }
+      ]
+    }
+  ],
+  "globalni_pravidla_etiky": [
+    "Nikdy nedoporucovat IZP ani kapitalove ZP jako nove produkty - vysoka nakladovost (viz izp_poplatkovost).",
+    "Nikdy nedoporucovat bankovni pojisteni schopnosti splacet, pokud lze sjednat samostatne RZP - horsi pomer cena/kryti, zanika pri refinancovani.",
+    "RZP k hypotece vzdy s klesajici pojistnou castkou (kopiruje zustatek) - levnejsi nez konstantni.",
+    "DPS vzdy alespon 1 700 Kc/mes pokud rozpocet dovoli - statni prispevek 340 Kc/mes je garantovany 20% vynos.",
+    "Pri rozpoctu pod tlakem (vysoke DSTI) doporucovat mene produktu, ne mensi kryti klicovych rizik.",
+    "Nikdy nerusit stavajici pojisteni pred sjednanim nahrady.",
+    "Vzdy uvest, ze odhady pojistneho jsou orientacni (estimate) a finalni cenu urci pojistovna po zdravotnim dotazniku."
+  ]
+}

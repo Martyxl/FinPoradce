@@ -148,7 +148,7 @@
     "_komentar": "Vahy jsou navrh - pred produkcnim nasazenim kalibrovat na realnych datech."
   },
   "pojistne_koeficienty": {
-    "_komentar": "ESTIMATE - tabulkove koeficienty pro odhad mesicniho pojistneho RZP s klesajici pojistnou castkou. Pred produkcnim nasazenim overit s konkretni pojistovnou.",
+    "_komentar": "ESTIMATE - tabulkove koeficienty pro orientacni odhady mesicniho pojistneho. Pred produkcnim nasazenim overit s konkretnimi pojistovnami. Slouzi pro UI odhady a jako cenovy vstup pro AI analyzator (Faze 10), aby si LLM ceny nevymyslelo.",
     "puvod": "estimate",
     "rocni_pojistne_z_pojistne_castky_base": 0.0050,
     "_pozn": "Zaklad: 0,5 % z pojistne castky rocne pro 35leteho cloveka, RZP klesajici, bez vaznych onemocneni v rodine.",
@@ -165,6 +165,41 @@
     "obor_pojisteni_nemovitosti": {
       "rocni_pojistne_z_pojistne_castky": 0.0010,
       "_pozn": "Orientacne 0,1 % rocne z hodnoty nemovitosti pro standardni objekt v CR."
+    },
+    "pojisteni_domacnosti": {
+      "rocni_pojistne_z_pojistne_castky": 0.0040,
+      "typicka_pojistna_castka_czk": [300000, 800000],
+      "_pozn": "Orientacne 0,4 % rocne z hodnoty vybaveni. Typicka PC 300-800 tis. dle velikosti domacnosti. Sleva pri balicku s nemovitosti u stejne pojistovny obvykle 10-20 %."
+    },
+    "pojisteni_odpovednosti": {
+      "rocni_pojistne_dle_limitu": [
+        { "limit_czk": 5000000, "rocni_pojistne_czk": 1200 },
+        { "limit_czk": 10000000, "rocni_pojistne_czk": 2000 },
+        { "limit_czk": 20000000, "rocni_pojistne_czk": 3200 }
+      ],
+      "_pozn": "Odpovednost v beznem zivote, cela domacnost. Casto soucasti balicku s pojistenim domacnosti."
+    },
+    "urazove_pojisteni": {
+      "mesicni_pojistne_orientacni_dospely_czk": 300,
+      "mesicni_pojistne_orientacni_dite_czk": 150,
+      "_pozn": "Stredni rozsah kryti (trvale nasledky od 1 %, denni odskodne). U RZP byva uraz soucasti baliku - samostatne urazove ma smysl hlavne pro deti a seniory."
+    },
+    "pojisteni_dlouhodobe_pece": {
+      "mesicni_pojistne_base_40let_czk": 500,
+      "vek_nasobky": [
+        { "vek_do": 35, "nasobek": 0.7 },
+        { "vek_do": 45, "nasobek": 1.0 },
+        { "vek_do": 55, "nasobek": 1.6 },
+        { "vek_do": 99, "nasobek": 2.5 }
+      ],
+      "_pozn": "Novy typ produktu v CR, malo poskytovatelu. Danove odcitatelne (spolecny limit 48 000 Kc)."
+    },
+    "izp_poplatkovost": {
+      "investicni_slozka_podil_pojistneho": [0.10, 0.15],
+      "typicke_rocni_naklady_fondu_procent": 0.025,
+      "pocatecni_naklady_prvni_2_roky_podil": 0.8,
+      "uspora_pri_rozdeleni_rzp_plus_dip_procent": [0.20, 0.40],
+      "_pozn": "Pro argumentaci 'rozdelte IZP na RZP + DIP': v prvnich 2 letech jde az 80 % pojistneho na pocatecni naklady; bezne naklady fondu ~2,5 % p.a.; pri rozdeleni na ciste RZP + DIP klient typicky usetri 20-40 % pri stejnem kryti."
     }
   },
   "osvc_obory": {

@@ -72,6 +72,27 @@ export interface ScoringPravidla {
     rocni_pojistne_z_pojistne_castky_base: number;
     vek_nasobky: { vek_do: number; nasobek: number }[];
     obor_pojisteni_nemovitosti: { rocni_pojistne_z_pojistne_castky: number };
+    pojisteni_domacnosti: {
+      rocni_pojistne_z_pojistne_castky: number;
+      typicka_pojistna_castka_czk: [number, number];
+    };
+    pojisteni_odpovednosti: {
+      rocni_pojistne_dle_limitu: { limit_czk: number; rocni_pojistne_czk: number }[];
+    };
+    urazove_pojisteni: {
+      mesicni_pojistne_orientacni_dospely_czk: number;
+      mesicni_pojistne_orientacni_dite_czk: number;
+    };
+    pojisteni_dlouhodobe_pece: {
+      mesicni_pojistne_base_40let_czk: number;
+      vek_nasobky: { vek_do: number; nasobek: number }[];
+    };
+    izp_poplatkovost: {
+      investicni_slozka_podil_pojistneho: [number, number];
+      typicke_rocni_naklady_fondu_procent: number;
+      pocatecni_naklady_prvni_2_roky_podil: number;
+      uspora_pri_rozdeleni_rzp_plus_dip_procent: [number, number];
+    };
   };
   osvc_obory: {
     polozky: {

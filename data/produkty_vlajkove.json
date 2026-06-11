@@ -1,0 +1,88 @@
+{
+  "_meta": {
+    "popis": "Vlajkove (hlavni) retailove produkty pojistoven - nazvy pro konkretnost doporuceni AI analyzatora. LLM smi jmenovat POUZE produkty z tohoto ciselniku, nikdy si nevymyslet nazvy.",
+    "datum_snapshotu": "2026-06-11",
+    "puvod": "estimate",
+    "_DULEZITE_OVERIT": "Nazvy produktu pochazeji z verejnych webu pojistoven, ale produktove rady se prejmenovavaji a meni. Pred ostrym provozem overit kazdy nazev na webu pojistovny. Parametry kryti (co presne produkt obsahuje) zde zamerne NEJSOU - prilis volatilni, doplnit az pri produkcnim nasazeni ze sazebniku.",
+    "legenda_jistota": {
+      "vysoka": "dlouhodobe zavedeny nazev produktove rady",
+      "stredni": "nazev znamy, ale mozna zmena rady - overit",
+      "nizka": "orientacni nazev - urcite overit"
+    }
+  },
+  "vlajkove_produkty": [
+    {
+      "instituce_id": "kooperativa",
+      "produkty": [
+        { "kategorie": "zp_rizikove", "nazev": "NA PŘÁNÍ", "jistota": "vysoka", "pozn": "Flexibilni rizikove ZP, stavebnicova konstrukce kryti." },
+        { "kategorie": "poj_nemovitosti", "nazev": "Pojištění rodinného domu a domácnosti", "jistota": "stredni", "pozn": "Kombinovany produkt nemovitost + domacnost." }
+      ]
+    },
+    {
+      "instituce_id": "generali_ceska",
+      "produkty": [
+        { "kategorie": "zp_rizikove", "nazev": "Můj život", "jistota": "vysoka", "pozn": "Flexibilni zivotni pojisteni, lze nastavit ciste rizikove." },
+        { "kategorie": "poj_nemovitosti", "nazev": "Bydlení", "jistota": "stredni", "pozn": "Nemovitost + domacnost + odpovednost v baliku." }
+      ]
+    },
+    {
+      "instituce_id": "allianz",
+      "produkty": [
+        { "kategorie": "zp_rizikove", "nazev": "Allianz ŽIVOT", "jistota": "stredni", "pozn": "Rizikove ZP s volitelnymi pripojistenimi." },
+        { "kategorie": "poj_nemovitosti", "nazev": "Allianz Domov", "jistota": "stredni", "pozn": "Nemovitost + domacnost + odpovednost." }
+      ]
+    },
+    {
+      "instituce_id": "csob_poj",
+      "produkty": [
+        { "kategorie": "zp_rizikove", "nazev": "FORTE", "jistota": "stredni", "pozn": "Rizikove zivotni pojisteni CSOB Pojistovny." },
+        { "kategorie": "poj_nemovitosti", "nazev": "Náš domov", "jistota": "nizka", "pozn": "OVERIT aktualni nazev produktove rady." }
+      ]
+    },
+    {
+      "instituce_id": "nn",
+      "produkty": [
+        { "kategorie": "zp_rizikove", "nazev": "NN Smart", "jistota": "stredni", "pozn": "NN je specialista na zivotni pojisteni, 3. nejvetsi v ZP." }
+      ]
+    },
+    {
+      "instituce_id": "uniqa",
+      "produkty": [
+        { "kategorie": "zp_rizikove", "nazev": "Rizikové životní pojištění UNIQA", "jistota": "nizka", "pozn": "Po fuzi s AXA doslo k prejmenovani rad - OVERIT aktualni obchodni nazev." },
+        { "kategorie": "poj_nemovitosti", "nazev": "Pojištění majetku UNIQA", "jistota": "nizka", "pozn": "OVERIT." }
+      ]
+    },
+    {
+      "instituce_id": "cpp",
+      "produkty": [
+        { "kategorie": "zp_rizikove", "nazev": "NEON", "jistota": "stredni", "pozn": "Zivotni pojisteni CPP (Vienna Insurance Group)." },
+        { "kategorie": "poj_nemovitosti", "nazev": "Domex", "jistota": "nizka", "pozn": "OVERIT aktualni nazev." }
+      ]
+    },
+    {
+      "instituce_id": "metlife",
+      "produkty": [
+        { "kategorie": "zp_rizikove", "nazev": "Garde", "jistota": "stredni", "pozn": "Rizikove ZP MetLife." }
+      ]
+    },
+    {
+      "instituce_id": "komercni_poj",
+      "produkty": [
+        { "kategorie": "zp_rizikove", "nazev": "MojePojištění", "jistota": "nizka", "pozn": "Distribuce pres KB. OVERIT nazev rady." }
+      ]
+    },
+    {
+      "instituce_id": "direct",
+      "produkty": [
+        { "kategorie": "poj_nemovitosti", "nazev": "Pojištění bydlení Direct", "jistota": "stredni", "pozn": "Direct nenabizi zivotni pojisteni - pouze neziv." }
+      ]
+    },
+    {
+      "instituce_id": "cardif",
+      "produkty": [
+        { "kategorie": "schopnost_splacet", "nazev": "Pojištění schopnosti splácet (přes banky)", "jistota": "vysoka", "pozn": "Cardif je B2B specialista - prodava se vyhradne pres banky jako pojisteni k uverum. NEDOPORUCOVAT primo (viz globalni pravidla etiky)." }
+      ]
+    }
+  ],
+  "_pozn_pouziti_ai": "AI analyzator pouzije nazev produktu pouze pokud je jistota vysoka nebo stredni. Pri jistote nizka uvadet jen pojistovnu + kategorii. Vzdy pridat dovetek, ze konkretni produkt a kryti potvrdi pojistovna/poradce."
+}
