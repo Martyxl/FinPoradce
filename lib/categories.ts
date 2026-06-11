@@ -10,6 +10,8 @@ export interface KategoriiDef {
   relevantni_typy: InstituceTyp[];
   /** Co znamená "měsíční částka" pro tuto kategorii */
   castka_label: string;
+  /** Zobrazit volitelné pole "Aktuálně naspořeno" */
+  ma_zustatek?: boolean;
 }
 
 export interface SekceDef {
@@ -66,31 +68,42 @@ export const SEKCE: SekceDef[] = [
         nazev: "Stavební spoření",
         relevantni_typy: ["stavebni_sporitelna"],
         castka_label: "Měsíční vklad (CZK)",
+        ma_zustatek: true,
       },
       {
         id: "dps",
         nazev: "Doplňkové penzijní spoření (III. pilíř)",
         relevantni_typy: ["penzijni_spolecnost"],
         castka_label: "Měsíční vlastní vklad (CZK)",
+        ma_zustatek: true,
       },
       {
         id: "dip",
         nazev: "DIP (dlouhodobý investiční produkt)",
-        relevantni_typy: ["penzijni_spolecnost", "banka_velka", "banka_mensi"],
+        relevantni_typy: [
+          "penzijni_spolecnost",
+          "banka_velka",
+          "banka_mensi",
+          "investicni_platforma",
+        ],
         castka_label: "Měsíční vklad (CZK)",
+        ma_zustatek: true,
       },
       {
         id: "investice",
-        nazev: "Investice / podílové fondy",
-        relevantni_typy: BANKY,
+        nazev: "Investice (fondy, ETF, akcie, nemovitostní platformy)",
+        popis: "Portu, Investown, eToro, XTB, podílové fondy bank…",
+        relevantni_typy: [...BANKY, "investicni_platforma"],
         castka_label: "Měsíční vklad (CZK)",
+        ma_zustatek: true,
       },
       {
         id: "sporici_ucet",
         nazev: "Spořicí účet / termínovaný vklad",
-        popis: "Pokud na něj posíláte pravidelnou částku.",
+        popis: "Pokud na něj posíláte pravidelnou částku nebo tam máte rezervu.",
         relevantni_typy: BANKY,
         castka_label: "Měsíční vklad (CZK)",
+        ma_zustatek: true,
       },
     ],
   },

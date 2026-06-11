@@ -51,6 +51,8 @@ type ProduktStav = {
   nazev_produktu: string;
   mesicni_castka: string;
   frekvence: Frekvence;
+  // Jen pro sporici/investicni kategorie (ma_zustatek)
+  zustatek: string;
   // Jen pro poj_nemovitosti — balickove kryti
   vcetne_domacnosti: boolean;
   vcetne_odpovednosti: boolean;
@@ -83,6 +85,7 @@ function prazdnyProdukt(): ProduktStav {
     nazev_produktu: "",
     mesicni_castka: "",
     frekvence: "mesicne",
+    zustatek: "",
     vcetne_domacnosti: false,
     vcetne_odpovednosti: false,
   };
@@ -260,13 +263,22 @@ export default function HypoForm() {
         e.stavajici_splatky_mesicne = "Nemůže být záporné.";
     }
     if (s === 3) {
-      // Pro každý zapnutý produkt vyžadujeme platnou částku
+      // Pro každý zapnutý produkt vyžadujeme platnou částku.
+      // U sporicich/investicnich kategorii staci zustatek (jednorazovy investor).
       const produktyErrors: Partial<Record<ProduktKategorie, string>> = {};
       for (const k of VSECHNY_KATEGORIE) {
         const p = produkty[k.id];
         if (!p.aktivni) continue;
         const castka = num(p.mesicni_castka);
-        if (!p.mesicni_castka || isNaN(castka) || castka <= 0) {
+        const zustatek = num(p.zustatek);
+        const maCastku = !!p.mesicni_castka && !isNaN(castka) && castka > 0;
+        const maZustatek = !!p.zustatek && !isNaN(zustatek) && zustatek > 0;
+        if (k.ma_zustatek) {
+          if (!maCastku && !maZustatek) {
+            produktyErrors[k.id] =
+              "Zadejte pravidelnou částku nebo aktuálně naspořeno.";
+          }
+        } else if (!maCastku) {
           produktyErrors[k.id] = "Zadejte měsíční částku v CZK.";
         }
       }
@@ -308,9 +320,10 @@ export default function HypoForm() {
     for (const k of VSECHNY_KATEGORIE) {
       const p = produkty[k.id];
       if (!p.aktivni) continue;
-      const castka = Number(p.mesicni_castka.replace(/\s/g, ""));
+      const castka = Number(p.mesicni_castka.replace(/\s/g, "") || "0");
       const mesicne =
         p.frekvence === "rocne" ? Math.round(castka / 12) : castka;
+      const zustatek = Number(p.zustatek.replace(/\s/g, "") || "0");
 
       const zahrnuje: ProduktKategorie[] = [];
       if (k.id === "poj_nemovitosti") {
@@ -324,6 +337,7 @@ export default function HypoForm() {
         nazev_produktu: p.nazev_produktu.trim() || null,
         mesicni_castka_czk: mesicne,
         zahrnuje_kategorie: zahrnuje.length > 0 ? zahrnuje : null,
+        zustatek_czk: zustatek > 0 ? zustatek : null,
       });
     }
     return out;
@@ -876,6 +890,31 @@ function ProduktyKrok({
                           )}
                         {chyba && <span className="error">{chyba}</span>}
                       </div>
+                      {kat.ma_zustatek && (
+                        <div className="field">
+                          <label
+                            htmlFor={`zustatek-${kat.id}`}
+                            style={{ fontSize: 13 }}
+                          >
+                            Aktuálně naspořeno (CZK)
+                          </label>
+                          <input
+                            id={`zustatek-${kat.id}`}
+                            type="number"
+                            inputMode="numeric"
+                            value={p.zustatek}
+                            onChange={(e) =>
+                              updateProdukt(kat.id, {
+                                zustatek: e.target.value,
+                              })
+                            }
+                            placeholder="např. 150000"
+                          />
+                          <span className="hint">
+                            Volitelné — zpřesní výpočet vaší rezervy.
+                          </span>
+                        </div>
+                      )}
                       {kat.id === "poj_nemovitosti" && (
                         <div className="field balicek-kryti">
                           <label style={{ fontSize: 13 }}>

@@ -57,6 +57,7 @@ export interface InstituceData {
   banky_velke_univerzalni?: InstituceItem[];
   banky_mensi_specializovane?: InstituceItem[];
   stavebni_sporitelny?: InstituceItem[];
+  investicni_platformy?: InstituceItem[];
   pojistovny?: InstituceItem[];
   penzijni_spolecnosti?: InstituceItem[];
 }

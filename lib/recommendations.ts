@@ -441,9 +441,23 @@ export class RecommendationEngine {
     const maSporici = !!this.najdiProdukt(profile, "sporici_ucet");
     const prijem = calc.prijem_pouzity_czk ?? profile.cisty_prijem_mesicne;
     const odhadovaneVydaje = prijem * 0.65;
+
+    // Realne zustatky (sporici 100 %, investice/DIP 50 % — semi-likvidni)
+    const zustatekLikvidni = profile.existujici_produkty
+      .filter((p) => p.kategorie === "sporici_ucet")
+      .reduce((a, p) => a + (p.zustatek_czk ?? 0), 0);
+    const zustatekSemi = profile.existujici_produkty
+      .filter((p) => p.kategorie === "investice" || p.kategorie === "dip")
+      .reduce((a, p) => a + (p.zustatek_czk ?? 0), 0);
+    const rezervaCelkem = zustatekLikvidni + zustatekSemi * 0.5;
+
     const rezervaPokrytaMesicu =
-      odhadovaneVydaje > 0 ? profile.vlastni_zdroje / odhadovaneVydaje : 0;
-    const maRezervu = maSporici || rezervaPokrytaMesicu >= 3;
+      odhadovaneVydaje > 0
+        ? (rezervaCelkem > 0 ? rezervaCelkem : profile.vlastni_zdroje) /
+          odhadovaneVydaje
+        : 0;
+    const maRezervu =
+      rezervaPokrytaMesicu >= 3 || (rezervaCelkem === 0 && maSporici);
 
     if (maRezervu) {
       return null; // OK karty pro vsechno nezobrazujeme

@@ -26,7 +26,8 @@ export type InstituceTyp =
   | "banka_mensi"
   | "stavebni_sporitelna"
   | "pojistovna"
-  | "penzijni_spolecnost";
+  | "penzijni_spolecnost"
+  | "investicni_platforma";
 
 export interface Instituce {
   id: string;
@@ -41,6 +42,8 @@ export interface ExistingProduct {
   mesicni_castka_czk: number;
   /** Balickove produkty: napr. pojisteni nemovitosti vcetne domacnosti a odpovednosti */
   zahrnuje_kategorie?: ProduktKategorie[] | null;
+  /** Aktualni zustatek / nasporena castka (u sporicich a investicnich produktu) */
+  zustatek_czk?: number | null;
 }
 
 export type OsvcObor =

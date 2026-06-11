@@ -166,8 +166,17 @@ export default function VysledkyPage() {
                   {zahrnuje && (
                     <span className="hint"> (včetně: {zahrnuje})</span>
                   )}
+                  {typeof p.zustatek_czk === "number" &&
+                    p.zustatek_czk > 0 && (
+                      <span className="hint">
+                        {" "}
+                        · naspořeno {formatCZK(p.zustatek_czk)}
+                      </span>
+                    )}
                   <span style={{ float: "right" }}>
-                    {formatCZK(p.mesicni_castka_czk)} / měs
+                    {p.mesicni_castka_czk > 0
+                      ? `${formatCZK(p.mesicni_castka_czk)} / měs`
+                      : "bez pravidelného vkladu"}
                   </span>
                 </li>
               );

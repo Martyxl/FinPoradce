@@ -21,6 +21,7 @@ export async function GET() {
       ["banky_velke_univerzalni", "banka_velka"],
       ["banky_mensi_specializovane", "banka_mensi"],
       ["stavebni_sporitelny", "stavebni_sporitelna"],
+      ["investicni_platformy", "investicni_platforma"],
       ["pojistovny", "pojistovna"],
       ["penzijni_spolecnosti", "penzijni_spolecnost"],
     ];

@@ -97,25 +97,44 @@ export class FinancialHealthCalculator {
       komentar: `Plánovaný dluh ${Math.round(dti * 10) / 10}× ročního příjmu.`,
     });
 
-    // 3) Nouzová rezerva — proxy: má aktivní spořicí účet s pravidelným vkladem
+    // 3) Nouzová rezerva — preferujeme realne zustatky, fallback na proxy
+    const odhadovaneVydaje = prijem * 0.65; // 65 % příjmu
+    const zustatekLikvidni = profile.existujici_produkty
+      .filter((p) => p.kategorie === "sporici_ucet")
+      .reduce((a, p) => a + (p.zustatek_czk ?? 0), 0);
+    // Investice/DIP jsou semi-likvidni — pocitame 50 %
+    const zustatekSemi = profile.existujici_produkty
+      .filter((p) => p.kategorie === "investice" || p.kategorie === "dip")
+      .reduce((a, p) => a + (p.zustatek_czk ?? 0), 0);
+    const rezervaCelkem = zustatekLikvidni + zustatekSemi * 0.5;
+    const maZustatkyData = rezervaCelkem > 0;
     const maSporici = profile.existujici_produkty.some(
       (p) => p.kategorie === "sporici_ucet",
     );
-    // Velmi hrubá proxy: vlastní zdroje > 3 měsíční výdaje
-    const odhadovaneVydaje = prijem * 0.65; // 65 % příjmu
-    const rezervaZVlastnichZdroju =
-      odhadovaneVydaje > 0 ? profile.vlastni_zdroje / odhadovaneVydaje : 0;
-    const rezervaSkore = clamp(
-      (maSporici ? 50 : 0) + linearScore(rezervaZVlastnichZdroju, 6, 0) * 0.5,
-    );
+
+    let rezervaSkore: number;
+    let rezervaKomentar: string;
+    if (maZustatkyData && odhadovaneVydaje > 0) {
+      const mesicu = rezervaCelkem / odhadovaneVydaje;
+      rezervaSkore = linearScore(mesicu, 6, 0);
+      rezervaKomentar = `Rezerva ${Math.round(rezervaCelkem).toLocaleString("cs-CZ")} Kč ≈ ${Math.round(mesicu * 10) / 10} měsíců výdajů (cíl 3–6).`;
+    } else {
+      // Proxy: vlastni zdroje + existence sporiciho uctu
+      const rezervaZVlastnichZdroju =
+        odhadovaneVydaje > 0 ? profile.vlastni_zdroje / odhadovaneVydaje : 0;
+      rezervaSkore = clamp(
+        (maSporici ? 50 : 0) + linearScore(rezervaZVlastnichZdroju, 6, 0) * 0.5,
+      );
+      rezervaKomentar = maSporici
+        ? "Máte aktivní spořicí účet. Vyplňte naspořenou částku pro přesnější skóre."
+        : "Bez aktivního spořicího účtu — doporučujeme rezervu 3–6 měsíců výdajů.";
+    }
     dimenze.push({
       klic: "rezerva",
       label: "Nouzová rezerva",
       skore_0_100: Math.round(rezervaSkore),
       vaha: vahy.rezerva ?? 0.15,
-      komentar: maSporici
-        ? "Máte aktivní spořicí účet."
-        : "Bez aktivního spořicího účtu — doporučujeme rezervu 3–6 měsíců výdajů.",
+      komentar: rezervaKomentar,
     });
 
     // 4) Savings rate — suma sporení/investování / příjem

@@ -95,6 +95,14 @@
     { "id": "ss_burinka", "nazev": "Stavebni sporitelna CS - Burinka", "typ": "stavebni_sporitelna", "kategorie": ["SS", "SS_UVER"], "matka": "csas", "puvod": "public" },
     { "id": "ss_moneta", "nazev": "MONETA Stavebni sporitelna", "typ": "stavebni_sporitelna", "kategorie": ["SS", "SS_UVER"], "matka": "moneta", "puvod": "public" }
   ],
+  "investicni_platformy": [
+    { "id": "portu", "nazev": "Portu", "typ": "investicni_platforma", "kategorie": ["INV", "DIP"], "_pozn": "Cesky robo-advisor (skupina WOOD & Co.), nabizi i DIP.", "puvod": "public" },
+    { "id": "investown", "nazev": "Investown", "typ": "investicni_platforma", "kategorie": ["INV"], "_pozn": "Ceska platforma pro investice do nemovitosti (crowdfunding).", "puvod": "public" },
+    { "id": "etoro", "nazev": "eToro", "typ": "investicni_platforma", "kategorie": ["INV"], "_pozn": "Zahranicni broker (akcie, ETF, krypto). Pozor: nenabizi DIP, zisky se dani dle CZ pravidel.", "puvod": "public" },
+    { "id": "xtb", "nazev": "XTB", "typ": "investicni_platforma", "kategorie": ["INV", "DIP"], "_pozn": "Broker s ceskou pobockou, akcie/ETF, nabizi i DIP.", "puvod": "public" },
+    { "id": "fondee", "nazev": "Fondee", "typ": "investicni_platforma", "kategorie": ["INV", "DIP"], "_pozn": "Cesky robo-advisor, ETF portfolia, nabizi i DIP.", "puvod": "public" },
+    { "id": "degiro", "nazev": "DEGIRO", "typ": "investicni_platforma", "kategorie": ["INV"], "_pozn": "Zahranicni broker, nizke poplatky, bez DIP.", "puvod": "public" }
+  ],
   "pojistovny": [
     { "id": "generali_ceska", "nazev": "Generali Ceska pojistovna", "typ": "pojistovna", "kategorie": ["POJ_ZIV", "POJ_NEZ"], "trzni_podil_celkem_2023_procent": 24.1, "puvod_podilu": "public", "_zdroj_podilu": "CAP 2023" },
     { "id": "kooperativa", "nazev": "Kooperativa", "typ": "pojistovna", "kategorie": ["POJ_ZIV", "POJ_NEZ"], "trzni_podil_celkem_2023_procent": 23.4, "puvod_podilu": "public" },
