@@ -344,6 +344,38 @@ p.lead {
   font-size: 14px;
 }
 
+/* ---- Castka + frekvence ---- */
+.castka-radek {
+  display: flex;
+  gap: 6px;
+}
+.castka-radek input {
+  flex: 1;
+  min-width: 0;
+}
+.castka-radek select {
+  width: auto;
+  flex-shrink: 0;
+}
+
+.balicek-kryti {
+  grid-column: 1 / -1;
+}
+.balicek-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 400 !important;
+  cursor: pointer;
+  margin: 4px 0;
+}
+.balicek-checkbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--accent);
+}
+
 /* ---- OSVC blok v formulari ---- */
 .osvc-blok {
   margin: 12px 0;

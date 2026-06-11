@@ -76,6 +76,20 @@ export class RecommendationEngine {
     );
   }
 
+  /** Kryti primo produktem NEBO v ramci balicku (zahrnuje_kategorie). */
+  private jeKryto(
+    profile: CustomerProfile,
+    kategorie: ProduktKategorie,
+  ): { kryto: boolean; pres_balicek: boolean } {
+    if (this.najdiProdukt(profile, kategorie)) {
+      return { kryto: true, pres_balicek: false };
+    }
+    const balicek = profile.existujici_produkty.some((p) =>
+      p.zahrnuje_kategorie?.includes(kategorie),
+    );
+    return { kryto: balicek, pres_balicek: balicek };
+  }
+
   private topPojistovnyZiv(n = 3): NavrhovanaInstituce[] {
     return this.vsechnyPojistovny
       .filter((p) => POJISTOVNY_PODIL_ZIV[p.id] !== undefined)
@@ -262,7 +276,7 @@ export class RecommendationEngine {
     profile: CustomerProfile,
     _calc: CalculationResult,
   ): Doporuceni | null {
-    if (this.najdiProdukt(profile, "poj_domacnosti")) return null;
+    if (this.jeKryto(profile, "poj_domacnosti").kryto) return null;
     return {
       id: "pojisteni_domacnosti",
       kategorie: "CHYBI",
@@ -287,7 +301,25 @@ export class RecommendationEngine {
     profile: CustomerProfile,
     _calc: CalculationResult,
   ): Doporuceni | null {
-    if (this.najdiProdukt(profile, "poj_odpovednosti")) return null;
+    const kryti = this.jeKryto(profile, "poj_odpovednosti");
+    if (kryti.kryto && !kryti.pres_balicek) return null;
+    if (kryti.pres_balicek) {
+      return {
+        id: "pojisteni_odpovednosti",
+        kategorie: "UPOZORNENI",
+        priorita: 3,
+        nadpis: "Odpovědnost máte v balíčku — zkontrolujte limit",
+        popis:
+          "Odpovědnost za škodu máte krytou v rámci balíčku (typicky s pojištěním nemovitosti). Balíčkové limity ale bývají nižší — často 2 mil. Kč.",
+        proc: [
+          "Doporučený limit odpovědnosti je 5–10 mil. Kč — škody na zdraví třetí osoby se snadno vyšplhají do milionů.",
+          "Navýšení limitu v balíčku nebo samostatná smlouva stojí řádově stokoruny ročně.",
+        ],
+        doporucena_akce:
+          "Zkontrolovat limit odpovědnosti v balíčkové smlouvě; pokud je pod 5 mil. Kč, navýšit.",
+        souvisejici_kategorie_produktu: ["poj_odpovednosti"],
+      };
+    }
     return {
       id: "pojisteni_odpovednosti",
       kategorie: "CHYBI",

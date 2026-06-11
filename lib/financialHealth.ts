@@ -160,12 +160,16 @@ export class FinancialHealthCalculator {
           : "Bez životního pojištění — k hypotéce nezbytné.",
     });
 
-    // 7) Krytí rizik majetek
+    // 7) Krytí rizik majetek (vc. balickovych produktu)
     const maPojNem = profile.existujici_produkty.some(
-      (p) => p.kategorie === "poj_nemovitosti",
+      (p) =>
+        p.kategorie === "poj_nemovitosti" ||
+        p.zahrnuje_kategorie?.includes("poj_nemovitosti"),
     );
     const maPojDom = profile.existujici_produkty.some(
-      (p) => p.kategorie === "poj_domacnosti",
+      (p) =>
+        p.kategorie === "poj_domacnosti" ||
+        p.zahrnuje_kategorie?.includes("poj_domacnosti"),
     );
     const majetekSkore = maPojNem && maPojDom ? 100 : maPojNem || maPojDom ? 50 : 0;
     dimenze.push({

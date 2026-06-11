@@ -43,15 +43,22 @@ type FormState = {
   fixace_roky: string;
 };
 
-type ProduktyState = Record<
-  ProduktKategorie,
-  {
-    aktivni: boolean;
-    instituce_id: string;
-    nazev_produktu: string;
-    mesicni_castka: string;
-  }
->;
+type Frekvence = "mesicne" | "rocne";
+
+type ProduktStav = {
+  aktivni: boolean;
+  instituce_id: string;
+  nazev_produktu: string;
+  mesicni_castka: string;
+  frekvence: Frekvence;
+  // Jen pro poj_nemovitosti — balickove kryti
+  vcetne_domacnosti: boolean;
+  vcetne_odpovednosti: boolean;
+};
+
+type ProduktyState = Record<ProduktKategorie, ProduktStav>;
+
+const STORAGE_KEY = "hypoFormDraft.v1";
 
 const initialState: FormState = {
   cisty_prijem_mesicne: "",
@@ -69,16 +76,60 @@ const initialState: FormState = {
   fixace_roky: "5",
 };
 
+function prazdnyProdukt(): ProduktStav {
+  return {
+    aktivni: false,
+    instituce_id: "",
+    nazev_produktu: "",
+    mesicni_castka: "",
+    frekvence: "mesicne",
+    vcetne_domacnosti: false,
+    vcetne_odpovednosti: false,
+  };
+}
+
 function initProduktyState(): ProduktyState {
   const out = {} as ProduktyState;
   for (const k of VSECHNY_KATEGORIE) {
-    out[k.id] = {
-      aktivni: false,
-      instituce_id: "",
-      nazev_produktu: "",
-      mesicni_castka: "",
-    };
+    out[k.id] = prazdnyProdukt();
   }
+
+  // --- TESTOVACI PREDVYPLNENI (odstranit pred ostrym provozem) ---
+  out.hypoteka_jina = {
+    ...prazdnyProdukt(),
+    aktivni: true,
+    instituce_id: "moneta",
+    mesicni_castka: "22700",
+  };
+  out.spotrebitelsky_uver = {
+    ...prazdnyProdukt(),
+    aktivni: true,
+    instituce_id: "csas",
+    mesicni_castka: "21000",
+  };
+  out.stavebni_sporeni = {
+    ...prazdnyProdukt(),
+    aktivni: true,
+    instituce_id: "ss_modra_pyramida",
+    mesicni_castka: "1370",
+  };
+  out.zp_rizikove = {
+    ...prazdnyProdukt(),
+    aktivni: true,
+    instituce_id: "kooperativa",
+    nazev_produktu: "Flexi",
+    mesicni_castka: "4300",
+  };
+  out.poj_nemovitosti = {
+    ...prazdnyProdukt(),
+    aktivni: true,
+    mesicni_castka: "5500",
+    frekvence: "rocne",
+    vcetne_domacnosti: true,
+    vcetne_odpovednosti: true,
+  };
+  // --- KONEC TESTOVACIHO PREDVYPLNENI ---
+
   return out;
 }
 
@@ -98,6 +149,7 @@ export default function HypoForm() {
   >({});
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
   // Načti seznam institucí na pozadí
   useEffect(() => {
@@ -109,6 +161,46 @@ export default function HypoForm() {
         );
       });
   }, []);
+
+  // Obnov rozpracovany formular (napr. po "Upravit zadani" z vysledku).
+  // localStorage az po mountu — kvuli SSR hydrataci.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as {
+          data?: Partial<FormState>;
+          produkty?: Partial<ProduktyState>;
+        };
+        if (saved.data) {
+          setData((d) => ({ ...d, ...saved.data }));
+        }
+        if (saved.produkty) {
+          setProdukty((p) => {
+            const merged = { ...p };
+            for (const k of VSECHNY_KATEGORIE) {
+              const sp = saved.produkty?.[k.id];
+              if (sp) merged[k.id] = { ...prazdnyProdukt(), ...sp };
+            }
+            return merged;
+          });
+        }
+      }
+    } catch {
+      // poskozeny draft ignorujeme
+    }
+    setDraftLoaded(true);
+  }, []);
+
+  // Prubezne ukladani draftu
+  useEffect(() => {
+    if (!draftLoaded) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ data, produkty }));
+    } catch {
+      // quota / private mode — ignorujeme
+    }
+  }, [data, produkty, draftLoaded]);
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setData((d) => ({ ...d, [key]: value }));
@@ -216,11 +308,22 @@ export default function HypoForm() {
     for (const k of VSECHNY_KATEGORIE) {
       const p = produkty[k.id];
       if (!p.aktivni) continue;
+      const castka = Number(p.mesicni_castka.replace(/\s/g, ""));
+      const mesicne =
+        p.frekvence === "rocne" ? Math.round(castka / 12) : castka;
+
+      const zahrnuje: ProduktKategorie[] = [];
+      if (k.id === "poj_nemovitosti") {
+        if (p.vcetne_domacnosti) zahrnuje.push("poj_domacnosti");
+        if (p.vcetne_odpovednosti) zahrnuje.push("poj_odpovednosti");
+      }
+
       out.push({
         kategorie: k.id,
         instituce_id: p.instituce_id || null,
         nazev_produktu: p.nazev_produktu.trim() || null,
-        mesicni_castka_czk: Number(p.mesicni_castka.replace(/\s/g, "")),
+        mesicni_castka_czk: mesicne,
+        zahrnuje_kategorie: zahrnuje.length > 0 ? zahrnuje : null,
       });
     }
     return out;
@@ -729,23 +832,81 @@ function ProduktyKrok({
                           htmlFor={`castka-${kat.id}`}
                           style={{ fontSize: 13 }}
                         >
-                          {kat.castka_label} <span className="required">*</span>
+                          {p.frekvence === "rocne"
+                            ? kat.castka_label.replace("Měsíční", "Roční")
+                            : kat.castka_label}{" "}
+                          <span className="required">*</span>
                         </label>
-                        <input
-                          id={`castka-${kat.id}`}
-                          type="number"
-                          inputMode="numeric"
-                          value={p.mesicni_castka}
-                          onChange={(e) =>
-                            updateProdukt(kat.id, {
-                              mesicni_castka: e.target.value,
-                            })
-                          }
-                          placeholder="CZK"
-                          aria-invalid={chyba ? "true" : undefined}
-                        />
+                        <div className="castka-radek">
+                          <input
+                            id={`castka-${kat.id}`}
+                            type="number"
+                            inputMode="numeric"
+                            value={p.mesicni_castka}
+                            onChange={(e) =>
+                              updateProdukt(kat.id, {
+                                mesicni_castka: e.target.value,
+                              })
+                            }
+                            placeholder="CZK"
+                            aria-invalid={chyba ? "true" : undefined}
+                          />
+                          <select
+                            aria-label="Frekvence platby"
+                            value={p.frekvence}
+                            onChange={(e) =>
+                              updateProdukt(kat.id, {
+                                frekvence: e.target.value as Frekvence,
+                              })
+                            }
+                          >
+                            <option value="mesicne">měsíčně</option>
+                            <option value="rocne">ročně</option>
+                          </select>
+                        </div>
+                        {p.frekvence === "rocne" &&
+                          Number(p.mesicni_castka) > 0 && (
+                            <span className="hint">
+                              ≈{" "}
+                              {Math.round(
+                                Number(p.mesicni_castka) / 12,
+                              ).toLocaleString("cs-CZ")}{" "}
+                              Kč/měs
+                            </span>
+                          )}
                         {chyba && <span className="error">{chyba}</span>}
                       </div>
+                      {kat.id === "poj_nemovitosti" && (
+                        <div className="field balicek-kryti">
+                          <label style={{ fontSize: 13 }}>
+                            Co smlouva zahrnuje
+                          </label>
+                          <label className="balicek-checkbox">
+                            <input
+                              type="checkbox"
+                              checked={p.vcetne_domacnosti}
+                              onChange={(e) =>
+                                updateProdukt(kat.id, {
+                                  vcetne_domacnosti: e.target.checked,
+                                })
+                              }
+                            />
+                            <span>včetně pojištění domácnosti</span>
+                          </label>
+                          <label className="balicek-checkbox">
+                            <input
+                              type="checkbox"
+                              checked={p.vcetne_odpovednosti}
+                              onChange={(e) =>
+                                updateProdukt(kat.id, {
+                                  vcetne_odpovednosti: e.target.checked,
+                                })
+                              }
+                            />
+                            <span>včetně odpovědnosti za škodu</span>
+                          </label>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>

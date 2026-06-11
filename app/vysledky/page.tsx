@@ -155,11 +155,17 @@ export default function VysledkyPage() {
           <ul className="produkty-prehled">
             {stavajiciProdukty.map((p, i) => {
               const kat = najdiKategorii(p.kategorie);
+              const zahrnuje = (p.zahrnuje_kategorie ?? [])
+                .map((z) => najdiKategorii(z)?.nazev ?? z)
+                .join(", ");
               return (
                 <li key={i}>
                   <strong>{kat?.nazev ?? p.kategorie}</strong>
                   {p.instituce_id && <> · {p.instituce_id}</>}
                   {p.nazev_produktu && <> · {p.nazev_produktu}</>}
+                  {zahrnuje && (
+                    <span className="hint"> (včetně: {zahrnuje})</span>
+                  )}
                   <span style={{ float: "right" }}>
                     {formatCZK(p.mesicni_castka_czk)} / měs
                   </span>

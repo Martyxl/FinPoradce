@@ -39,6 +39,8 @@ export interface ExistingProduct {
   instituce_id?: string | null;
   nazev_produktu?: string | null;
   mesicni_castka_czk: number;
+  /** Balickove produkty: napr. pojisteni nemovitosti vcetne domacnosti a odpovednosti */
+  zahrnuje_kategorie?: ProduktKategorie[] | null;
 }
 
 export type OsvcObor =
