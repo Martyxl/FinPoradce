@@ -158,7 +158,40 @@ Projekt je čistý Next.js. Po importu repozitáře Vercel automaticky:
    funguje bez konfigurace.
 
 `vercel.json` obsahuje jen `framework: nextjs` jako pojistka pro auto-detekci.
-Žádné ENV proměnné nejsou potřeba pro MVP.
+
+### ENV proměnné
+
+| Proměnná | Povinná | Popis |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | jen pro AI balíčky | API klíč pro Claude (tlačítko „Co doporučuje AI?" na výsledcích). Bez něj vše ostatní funguje, AI sekce vrátí srozumitelnou hlášku. Nastavit ve Vercel → Project Settings → Environment Variables. |
+| `AI_MODEL` | ne | Override modelu (default `claude-opus-4-8`). |
+| `AI_DISABLED` | ne | `1` = kill switch pro AI doporučení (např. při explozi nákladů). |
+
+---
+
+## AI analyzátor (Fáze 10)
+
+Tlačítko **„Co doporučuje AI?"** na výsledkové stránce zavolá `POST /api/scenare`,
+který přes Claude API sestaví **3 balíčky řešení** (nejlevnější / standard /
+luxus) ušité na situaci klienta.
+
+- **Izolovaný modul** `lib/aiAnalyzer.ts` (`AIScenarioBuilder.build(calculation) → Scenare3`)
+  — stejný vzor jako `BonitaCalculator`; výměna modelu/provideru bez zásahu do UI.
+- **Strukturovaný výstup**: Zod schéma + `client.messages.parse()` —
+  AI nemůže vrátit nevalidní JSON; `instituce_id` se post-validuje proti
+  databázi (ochrana proti halucinaci institucí).
+- **Prompt caching**: statický kontext (instituce, matice životních situací,
+  cenové koeficienty, vlajkové produkty, etika) je v system bloku
+  s `cache_control` — platí se jednou za 5 minut, další volání čtou z cache.
+- **Vstup pro AI**: profil, výsledek výpočtu (top 3 banky), FH skóre,
+  OSVČ analýza, rule-based doporučení. Volatilní část jde do user message,
+  cache se neinvaliduje.
+- **Etika v promptu**: žádné IŽP, žádné bankovní pojistky splácení, RŽP vždy
+  klesající, při napjatém rozpočtu méně produktů — zrcadlí
+  `zivotni_situace.json` → `globalni_pravidla_etiky`.
+- **Ochrany**: rate limit 5 volání / IP / 10 min, cache odpovědí podle hashe
+  profilu (24 h), kill switch `AI_DISABLED=1`, české chybové hlášky pro
+  všechny stavy (chybějící klíč, rate limit, výpadek API).
 
 ---
 

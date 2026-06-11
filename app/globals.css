@@ -905,6 +905,131 @@ p.lead {
   color: var(--ok);
 }
 
+/* ---- AI scenare (3 balicky) ---- */
+.scenare-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  margin-top: 16px;
+}
+@media (min-width: 800px) {
+  .scenare-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.scenar-karta {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.scenar-karta.scenar-standard {
+  border-color: var(--brand-orange);
+  box-shadow: 0 0 0 1px var(--brand-orange);
+}
+
+.scenar-tag {
+  display: inline-block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 99px;
+  background: var(--border-soft);
+  color: var(--text-secondary);
+}
+.scenar-standard .scenar-tag {
+  background: var(--brand-orange-soft);
+  color: var(--brand-orange);
+}
+.scenar-luxus .scenar-tag {
+  background: var(--info-soft);
+  color: var(--info);
+}
+
+.scenar-header h3 {
+  margin: 8px 0 4px;
+  font-size: 16px;
+}
+.scenar-cena {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.scenar-cena-mes {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--text-muted);
+}
+.scenar-filozofie {
+  margin: 6px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.scenar-produkty {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px dashed var(--border-soft);
+}
+.scenar-produkty li {
+  padding: 8px 0;
+  border-bottom: 1px dashed var(--border-soft);
+  font-size: 13px;
+}
+.scenar-produkt-radek {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+}
+.scenar-produkt-radek span {
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
+.scenar-klady-zapory {
+  font-size: 12px;
+}
+.scenar-klady,
+.scenar-zapory {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.scenar-klady li {
+  color: var(--ok);
+  margin: 2px 0;
+}
+.scenar-zapory li {
+  color: var(--text-muted);
+  margin: 2px 0;
+}
+
+.scenar-vhodnost {
+  margin-top: auto;
+  padding: 10px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-field);
+  font-size: 13px;
+}
+
+.scenare-komentar {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand-orange);
+  border-radius: 0 var(--radius-field) var(--radius-field) 0;
+  font-size: 14px;
+}
+
 /* ---- Prehled stavajicich produktu ---- */
 .produkty-prehled {
   list-style: none;

@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { CalculationResult } from "@/lib/types";
 import VysledekKarta from "@/components/VysledekKarta";
 import DoporuceniKarta from "@/components/DoporuceniKarta";
+import AiScenare from "@/components/AiScenare";
 import { formatCZK } from "@/lib/api";
 import { najdiKategorii } from "@/lib/categories";
 
@@ -144,6 +145,8 @@ export default function VysledkyPage() {
           </div>
         </section>
       )}
+
+      <AiScenare result={result} />
 
       {stavajiciProdukty.length > 0 && (
         <section style={{ marginTop: 32 }}>

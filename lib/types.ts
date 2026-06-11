@@ -151,6 +151,33 @@ export interface Doporuceni {
   uspora_popis?: string | null;
 }
 
+// ---- AI analyzator (Faze 10): 3 balicky reseni ----
+export type ScenarUroven = "nejlevnejsi" | "standard" | "luxus";
+
+export interface ScenarProdukt {
+  kategorie: string;
+  instituce_id: string;
+  nazev: string;
+  mesicni_naklad_czk: number;
+  proc: string;
+}
+
+export interface Scenar {
+  uroven: ScenarUroven;
+  nadpis: string;
+  filozofie: string;
+  produkty: ScenarProdukt[];
+  mesicni_naklad_celkem_czk: number;
+  klady: string[];
+  zapory: string[];
+  vhodnost_pro_klienta: string;
+}
+
+export interface Scenare3 {
+  scenare: Scenar[];
+  celkovy_komentar: string;
+}
+
 export interface CalculationResult {
   max_loan: number;
   max_monthly_payment: number;
