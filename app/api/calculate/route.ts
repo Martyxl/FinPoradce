@@ -16,8 +16,19 @@ export const runtime = "nodejs";
 function isValidProfile(p: unknown): p is CustomerProfile {
   if (typeof p !== "object" || p === null) return false;
   const o = p as Record<string, unknown>;
+  // Prijem > 0 je povinny, POKUD neni OSVC s kompletnimi udaji
+  // (obor + obrat) — z tech se prijem odvodi.
+  const osvcKompletni =
+    o.typ_prijmu === "osvc" &&
+    typeof o.osvc_obor === "string" &&
+    o.osvc_obor.length > 0 &&
+    typeof o.osvc_rocni_obrat_czk === "number" &&
+    o.osvc_rocni_obrat_czk > 0;
+  const prijemOk =
+    typeof o.cisty_prijem_mesicne === "number" &&
+    (o.cisty_prijem_mesicne > 0 || (osvcKompletni && o.cisty_prijem_mesicne >= 0));
   return (
-    typeof o.cisty_prijem_mesicne === "number" && o.cisty_prijem_mesicne > 0 &&
+    prijemOk &&
     typeof o.typ_prijmu === "string" &&
     typeof o.vek === "number" && o.vek >= 18 && o.vek <= 99 &&
     typeof o.pocet_osob_domacnost === "number" && o.pocet_osob_domacnost >= 1 &&

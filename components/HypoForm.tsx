@@ -131,14 +131,31 @@ export default function HypoForm() {
     const num = (v: string) => Number(v.replace(/\s/g, ""));
 
     if (s === 1) {
-      if (!data.cisty_prijem_mesicne || num(data.cisty_prijem_mesicne) <= 0)
-        e.cisty_prijem_mesicne = "Zadejte čistý měsíční příjem (CZK).";
+      const maObrat =
+        data.typ_prijmu === "osvc" &&
+        !!data.osvc_rocni_obrat_czk &&
+        num(data.osvc_rocni_obrat_czk) > 0;
+      const maObor = data.typ_prijmu === "osvc" && !!data.osvc_obor;
+      const osvcKompletni = maObrat && maObor;
+
+      // Mesicni prijem je povinny, POKUD nemame kompletni OSVC udaje
+      // (obor + obrat) — z tech si prijem odvodime.
+      if (!osvcKompletni) {
+        if (!data.cisty_prijem_mesicne || num(data.cisty_prijem_mesicne) <= 0)
+          e.cisty_prijem_mesicne =
+            data.typ_prijmu === "osvc"
+              ? "Zadejte čistý měsíční příjem, nebo vyplňte obor + roční obrat níže."
+              : "Zadejte čistý měsíční příjem (CZK).";
+      } else if (
+        data.cisty_prijem_mesicne &&
+        num(data.cisty_prijem_mesicne) < 0
+      ) {
+        e.cisty_prijem_mesicne = "Nemůže být záporné.";
+      }
       if (!data.vek || num(data.vek) < 18 || num(data.vek) > 99)
         e.vek = "Věk 18–99.";
-      // OSVČ: pokud zadali obrat, musí vybrat i obor (a naopak — oboje vyžaduje druhé)
+      // OSVČ: obor a obrat jdou jen v páru
       if (data.typ_prijmu === "osvc") {
-        const maObrat = data.osvc_rocni_obrat_czk && num(data.osvc_rocni_obrat_czk) > 0;
-        const maObor = !!data.osvc_obor;
         if (maObrat && !maObor) e.osvc_obor = "Vyberte obor podnikání.";
         if (maObor && !maObrat) e.osvc_rocni_obrat_czk = "Zadejte roční obrat.";
       }
@@ -216,7 +233,7 @@ export default function HypoForm() {
 
     const obratNum = Number(data.osvc_rocni_obrat_czk || "0");
     const profile: CustomerProfile = {
-      cisty_prijem_mesicne: Number(data.cisty_prijem_mesicne),
+      cisty_prijem_mesicne: Number(data.cisty_prijem_mesicne || "0"),
       typ_prijmu: data.typ_prijmu,
       vek: Number(data.vek),
       pocet_osob_domacnost: Number(data.pocet_osob_domacnost),
@@ -268,22 +285,6 @@ export default function HypoForm() {
         <>
           <h2>Příjem a věk</h2>
           <div className="field">
-            <label htmlFor="prijem">Čistý měsíční příjem (CZK)</label>
-            <input
-              id="prijem"
-              type="number"
-              inputMode="numeric"
-              value={data.cisty_prijem_mesicne}
-              onChange={(e) =>
-                update("cisty_prijem_mesicne", e.target.value)
-              }
-              placeholder="např. 45000"
-            />
-            {errors.cisty_prijem_mesicne && (
-              <span className="error">{errors.cisty_prijem_mesicne}</span>
-            )}
-          </div>
-          <div className="field">
             <label htmlFor="typ_prijmu">Typ příjmu</label>
             <select
               id="typ_prijmu"
@@ -300,6 +301,36 @@ export default function HypoForm() {
               Banky mají různé požadavky na doložení a OSVČ často podhodnocují
               příjem podle daňového přiznání.
             </span>
+          </div>
+          <div className="field">
+            <label htmlFor="prijem">
+              {data.typ_prijmu === "osvc"
+                ? "Čistý měsíční příjem (CZK) — volitelné, pokud níže vyplníte obor a obrat"
+                : "Čistý měsíční příjem (CZK)"}
+            </label>
+            <input
+              id="prijem"
+              type="number"
+              inputMode="numeric"
+              value={data.cisty_prijem_mesicne}
+              onChange={(e) =>
+                update("cisty_prijem_mesicne", e.target.value)
+              }
+              placeholder={
+                data.typ_prijmu === "osvc"
+                  ? "kolik si reálně měsíčně berete (nepovinné)"
+                  : "např. 45000"
+              }
+            />
+            {data.typ_prijmu === "osvc" && (
+              <span className="hint">
+                Pokud vyplníte obor + roční obrat, příjem odvodíme z obratu.
+                Vyplňte jen pokud chcete porovnat s vlastním odhadem.
+              </span>
+            )}
+            {errors.cisty_prijem_mesicne && (
+              <span className="error">{errors.cisty_prijem_mesicne}</span>
+            )}
           </div>
 
           {data.typ_prijmu === "osvc" && (

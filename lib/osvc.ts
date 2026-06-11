@@ -70,13 +70,17 @@ export function osvcAnalyzaProfilu(
   const realistickyPouzity = Math.max(profile.cisty_prijem_mesicne, realistickyMesicne);
 
   const metody: OsvcAnalyza["metody"] = [
-    {
-      nazev: "deklarovany_prijem",
-      label: "Váš zadaný čistý příjem",
-      mesicni_prijem_czk: Math.round(profile.cisty_prijem_mesicne),
-      popis:
-        "Co reálně berete domů (zadali jste v 1. kroku). Banky toto akceptují, pokud doložíte výpisy z účtu / daňové přiznání.",
-    },
+    ...(profile.cisty_prijem_mesicne > 0
+      ? [
+          {
+            nazev: "deklarovany_prijem" as const,
+            label: "Váš zadaný čistý příjem",
+            mesicni_prijem_czk: Math.round(profile.cisty_prijem_mesicne),
+            popis:
+              "Co reálně berete domů (zadali jste v 1. kroku). Banky toto akceptují, pokud doložíte výpisy z účtu / daňové přiznání.",
+          },
+        ]
+      : []),
     {
       nazev: "z_danoveho_zakladu_pausal",
       label: `Z daňového přiznání (${def.pausal_dp_procent}% paušál)`,
