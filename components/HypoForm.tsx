@@ -474,19 +474,29 @@ export default function HypoForm() {
   return (
     <div className="form-card">
       <div className="step-indicator">
-        {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((s) => (
-          <span
-            key={s}
-            className={
-              "step-dot " +
-              (s === step ? "active" : s < step ? "done" : "")
-            }
-            aria-label={`Krok ${s}`}
-          />
-        ))}
-        <span>
-          Krok {step} ze {TOTAL_STEPS}
+        <div className="step-circles">
+          {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((s) => (
+            <span
+              key={s}
+              className={
+                "step-circle " +
+                (s === step ? "active" : s < step ? "done" : "")
+              }
+              aria-label={`Krok ${s}`}
+            >
+              {s < step ? "✓" : s}
+            </span>
+          ))}
+        </div>
+        <span className="step-label">
+          Krok {step} z {TOTAL_STEPS}
         </span>
+      </div>
+      <div className="step-progress" aria-hidden="true">
+        <div
+          className="step-progress-fill"
+          style={{ width: `${(step / TOTAL_STEPS) * 100}%` }}
+        />
       </div>
 
       {step === 1 && (
@@ -889,7 +899,7 @@ export default function HypoForm() {
         </button>
         {step < TOTAL_STEPS ? (
           <button type="button" className="btn" onClick={next}>
-            Pokračovat
+            Pokračovat <span className="btn-arrow">→</span>
           </button>
         ) : (
           <button

@@ -107,6 +107,28 @@ Anuitní vzorec: `splátka = jistina × (i/12) / (1 − (1+i/12)^(−n))`.
 
 ---
 
+## Design systém (light/dark theme)
+
+Celý vizuální styl je postavený na **CSS custom properties** v
+[app/globals.css](app/globals.css) — sekce „FinPoradce design system" na
+začátku souboru.
+
+- **Light režim** = `:root` (výchozí), **dark režim** = `[data-theme="dark"]`
+  na `<html>` elementu. Přepínač (slunce/měsíc) je v hlavičce —
+  `components/ThemeToggle.tsx`; volba se drží v `sessionStorage`, SSR vždy
+  renderuje light (žádný hydration mismatch).
+- **Změna palety = úprava tokenů**, komponenty barvy nehardcodují.
+  Klíčové tokeny: `--brand-orange` (akcent/CTA), `--brand-ink` (uhlová),
+  `--bg-page/surface/elevated`, `--border`, `--text-primary/secondary/muted`,
+  sémantické `--ok/--warning/--danger/--info` (+ `-soft` varianty pro podklady).
+- Hlavička je **vždy tmavá** v obou režimech (`--header-bg`).
+- Písmo: **Inter** přes `next/font/google` (subset latin-ext kvůli češtině).
+- Rozměry: `--radius-field` 10px (pole/tlačítka), `--radius-card` 16px
+  (karty/panely), `--touch-target` 44px (mobilní dotyk).
+- Responzivita mobile-first: gridy se lámou na `min-width: 600/700/800px`.
+
+---
+
 ## Spuštění lokálně
 
 ### Předpoklady
