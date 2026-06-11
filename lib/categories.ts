@@ -12,6 +12,8 @@ export interface KategoriiDef {
   castka_label: string;
   /** Zobrazit volitelné pole "Aktuálně naspořeno" */
   ma_zustatek?: boolean;
+  /** Povolit více instancí (např. více investičních platforem současně) */
+  vice_instanci?: boolean;
 }
 
 export interface SekceDef {
@@ -66,9 +68,11 @@ export const SEKCE: SekceDef[] = [
       {
         id: "stavebni_sporeni",
         nazev: "Stavební spoření",
+        popis: "Více smluv (např. pro děti) přidáte tlačítkem níže.",
         relevantni_typy: ["stavebni_sporitelna"],
         castka_label: "Měsíční vklad (CZK)",
         ma_zustatek: true,
+        vice_instanci: true,
       },
       {
         id: "dps",
@@ -96,6 +100,7 @@ export const SEKCE: SekceDef[] = [
         relevantni_typy: [...BANKY, "investicni_platforma"],
         castka_label: "Měsíční vklad (CZK)",
         ma_zustatek: true,
+        vice_instanci: true,
       },
       {
         id: "sporici_ucet",
@@ -104,6 +109,7 @@ export const SEKCE: SekceDef[] = [
         relevantni_typy: BANKY,
         castka_label: "Měsíční vklad (CZK)",
         ma_zustatek: true,
+        vice_instanci: true,
       },
     ],
   },

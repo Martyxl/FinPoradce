@@ -119,23 +119,53 @@ export class BonitaCalculator {
   ): BankResult {
     const poznamky: string[] = [];
     const n = profile.splatnost_roky * 12;
+    const protiNemovitosti =
+      profile.typ_pozadavku === "uver_proti_nemovitosti";
 
     // 1) LTV
     const maxLtv = this.maxLtvBank(bank, profile);
     const maxUverLtv = profile.hodnota_nemovitosti * maxLtv;
-    const pozadovanyUver = Math.max(
-      0,
-      profile.hodnota_nemovitosti - profile.vlastni_zdroje,
-    );
-    const uverDleLtv = Math.min(
-      maxUverLtv,
-      pozadovanyUver > 0 ? pozadovanyUver : maxUverLtv,
-    );
 
-    const skutecneLtv =
-      profile.hodnota_nemovitosti > 0
-        ? uverDleLtv / profile.hodnota_nemovitosti
-        : 0;
+    let pozadovanyUver: number;
+    let uverDleLtv: number;
+    let skutecneLtv: number;
+
+    if (protiNemovitosti) {
+      // Uver proti stavajici nemovitosti: zastavni kapacita je
+      // hodnota x maxLTV MINUS dluh, ktery uz na nemovitosti vazne.
+      const stavajiciDluh = Math.max(
+        0,
+        profile.zbyvajici_dluh_nemovitost_czk ?? 0,
+      );
+      const kapacita = Math.max(0, maxUverLtv - stavajiciDluh);
+      const chce = profile.pozadovana_castka_czk ?? 0;
+      pozadovanyUver = chce > 0 ? Math.min(chce, kapacita) : kapacita;
+      uverDleLtv = kapacita;
+      // LTV pro vyber sazby = celkove zatizeni nemovitosti
+      skutecneLtv =
+        profile.hodnota_nemovitosti > 0
+          ? (stavajiciDluh + pozadovanyUver) / profile.hodnota_nemovitosti
+          : 0;
+      poznamky.push(
+        `Úvěr proti nemovitosti: LTV počítáno včetně stávajícího dluhu ${Math.round(stavajiciDluh).toLocaleString("cs-CZ")} Kč (celkové zatížení ${Math.round(skutecneLtv * 100)} %).`,
+      );
+      poznamky.push(
+        "Neúčelový úvěr (americká hypotéka) mívá nižší max. LTV (60–70 %) a vyšší sazbu než účelová hypotéka — ověřit u banky.",
+      );
+    } else {
+      pozadovanyUver = Math.max(
+        0,
+        profile.hodnota_nemovitosti - profile.vlastni_zdroje,
+      );
+      uverDleLtv = Math.min(
+        maxUverLtv,
+        pozadovanyUver > 0 ? pozadovanyUver : maxUverLtv,
+      );
+      skutecneLtv =
+        profile.hodnota_nemovitosti > 0
+          ? uverDleLtv / profile.hodnota_nemovitosti
+          : 0;
+    }
 
     // 2) Sazba
     const { sazba, puvod: sazbaPuvod } = this.vyberSazbu(

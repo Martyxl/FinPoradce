@@ -1,5 +1,6 @@
 export type TypPrijmu = "zamestnanec" | "osvc" | "jiny";
 export type Ucel = "vlastni_bydleni" | "investicni";
+export type TypPozadavku = "koupe" | "uver_proti_nemovitosti";
 export type LimitingFactor = "LTV" | "DSTI" | "DTI" | "ZADOST";
 
 export type ProduktKategorie =
@@ -70,6 +71,12 @@ export interface CustomerProfile {
   // OSVČ-specifické, volitelné
   osvc_obor?: OsvcObor | null;
   osvc_rocni_obrat_czk?: number | null;
+  /** koupe (default) = porizeni nemovitosti; uver_proti_nemovitosti = navyseni / americka hypoteka proti stavajici nemovitosti */
+  typ_pozadavku?: TypPozadavku | null;
+  /** Zbyvajici dluh zajisteny touto nemovitosti (rezim uver_proti_nemovitosti) */
+  zbyvajici_dluh_nemovitost_czk?: number | null;
+  /** Kolik chce klient pujcit (rezim uver_proti_nemovitosti); prazdne = maximum do LTV */
+  pozadovana_castka_czk?: number | null;
 }
 
 export interface OsvcAnalyza {

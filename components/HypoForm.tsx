@@ -8,11 +8,12 @@ import type {
   Instituce,
   OsvcObor,
   ProduktKategorie,
+  TypPozadavku,
   TypPrijmu,
   Ucel,
 } from "@/lib/types";
 import { fetchInstituce, vypocitej } from "@/lib/api";
-import { SEKCE, VSECHNY_KATEGORIE } from "@/lib/categories";
+import { SEKCE, VSECHNY_KATEGORIE, type KategoriiDef } from "@/lib/categories";
 
 const OSVC_OBORY: { id: OsvcObor; label: string }[] = [
   { id: "it_programovani", label: "IT, programování, datová analytika" },
@@ -35,9 +36,12 @@ type FormState = {
   pocet_deti: string;
   stavajici_splatky_mesicne: string;
   // Krok 4 (Nemovitost)
+  typ_pozadavku: TypPozadavku;
   ucel: Ucel;
   hodnota_nemovitosti: string;
   vlastni_zdroje: string;
+  zbyvajici_dluh: string;
+  pozadovana_castka: string;
   // Krok 5 (Úvěr)
   splatnost_roky: string;
   fixace_roky: string;
@@ -58,9 +62,10 @@ type ProduktStav = {
   vcetne_odpovednosti: boolean;
 };
 
-type ProduktyState = Record<ProduktKategorie, ProduktStav>;
+// Kazda kategorie ma 1..N instanci (vice instanci jen u vice_instanci kategorii)
+type ProduktyState = Record<ProduktKategorie, ProduktStav[]>;
 
-const STORAGE_KEY = "hypoFormDraft.v1";
+const STORAGE_KEY = "hypoFormDraft.v2";
 
 const initialState: FormState = {
   cisty_prijem_mesicne: "",
@@ -71,9 +76,14 @@ const initialState: FormState = {
   pocet_osob_domacnost: "1",
   pocet_deti: "0",
   stavajici_splatky_mesicne: "0",
+  // --- TESTOVACI PREDVYPLNENI (odstranit pred ostrym provozem) ---
+  typ_pozadavku: "uver_proti_nemovitosti",
   ucel: "vlastni_bydleni",
-  hodnota_nemovitosti: "",
+  hodnota_nemovitosti: "10000000",
   vlastni_zdroje: "0",
+  zbyvajici_dluh: "3900000",
+  pozadovana_castka: "",
+  // --- KONEC TESTOVACIHO PREDVYPLNENI ---
   splatnost_roky: "25",
   fixace_roky: "5",
 };
@@ -94,43 +104,58 @@ function prazdnyProdukt(): ProduktStav {
 function initProduktyState(): ProduktyState {
   const out = {} as ProduktyState;
   for (const k of VSECHNY_KATEGORIE) {
-    out[k.id] = prazdnyProdukt();
+    out[k.id] = [prazdnyProdukt()];
   }
 
   // --- TESTOVACI PREDVYPLNENI (odstranit pred ostrym provozem) ---
-  out.hypoteka_jina = {
-    ...prazdnyProdukt(),
-    aktivni: true,
-    instituce_id: "moneta",
-    mesicni_castka: "22700",
-  };
-  out.spotrebitelsky_uver = {
-    ...prazdnyProdukt(),
-    aktivni: true,
-    instituce_id: "csas",
-    mesicni_castka: "21000",
-  };
-  out.stavebni_sporeni = {
-    ...prazdnyProdukt(),
-    aktivni: true,
-    instituce_id: "ss_modra_pyramida",
-    mesicni_castka: "1370",
-  };
-  out.zp_rizikove = {
-    ...prazdnyProdukt(),
-    aktivni: true,
-    instituce_id: "kooperativa",
-    nazev_produktu: "Flexi",
-    mesicni_castka: "4300",
-  };
-  out.poj_nemovitosti = {
-    ...prazdnyProdukt(),
-    aktivni: true,
-    mesicni_castka: "5500",
-    frekvence: "rocne",
-    vcetne_domacnosti: true,
-    vcetne_odpovednosti: true,
-  };
+  out.hypoteka_jina = [
+    {
+      ...prazdnyProdukt(),
+      aktivni: true,
+      instituce_id: "moneta",
+      mesicni_castka: "22700",
+    },
+  ];
+  out.spotrebitelsky_uver = [
+    {
+      ...prazdnyProdukt(),
+      aktivni: true,
+      instituce_id: "csas",
+      mesicni_castka: "21000",
+    },
+  ];
+  out.stavebni_sporeni = [
+    {
+      ...prazdnyProdukt(),
+      aktivni: true,
+      instituce_id: "ss_modra_pyramida",
+      mesicni_castka: "1370",
+    },
+  ];
+  out.zp_rizikove = [
+    {
+      ...prazdnyProdukt(),
+      aktivni: true,
+      instituce_id: "kooperativa",
+      nazev_produktu: "Flexi",
+      mesicni_castka: "4300",
+    },
+  ];
+  out.poj_nemovitosti = [
+    {
+      ...prazdnyProdukt(),
+      aktivni: true,
+      mesicni_castka: "5500",
+      frekvence: "rocne",
+      vcetne_domacnosti: true,
+      vcetne_odpovednosti: true,
+    },
+  ];
+  out.investice = [
+    { ...prazdnyProdukt(), aktivni: true, instituce_id: "investown" },
+    { ...prazdnyProdukt(), aktivni: true, instituce_id: "xtb" },
+    { ...prazdnyProdukt(), aktivni: true, instituce_id: "etoro" },
+  ];
   // --- KONEC TESTOVACIHO PREDVYPLNENI ---
 
   return out;
@@ -183,7 +208,9 @@ export default function HypoForm() {
             const merged = { ...p };
             for (const k of VSECHNY_KATEGORIE) {
               const sp = saved.produkty?.[k.id];
-              if (sp) merged[k.id] = { ...prazdnyProdukt(), ...sp };
+              if (Array.isArray(sp) && sp.length > 0) {
+                merged[k.id] = sp.map((i) => ({ ...prazdnyProdukt(), ...i }));
+              }
             }
             return merged;
           });
@@ -212,9 +239,47 @@ export default function HypoForm() {
 
   function updateProdukt(
     kategorie: ProduktKategorie,
-    patch: Partial<ProduktyState[ProduktKategorie]>,
+    idx: number,
+    patch: Partial<ProduktStav>,
   ) {
-    setProdukty((p) => ({ ...p, [kategorie]: { ...p[kategorie], ...patch } }));
+    setProdukty((p) => {
+      const list = [...p[kategorie]];
+      list[idx] = { ...list[idx], ...patch };
+      return { ...p, [kategorie]: list };
+    });
+    setErrors((e) => ({
+      ...e,
+      produkty: { ...(e.produkty ?? {}), [kategorie]: undefined },
+    }));
+  }
+
+  function pridatInstanci(kategorie: ProduktKategorie) {
+    setProdukty((p) => ({
+      ...p,
+      [kategorie]: [...p[kategorie], { ...prazdnyProdukt(), aktivni: true }],
+    }));
+  }
+
+  function odebratInstanci(kategorie: ProduktKategorie, idx: number) {
+    setProdukty((p) => {
+      const list = p[kategorie].filter((_, i) => i !== idx);
+      return {
+        ...p,
+        [kategorie]: list.length > 0 ? list : [prazdnyProdukt()],
+      };
+    });
+  }
+
+  function toggleKategorie(kategorie: ProduktKategorie, aktivni: boolean) {
+    setProdukty((p) => {
+      if (aktivni) {
+        const list = [...p[kategorie]];
+        list[0] = { ...list[0], aktivni: true };
+        return { ...p, [kategorie]: list };
+      }
+      // Vypnuti = reset cele kategorie (vc. extra instanci)
+      return { ...p, [kategorie]: [prazdnyProdukt()] };
+    });
     setErrors((e) => ({
       ...e,
       produkty: { ...(e.produkty ?? {}), [kategorie]: undefined },
@@ -263,24 +328,30 @@ export default function HypoForm() {
         e.stavajici_splatky_mesicne = "Nemůže být záporné.";
     }
     if (s === 3) {
-      // Pro každý zapnutý produkt vyžadujeme platnou částku.
+      // Pro každou zapnutou instanci vyžadujeme platnou částku.
       // U sporicich/investicnich kategorii staci zustatek (jednorazovy investor).
       const produktyErrors: Partial<Record<ProduktKategorie, string>> = {};
       for (const k of VSECHNY_KATEGORIE) {
-        const p = produkty[k.id];
-        if (!p.aktivni) continue;
-        const castka = num(p.mesicni_castka);
-        const zustatek = num(p.zustatek);
-        const maCastku = !!p.mesicni_castka && !isNaN(castka) && castka > 0;
-        const maZustatek = !!p.zustatek && !isNaN(zustatek) && zustatek > 0;
-        if (k.ma_zustatek) {
-          if (!maCastku && !maZustatek) {
-            produktyErrors[k.id] =
-              "Zadejte pravidelnou částku nebo aktuálně naspořeno.";
+        const instances = produkty[k.id];
+        instances.forEach((p, idx) => {
+          if (!p.aktivni) return;
+          const castka = num(p.mesicni_castka);
+          const zustatek = num(p.zustatek);
+          const maCastku = !!p.mesicni_castka && !isNaN(castka) && castka > 0;
+          const maZustatek = !!p.zustatek && !isNaN(zustatek) && zustatek > 0;
+          const oznaceni =
+            instances.filter((i) => i.aktivni).length > 1
+              ? ` (položka ${idx + 1})`
+              : "";
+          if (k.ma_zustatek) {
+            if (!maCastku && !maZustatek) {
+              produktyErrors[k.id] =
+                `Zadejte pravidelnou částku nebo aktuálně naspořeno${oznaceni}.`;
+            }
+          } else if (!maCastku) {
+            produktyErrors[k.id] = `Zadejte měsíční částku v CZK${oznaceni}.`;
           }
-        } else if (!maCastku) {
-          produktyErrors[k.id] = "Zadejte měsíční částku v CZK.";
-        }
+        });
       }
       if (Object.keys(produktyErrors).length > 0) {
         e.produkty = produktyErrors;
@@ -289,10 +360,20 @@ export default function HypoForm() {
     if (s === 4) {
       if (!data.hodnota_nemovitosti || num(data.hodnota_nemovitosti) <= 0)
         e.hodnota_nemovitosti = "Zadejte hodnotu nemovitosti.";
-      if (num(data.vlastni_zdroje) < 0)
-        e.vlastni_zdroje = "Nemůže být záporné.";
-      if (num(data.vlastni_zdroje) > num(data.hodnota_nemovitosti))
-        e.vlastni_zdroje = "Vlastní zdroje > hodnota nemovitosti.";
+      if (data.typ_pozadavku === "koupe") {
+        if (num(data.vlastni_zdroje) < 0)
+          e.vlastni_zdroje = "Nemůže být záporné.";
+        if (num(data.vlastni_zdroje) > num(data.hodnota_nemovitosti))
+          e.vlastni_zdroje = "Vlastní zdroje > hodnota nemovitosti.";
+      } else {
+        const dluh = num(data.zbyvajici_dluh);
+        if (data.zbyvajici_dluh === "" || isNaN(dluh) || dluh < 0)
+          e.zbyvajici_dluh = "Zadejte zbývající dluh (0, pokud žádný).";
+        if (dluh >= num(data.hodnota_nemovitosti))
+          e.zbyvajici_dluh = "Dluh musí být nižší než hodnota nemovitosti.";
+        if (data.pozadovana_castka && num(data.pozadovana_castka) < 0)
+          e.pozadovana_castka = "Nemůže být záporné.";
+      }
     }
     if (s === 5) {
       const sp = num(data.splatnost_roky);
@@ -318,27 +399,28 @@ export default function HypoForm() {
   function vyrobExistingProductList(): ExistingProduct[] {
     const out: ExistingProduct[] = [];
     for (const k of VSECHNY_KATEGORIE) {
-      const p = produkty[k.id];
-      if (!p.aktivni) continue;
-      const castka = Number(p.mesicni_castka.replace(/\s/g, "") || "0");
-      const mesicne =
-        p.frekvence === "rocne" ? Math.round(castka / 12) : castka;
-      const zustatek = Number(p.zustatek.replace(/\s/g, "") || "0");
+      for (const p of produkty[k.id]) {
+        if (!p.aktivni) continue;
+        const castka = Number(p.mesicni_castka.replace(/\s/g, "") || "0");
+        const mesicne =
+          p.frekvence === "rocne" ? Math.round(castka / 12) : castka;
+        const zustatek = Number(p.zustatek.replace(/\s/g, "") || "0");
 
-      const zahrnuje: ProduktKategorie[] = [];
-      if (k.id === "poj_nemovitosti") {
-        if (p.vcetne_domacnosti) zahrnuje.push("poj_domacnosti");
-        if (p.vcetne_odpovednosti) zahrnuje.push("poj_odpovednosti");
+        const zahrnuje: ProduktKategorie[] = [];
+        if (k.id === "poj_nemovitosti") {
+          if (p.vcetne_domacnosti) zahrnuje.push("poj_domacnosti");
+          if (p.vcetne_odpovednosti) zahrnuje.push("poj_odpovednosti");
+        }
+
+        out.push({
+          kategorie: k.id,
+          instituce_id: p.instituce_id || null,
+          nazev_produktu: p.nazev_produktu.trim() || null,
+          mesicni_castka_czk: mesicne,
+          zahrnuje_kategorie: zahrnuje.length > 0 ? zahrnuje : null,
+          zustatek_czk: zustatek > 0 ? zustatek : null,
+        });
       }
-
-      out.push({
-        kategorie: k.id,
-        instituce_id: p.instituce_id || null,
-        nazev_produktu: p.nazev_produktu.trim() || null,
-        mesicni_castka_czk: mesicne,
-        zahrnuje_kategorie: zahrnuje.length > 0 ? zahrnuje : null,
-        zustatek_czk: zustatek > 0 ? zustatek : null,
-      });
     }
     return out;
   }
@@ -349,6 +431,7 @@ export default function HypoForm() {
     setSubmitError(null);
 
     const obratNum = Number(data.osvc_rocni_obrat_czk || "0");
+    const protiNemovitosti = data.typ_pozadavku === "uver_proti_nemovitosti";
     const profile: CustomerProfile = {
       cisty_prijem_mesicne: Number(data.cisty_prijem_mesicne || "0"),
       typ_prijmu: data.typ_prijmu,
@@ -358,7 +441,7 @@ export default function HypoForm() {
       stavajici_splatky_mesicne: Number(data.stavajici_splatky_mesicne),
       ucel: data.ucel,
       hodnota_nemovitosti: Number(data.hodnota_nemovitosti),
-      vlastni_zdroje: Number(data.vlastni_zdroje),
+      vlastni_zdroje: protiNemovitosti ? 0 : Number(data.vlastni_zdroje),
       splatnost_roky: Number(data.splatnost_roky),
       fixace_roky: Number(data.fixace_roky),
       existujici_produkty: vyrobExistingProductList(),
@@ -366,6 +449,14 @@ export default function HypoForm() {
         data.typ_prijmu === "osvc" && data.osvc_obor ? data.osvc_obor : null,
       osvc_rocni_obrat_czk:
         data.typ_prijmu === "osvc" && obratNum > 0 ? obratNum : null,
+      typ_pozadavku: data.typ_pozadavku,
+      zbyvajici_dluh_nemovitost_czk: protiNemovitosti
+        ? Number(data.zbyvajici_dluh || "0")
+        : null,
+      pozadovana_castka_czk:
+        protiNemovitosti && Number(data.pozadovana_castka || "0") > 0
+          ? Number(data.pozadovana_castka)
+          : null,
     };
 
     try {
@@ -586,13 +677,40 @@ export default function HypoForm() {
           instituce={instituce}
           institucniChyba={institucniChyba}
           updateProdukt={updateProdukt}
+          toggleKategorie={toggleKategorie}
+          pridatInstanci={pridatInstanci}
+          odebratInstanci={odebratInstanci}
           chyby={errors.produkty ?? {}}
         />
       )}
 
       {step === 4 && (
         <>
-          <h2>Nemovitost</h2>
+          <h2>Nemovitost a úvěr</h2>
+          <div className="field">
+            <label htmlFor="typ_pozadavku">Co řešíte?</label>
+            <select
+              id="typ_pozadavku"
+              value={data.typ_pozadavku}
+              onChange={(e) =>
+                update("typ_pozadavku", e.target.value as TypPozadavku)
+              }
+            >
+              <option value="koupe">
+                Koupě / výstavba nemovitosti (nová hypotéka)
+              </option>
+              <option value="uver_proti_nemovitosti">
+                Půjčka proti stávající nemovitosti (navýšení / americká
+                hypotéka)
+              </option>
+            </select>
+            {data.typ_pozadavku === "uver_proti_nemovitosti" && (
+              <span className="hint">
+                Vaše nemovitost slouží jako zástava. Spočítáme, kolik můžete
+                půjčit do LTV limitu banky po odečtení stávajícího dluhu.
+              </span>
+            )}
+          </div>
           <div className="field">
             <label htmlFor="ucel">Účel</label>
             <select
@@ -625,21 +743,96 @@ export default function HypoForm() {
                 <span className="error">{errors.hodnota_nemovitosti}</span>
               )}
             </div>
+            {data.typ_pozadavku === "koupe" ? (
+              <div className="field">
+                <label htmlFor="vlastni">Vlastní zdroje (CZK)</label>
+                <input
+                  id="vlastni"
+                  type="number"
+                  inputMode="numeric"
+                  value={data.vlastni_zdroje}
+                  onChange={(e) => update("vlastni_zdroje", e.target.value)}
+                  placeholder="např. 900000"
+                />
+                {errors.vlastni_zdroje && (
+                  <span className="error">{errors.vlastni_zdroje}</span>
+                )}
+              </div>
+            ) : (
+              <div className="field">
+                <label htmlFor="dluh">
+                  Zbývající dluh na nemovitosti (CZK)
+                </label>
+                <input
+                  id="dluh"
+                  type="number"
+                  inputMode="numeric"
+                  value={data.zbyvajici_dluh}
+                  onChange={(e) => update("zbyvajici_dluh", e.target.value)}
+                  placeholder="např. 3900000"
+                />
+                <span className="hint">
+                  Aktuální zůstatek hypotéky/úvěrů zajištěných touto
+                  nemovitostí. 0, pokud je bez zástavy.
+                </span>
+                {errors.zbyvajici_dluh && (
+                  <span className="error">{errors.zbyvajici_dluh}</span>
+                )}
+              </div>
+            )}
+          </div>
+          {data.typ_pozadavku === "uver_proti_nemovitosti" && (
             <div className="field">
-              <label htmlFor="vlastni">Vlastní zdroje (CZK)</label>
+              <label htmlFor="pozadovana">
+                Kolik chcete půjčit (CZK) — volitelné
+              </label>
               <input
-                id="vlastni"
+                id="pozadovana"
                 type="number"
                 inputMode="numeric"
-                value={data.vlastni_zdroje}
-                onChange={(e) => update("vlastni_zdroje", e.target.value)}
-                placeholder="např. 900000"
+                value={data.pozadovana_castka}
+                onChange={(e) =>
+                  update("pozadovana_castka", e.target.value)
+                }
+                placeholder="prázdné = maximum do LTV limitu"
               />
-              {errors.vlastni_zdroje && (
-                <span className="error">{errors.vlastni_zdroje}</span>
+              <span className="hint">
+                Necháte-li prázdné, spočítáme maximum, na které dosáhnete.
+                {Number(data.hodnota_nemovitosti) > 0 &&
+                  Number(data.zbyvajici_dluh) >= 0 && (
+                    <>
+                      {" "}
+                      Orientačně při LTV 70 %:{" "}
+                      <strong>
+                        {Math.max(
+                          0,
+                          Math.round(
+                            Number(data.hodnota_nemovitosti) * 0.7 -
+                              Number(data.zbyvajici_dluh || "0"),
+                          ),
+                        ).toLocaleString("cs-CZ")}{" "}
+                        Kč
+                      </strong>
+                      , při LTV 80 %:{" "}
+                      <strong>
+                        {Math.max(
+                          0,
+                          Math.round(
+                            Number(data.hodnota_nemovitosti) * 0.8 -
+                              Number(data.zbyvajici_dluh || "0"),
+                          ),
+                        ).toLocaleString("cs-CZ")}{" "}
+                        Kč
+                      </strong>
+                      .
+                    </>
+                  )}
+              </span>
+              {errors.pozadovana_castka && (
+                <span className="error">{errors.pozadovana_castka}</span>
               )}
             </div>
-          </div>
+          )}
         </>
       )}
 
@@ -721,8 +914,12 @@ interface ProduktyKrokProps {
   institucniChyba: string | null;
   updateProdukt: (
     kategorie: ProduktKategorie,
-    patch: Partial<ProduktyState[ProduktKategorie]>,
+    idx: number,
+    patch: Partial<ProduktStav>,
   ) => void;
+  toggleKategorie: (kategorie: ProduktKategorie, aktivni: boolean) => void;
+  pridatInstanci: (kategorie: ProduktKategorie) => void;
+  odebratInstanci: (kategorie: ProduktKategorie, idx: number) => void;
   chyby: Partial<Record<ProduktKategorie, string>>;
 }
 
@@ -731,10 +928,16 @@ function ProduktyKrok({
   instituce,
   institucniChyba,
   updateProdukt,
+  toggleKategorie,
+  pridatInstanci,
+  odebratInstanci,
   chyby,
 }: ProduktyKrokProps) {
   const pocetAktivnich = useMemo(
-    () => Object.values(produkty).filter((p) => p.aktivni).length,
+    () =>
+      Object.values(produkty)
+        .flat()
+        .filter((p) => p.aktivni).length,
     [produkty],
   );
 
@@ -769,22 +972,22 @@ function ProduktyKrok({
           </p>
           <div className="produkty-list">
             {sekce.kategorie.map((kat) => {
-              const p = produkty[kat.id];
-              const filtrovaneInstituce = instituce.filter((i) =>
-                kat.relevantni_typy.includes(i.typ),
-              );
+              const instances = produkty[kat.id];
+              const kategorieAktivni = instances.some((i) => i.aktivni);
               const chyba = chyby[kat.id];
               return (
                 <div
                   key={kat.id}
-                  className={"produkt-radek " + (p.aktivni ? "active" : "")}
+                  className={
+                    "produkt-radek " + (kategorieAktivni ? "active" : "")
+                  }
                 >
                   <label className="produkt-toggle">
                     <input
                       type="checkbox"
-                      checked={p.aktivni}
+                      checked={kategorieAktivni}
                       onChange={(e) =>
-                        updateProdukt(kat.id, { aktivni: e.target.checked })
+                        toggleKategorie(kat.id, e.target.checked)
                       }
                     />
                     <span>
@@ -795,158 +998,37 @@ function ProduktyKrok({
                     </span>
                   </label>
 
-                  {p.aktivni && (
-                    <div className="produkt-detail">
-                      <div className="field">
-                        <label
-                          htmlFor={`inst-${kat.id}`}
-                          style={{ fontSize: 13 }}
-                        >
-                          Společnost (volitelné)
-                        </label>
-                        <select
-                          id={`inst-${kat.id}`}
-                          value={p.instituce_id}
-                          onChange={(e) =>
-                            updateProdukt(kat.id, {
-                              instituce_id: e.target.value,
-                            })
-                          }
-                          disabled={filtrovaneInstituce.length === 0}
-                        >
-                          <option value="">— vyberte —</option>
-                          {filtrovaneInstituce.map((i) => (
-                            <option key={i.id} value={i.id}>
-                              {i.nazev}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="field">
-                        <label
-                          htmlFor={`nazev-${kat.id}`}
-                          style={{ fontSize: 13 }}
-                        >
-                          Název produktu (volitelné)
-                        </label>
-                        <input
-                          id={`nazev-${kat.id}`}
-                          type="text"
-                          value={p.nazev_produktu}
-                          onChange={(e) =>
-                            updateProdukt(kat.id, {
-                              nazev_produktu: e.target.value,
-                            })
-                          }
-                          placeholder="např. KB Garant Plus"
-                        />
-                      </div>
-                      <div className="field">
-                        <label
-                          htmlFor={`castka-${kat.id}`}
-                          style={{ fontSize: 13 }}
-                        >
-                          {p.frekvence === "rocne"
-                            ? kat.castka_label.replace("Měsíční", "Roční")
-                            : kat.castka_label}{" "}
-                          <span className="required">*</span>
-                        </label>
-                        <div className="castka-radek">
-                          <input
-                            id={`castka-${kat.id}`}
-                            type="number"
-                            inputMode="numeric"
-                            value={p.mesicni_castka}
-                            onChange={(e) =>
-                              updateProdukt(kat.id, {
-                                mesicni_castka: e.target.value,
-                              })
+                  {kategorieAktivni && (
+                    <>
+                      {instances.map((p, idx) =>
+                        p.aktivni ? (
+                          <ProduktInstance
+                            key={idx}
+                            kat={kat}
+                            p={p}
+                            idx={idx}
+                            pocetInstanci={
+                              instances.filter((i) => i.aktivni).length
                             }
-                            placeholder="CZK"
-                            aria-invalid={chyba ? "true" : undefined}
+                            instituce={instituce}
+                            updateProdukt={updateProdukt}
+                            odebratInstanci={odebratInstanci}
+                            chyba={idx === 0 ? chyba : undefined}
                           />
-                          <select
-                            aria-label="Frekvence platby"
-                            value={p.frekvence}
-                            onChange={(e) =>
-                              updateProdukt(kat.id, {
-                                frekvence: e.target.value as Frekvence,
-                              })
-                            }
-                          >
-                            <option value="mesicne">měsíčně</option>
-                            <option value="rocne">ročně</option>
-                          </select>
-                        </div>
-                        {p.frekvence === "rocne" &&
-                          Number(p.mesicni_castka) > 0 && (
-                            <span className="hint">
-                              ≈{" "}
-                              {Math.round(
-                                Number(p.mesicni_castka) / 12,
-                              ).toLocaleString("cs-CZ")}{" "}
-                              Kč/měs
-                            </span>
-                          )}
-                        {chyba && <span className="error">{chyba}</span>}
-                      </div>
-                      {kat.ma_zustatek && (
-                        <div className="field">
-                          <label
-                            htmlFor={`zustatek-${kat.id}`}
-                            style={{ fontSize: 13 }}
-                          >
-                            Aktuálně naspořeno (CZK)
-                          </label>
-                          <input
-                            id={`zustatek-${kat.id}`}
-                            type="number"
-                            inputMode="numeric"
-                            value={p.zustatek}
-                            onChange={(e) =>
-                              updateProdukt(kat.id, {
-                                zustatek: e.target.value,
-                              })
-                            }
-                            placeholder="např. 150000"
-                          />
-                          <span className="hint">
-                            Volitelné — zpřesní výpočet vaší rezervy.
-                          </span>
-                        </div>
+                        ) : null,
                       )}
-                      {kat.id === "poj_nemovitosti" && (
-                        <div className="field balicek-kryti">
-                          <label style={{ fontSize: 13 }}>
-                            Co smlouva zahrnuje
-                          </label>
-                          <label className="balicek-checkbox">
-                            <input
-                              type="checkbox"
-                              checked={p.vcetne_domacnosti}
-                              onChange={(e) =>
-                                updateProdukt(kat.id, {
-                                  vcetne_domacnosti: e.target.checked,
-                                })
-                              }
-                            />
-                            <span>včetně pojištění domácnosti</span>
-                          </label>
-                          <label className="balicek-checkbox">
-                            <input
-                              type="checkbox"
-                              checked={p.vcetne_odpovednosti}
-                              onChange={(e) =>
-                                updateProdukt(kat.id, {
-                                  vcetne_odpovednosti: e.target.checked,
-                                })
-                              }
-                            />
-                            <span>včetně odpovědnosti za škodu</span>
-                          </label>
-                        </div>
+                      {kat.vice_instanci && (
+                        <button
+                          type="button"
+                          className="btn-pridat-instanci"
+                          onClick={() => pridatInstanci(kat.id)}
+                        >
+                          + Přidat další {kat.id === "investice"
+                            ? "platformu"
+                            : "smlouvu"}
+                        </button>
                       )}
-                    </div>
+                    </>
                   )}
                 </div>
               );
@@ -955,5 +1037,179 @@ function ProduktyKrok({
         </section>
       ))}
     </>
+  );
+}
+
+// ----------- Jedna instance produktu -----------
+
+interface ProduktInstanceProps {
+  kat: KategoriiDef;
+  p: ProduktStav;
+  idx: number;
+  pocetInstanci: number;
+  instituce: Instituce[];
+  updateProdukt: (
+    kategorie: ProduktKategorie,
+    idx: number,
+    patch: Partial<ProduktStav>,
+  ) => void;
+  odebratInstanci: (kategorie: ProduktKategorie, idx: number) => void;
+  chyba?: string;
+}
+
+function ProduktInstance({
+  kat,
+  p,
+  idx,
+  pocetInstanci,
+  instituce,
+  updateProdukt,
+  odebratInstanci,
+  chyba,
+}: ProduktInstanceProps) {
+  const filtrovaneInstituce = instituce.filter((i) =>
+    kat.relevantni_typy.includes(i.typ),
+  );
+  const suffix = `${kat.id}-${idx}`;
+
+  return (
+    <div className="produkt-detail">
+      {pocetInstanci > 1 && (
+        <div className="instance-header">
+          <span className="hint">Položka {idx + 1}</span>
+          <button
+            type="button"
+            className="btn-odebrat"
+            onClick={() => odebratInstanci(kat.id, idx)}
+            aria-label={`Odebrat položku ${idx + 1}`}
+          >
+            ✕ odebrat
+          </button>
+        </div>
+      )}
+      <div className="field">
+        <label htmlFor={`inst-${suffix}`} style={{ fontSize: 13 }}>
+          Společnost (volitelné)
+        </label>
+        <select
+          id={`inst-${suffix}`}
+          value={p.instituce_id}
+          onChange={(e) =>
+            updateProdukt(kat.id, idx, { instituce_id: e.target.value })
+          }
+          disabled={filtrovaneInstituce.length === 0}
+        >
+          <option value="">— vyberte —</option>
+          {filtrovaneInstituce.map((i) => (
+            <option key={i.id} value={i.id}>
+              {i.nazev}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="field">
+        <label htmlFor={`nazev-${suffix}`} style={{ fontSize: 13 }}>
+          Název produktu (volitelné)
+        </label>
+        <input
+          id={`nazev-${suffix}`}
+          type="text"
+          value={p.nazev_produktu}
+          onChange={(e) =>
+            updateProdukt(kat.id, idx, { nazev_produktu: e.target.value })
+          }
+          placeholder="např. KB Garant Plus"
+        />
+      </div>
+      <div className="field">
+        <label htmlFor={`castka-${suffix}`} style={{ fontSize: 13 }}>
+          {p.frekvence === "rocne"
+            ? kat.castka_label.replace("Měsíční", "Roční")
+            : kat.castka_label}{" "}
+          <span className="required">*</span>
+        </label>
+        <div className="castka-radek">
+          <input
+            id={`castka-${suffix}`}
+            type="number"
+            inputMode="numeric"
+            value={p.mesicni_castka}
+            onChange={(e) =>
+              updateProdukt(kat.id, idx, { mesicni_castka: e.target.value })
+            }
+            placeholder="CZK"
+            aria-invalid={chyba ? "true" : undefined}
+          />
+          <select
+            aria-label="Frekvence platby"
+            value={p.frekvence}
+            onChange={(e) =>
+              updateProdukt(kat.id, idx, {
+                frekvence: e.target.value as Frekvence,
+              })
+            }
+          >
+            <option value="mesicne">měsíčně</option>
+            <option value="rocne">ročně</option>
+          </select>
+        </div>
+        {p.frekvence === "rocne" && Number(p.mesicni_castka) > 0 && (
+          <span className="hint">
+            ≈ {Math.round(Number(p.mesicni_castka) / 12).toLocaleString("cs-CZ")}{" "}
+            Kč/měs
+          </span>
+        )}
+        {chyba && <span className="error">{chyba}</span>}
+      </div>
+      {kat.ma_zustatek && (
+        <div className="field">
+          <label htmlFor={`zustatek-${suffix}`} style={{ fontSize: 13 }}>
+            Aktuálně naspořeno (CZK)
+          </label>
+          <input
+            id={`zustatek-${suffix}`}
+            type="number"
+            inputMode="numeric"
+            value={p.zustatek}
+            onChange={(e) =>
+              updateProdukt(kat.id, idx, { zustatek: e.target.value })
+            }
+            placeholder="např. 150000"
+          />
+          <span className="hint">
+            Volitelné — zpřesní výpočet vaší rezervy.
+          </span>
+        </div>
+      )}
+      {kat.id === "poj_nemovitosti" && (
+        <div className="field balicek-kryti">
+          <label style={{ fontSize: 13 }}>Co smlouva zahrnuje</label>
+          <label className="balicek-checkbox">
+            <input
+              type="checkbox"
+              checked={p.vcetne_domacnosti}
+              onChange={(e) =>
+                updateProdukt(kat.id, idx, {
+                  vcetne_domacnosti: e.target.checked,
+                })
+              }
+            />
+            <span>včetně pojištění domácnosti</span>
+          </label>
+          <label className="balicek-checkbox">
+            <input
+              type="checkbox"
+              checked={p.vcetne_odpovednosti}
+              onChange={(e) =>
+                updateProdukt(kat.id, idx, {
+                  vcetne_odpovednosti: e.target.checked,
+                })
+              }
+            />
+            <span>včetně odpovědnosti za škodu</span>
+          </label>
+        </div>
+      )}
+    </div>
   );
 }
