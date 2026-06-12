@@ -108,8 +108,9 @@ export async function POST(req: Request) {
       );
     }
     if (err instanceof Anthropic.APIError) {
+      console.error("Anthropic APIError:", err.status, err.message);
       return NextResponse.json(
-        { detail: `AI služba vrátila chybu (${err.status}).` },
+        { detail: `AI služba vrátila chybu (${err.status}): ${err.message}` },
         { status: 502 },
       );
     }
