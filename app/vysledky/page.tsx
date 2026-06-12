@@ -6,6 +6,7 @@ import type { CalculationResult } from "@/lib/types";
 import VysledekKarta from "@/components/VysledekKarta";
 import DoporuceniKarta from "@/components/DoporuceniKarta";
 import AiScenare from "@/components/AiScenare";
+import AppShell from "@/components/AppShell";
 import { formatCZK } from "@/lib/api";
 import { najdiKategorii } from "@/lib/categories";
 
@@ -30,18 +31,20 @@ export default function VysledkyPage() {
     [result],
   );
 
-  if (!loaded) return null;
+  if (!loaded) return <AppShell>{null}</AppShell>;
 
   if (!result) {
     return (
-      <>
+      <AppShell>
         <h1>Výsledky nejsou k dispozici</h1>
         <p className="lead">
           Pravděpodobně jste stránku otevřeli přímo. Vraťte se na úvod a
           vyplňte formulář.
         </p>
-        <Link href="/" className="btn">Zpět na formulář</Link>
-      </>
+        <Link href="/kalkulacka" className="btn">
+          Zpět na formulář
+        </Link>
+      </AppShell>
     );
   }
 
@@ -50,7 +53,7 @@ export default function VysledkyPage() {
   const osvc = result.osvc_analyza;
 
   return (
-    <>
+    <AppShell>
       <h1>Předběžný odhad — porovnání bank</h1>
       <p className="lead">
         Nejvyšší dosažitelný úvěr ve vašem profilu:{" "}
@@ -189,10 +192,10 @@ export default function VysledkyPage() {
       )}
 
       <div style={{ marginTop: 24 }}>
-        <Link href="/" className="btn secondary">
+        <Link href="/kalkulacka" className="btn secondary">
           Upravit zadání
         </Link>
       </div>
-    </>
+    </AppShell>
   );
 }

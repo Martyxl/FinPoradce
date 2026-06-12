@@ -107,25 +107,31 @@ Anuitní vzorec: `splátka = jistina × (i/12) / (1 − (1+i/12)^(−n))`.
 
 ---
 
-## Design systém (light/dark theme)
+## Design systém — FinSei (dark-first)
 
-Celý vizuální styl je postavený na **CSS custom properties** v
-[app/globals.css](app/globals.css) — sekce „FinPoradce design system" na
-začátku souboru.
+Vizuální styl podle design handoffu **FinSei** („Konec provizních poradců").
+Tokeny v [app/globals.css](app/globals.css), landing v
+[components/Landing.tsx](components/Landing.tsx).
 
-- **Light režim** = `:root` (výchozí), **dark režim** = `[data-theme="dark"]`
-  na `<html>` elementu. Přepínač (slunce/měsíc) je v hlavičce —
-  `components/ThemeToggle.tsx`; volba se drží v `sessionStorage`, SSR vždy
-  renderuje light (žádný hydration mismatch).
-- **Změna palety = úprava tokenů**, komponenty barvy nehardcodují.
-  Klíčové tokeny: `--brand-orange` (akcent/CTA), `--brand-ink` (uhlová),
-  `--bg-page/surface/elevated`, `--border`, `--text-primary/secondary/muted`,
-  sémantické `--ok/--warning/--danger/--info` (+ `-soft` varianty pro podklady).
-- Hlavička je **vždy tmavá** v obou režimech (`--header-bg`).
-- Písmo: **Inter** přes `next/font/google` (subset latin-ext kvůli češtině).
-- Rozměry: `--radius-field` 10px (pole/tlačítka), `--radius-card` 16px
-  (karty/panely), `--touch-target` 44px (mobilní dotyk).
-- Responzivita mobile-first: gridy se lámou na `min-width: 600/700/800px`.
+- **Dark režim = výchozí** (`:root`), light = `[data-theme="light"]`.
+  Přepínač ◐ v hlavičce (`components/ThemeToggle.tsx`), volba
+  v `sessionStorage`, SSR renderuje dark.
+- Paleta: pozadí `#0d0f13`, karty `#12151b/#14171d`, text `#f2f3f5/#9aa0ab`,
+  **akcent `#ff7a1a`** (hover `#ff913f`); light: `#f6f5f2` + akcent `#ee6a0e`.
+- Písma: **Space Grotesk** (text) + **JetBrains Mono** (eyebrow labely,
+  čísla, mono údaje) přes `next/font/google`; do tokenů `--font-sans` /
+  `--font-mono`.
+- Tlačítka/pills: `border-radius: 99px`, text na oranžové `#181208`
+  (`--on-accent`); karty 20px radius.
+- **Struktura stránek**: `/` = landing (vlastní hlavička přes hero),
+  `/kalkulacka` = formulář, `/vysledky` = výsledky — obě v `AppShell`
+  (tmavý topbar s logem FinSei).
+- **Landing interakce**: canvas particle field (85 částic, měnové glyfy
+  Kč/€/$, spojnice do 145 px), typewriter placeholder, AI input flow
+  idle → analyzing (2,1 s) → answered, plovoucí fin-karty (skryté pod
+  1220 px), pulzující badge, srovnávací tabulka s oranžovým FinSei sloupcem.
+- `Landing Page.dc.html` + `support.js` v rootu projektu jsou designové
+  reference (prototyp), neimportují se do produkce.
 
 ---
 

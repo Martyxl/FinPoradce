@@ -3,18 +3,18 @@
 import { useEffect, useState } from "react";
 
 /**
- * Prepinac light/dark. Vychozi je light; volba se uklada do
- * sessionStorage (per zalozka) a aplikuje az po mountu, takze
- * SSR vzdy renderuje light a nedochazi k hydration mismatch.
+ * Prepinac dark/light. Vychozi je DARK (FinSei design); volba se uklada
+ * do sessionStorage a aplikuje az po mountu — SSR vzdy renderuje dark,
+ * zadny hydration mismatch.
  */
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
   useEffect(() => {
     try {
-      if (sessionStorage.getItem("theme") === "dark") {
-        setTheme("dark");
-        document.documentElement.setAttribute("data-theme", "dark");
+      if (sessionStorage.getItem("theme") === "light") {
+        setTheme("light");
+        document.documentElement.setAttribute("data-theme", "light");
       }
     } catch {
       // private mode — ignorujeme
@@ -22,10 +22,10 @@ export default function ThemeToggle() {
   }, []);
 
   function toggle() {
-    const next = theme === "light" ? "dark" : "light";
+    const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
-    if (next === "dark") {
-      document.documentElement.setAttribute("data-theme", "dark");
+    if (next === "light") {
+      document.documentElement.setAttribute("data-theme", "light");
     } else {
       document.documentElement.removeAttribute("data-theme");
     }
@@ -42,38 +42,11 @@ export default function ThemeToggle() {
       className="theme-toggle"
       onClick={toggle}
       aria-label={
-        theme === "light" ? "Přepnout na tmavý režim" : "Přepnout na světlý režim"
+        theme === "dark" ? "Přepnout na světlý režim" : "Přepnout na tmavý režim"
       }
-      title={theme === "light" ? "Tmavý režim" : "Světlý režim"}
+      title={theme === "dark" ? "Světlý režim" : "Tmavý režim"}
     >
-      {theme === "light" ? (
-        // Mesic — prepne na dark
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-        </svg>
-      ) : (
-        // Slunce — prepne na light
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="12" cy="12" r="4" />
-          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" />
-        </svg>
-      )}
+      {theme === "dark" ? "◐" : "◑"}
     </button>
   );
 }

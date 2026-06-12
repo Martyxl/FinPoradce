@@ -1,17 +1,25 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import ThemeToggle from "@/components/ThemeToggle";
+import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({
+const spaceGrotesk = Space_Grotesk({
   subsets: ["latin", "latin-ext"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
+  variable: "--font-space-grotesk",
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  subsets: ["latin", "latin-ext"],
+  weight: ["400", "600"],
+  display: "swap",
+  variable: "--font-jetbrains-mono",
 });
 
 export const metadata: Metadata = {
-  title: "FinPoradce — orientační výpočet hypotéky",
+  title: "FinSei — finanční poradce, který neprodává. Radí.",
   description:
-    "Spočítejte si zdarma a online, na jakou hypotéku dosáhnete u 10 bank. Bez kontaktního formuláře, bez prodejního tlaku.",
+    "Jeden nezávislý poradce a AI, která porovná celý trh — hypotéky, pojištění, investice i penzi. Doporučí jen to, co se vyplatí vám. Ne bance.",
 };
 
 export default function RootLayout({
@@ -21,26 +29,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="cs">
-      <body className={inter.className}>
-        <header className="topbar">
-          <div className="container topbar-inner">
-            <a href="/" className="brand">
-              <span className="brand-fin">Fin</span>
-              <span className="brand-poradce">Poradce</span>
-            </a>
-            <span className="brand-sub">orientační kalkulačka hypotéky</span>
-            <ThemeToggle />
-          </div>
-        </header>
-        <main className="container">{children}</main>
-        <footer className="footer">
-          <div className="container">
-            <small>
-              Výpočty jsou předběžné odhady. Závazné podmínky určí banka po
-              posouzení. Sazby = snapshot jaro 2026, mění se měsíčně.
-            </small>
-          </div>
-        </footer>
+      <body
+        className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
+        style={{
+          // next/font vystavi promenne s vlastnimi nazvy — preposleme je
+          // do tokenu design systemu
+          ["--font-sans" as string]: "var(--font-space-grotesk)",
+          ["--font-mono" as string]: "var(--font-jetbrains-mono)",
+        }}
+      >
+        {children}
       </body>
     </html>
   );
