@@ -86,6 +86,35 @@ export default function AiScenare({ result }: { result: CalculationResult }) {
           <div className="scenare-komentar">
             <strong>Shrnutí AI:</strong> {scenare.celkovy_komentar}
           </div>
+
+          {scenare.chytre_strategie && scenare.chytre_strategie.length > 0 && (
+            <div style={{ marginTop: 28 }}>
+              <h3 style={{ margin: "0 0 4px" }}>
+                Chytré strategie pro vaši situaci
+              </h3>
+              <p className="hint" style={{ marginBottom: 12 }}>
+                Pokročilé kombinace hypotéky, investic a hodnoty nemovitosti —
+                orientační modelování, ne investiční doporučení.
+              </p>
+              <div className="strategie-grid">
+                {scenare.chytre_strategie.map((st, i) => (
+                  <article key={i} className="strategie-karta">
+                    <h4>{st.nazev}</h4>
+                    <p className="strategie-popis">{st.popis}</p>
+                    <div className="strategie-cisla">{st.cisla}</div>
+                    <ul className="strategie-rizika">
+                      {st.rizika.map((r, j) => (
+                        <li key={j}>⚠ {r}</li>
+                      ))}
+                    </ul>
+                    <div className="strategie-doporuceni">
+                      {st.doporuceni}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </div>
+          )}
           <p className="hint" style={{ marginTop: 10 }}>
             Odhady cen jsou orientační (estimate) — finální cenu určí
             pojišťovna nebo banka po posouzení. AI doporučení nenahrazuje

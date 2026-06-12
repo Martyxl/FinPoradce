@@ -1,0 +1,111 @@
+{
+  "_meta": {
+    "popis": "Dlouhodoba trzni ocekavani pro AI stratega - akcie, dluhopisy, nemovitosti, komodity. POUZE pro orientacni modelovani strategii (hypoteka + investice, equity release, byznys ROI). Nejde o investicni doporuceni.",
+    "datum_snapshotu": "2026-06-12",
+    "puvod": "estimate",
+    "zdroj": "Dlouhodobe historicke prumery (MSCI World, ceske nemovitostni indexy, CNB statistiky) - minulé vynosy nezarucuji budouci.",
+    "_DULEZITE": "AI musi kazdou strategii doprovodit upozornenim na rizika a na to, ze ocekavane vynosy nejsou garantovane."
+  },
+  "tridy_aktiv": [
+    {
+      "id": "akcie_globalni_etf",
+      "nazev": "Globální akciové ETF (MSCI World apod.)",
+      "ocekavany_vynos_pa_nominal": [0.06, 0.09],
+      "volatilita": "vysoka (propady 30-50 % v krizich)",
+      "likvidita": "vysoka (prodej do nekolika dnu)",
+      "minimalni_horizont_let": 10,
+      "dane_cr": "Casovy test 3 roky - po 3 letech drzeni je prodej osvobozen od dane z prijmu. Do 100 000 Kc prijmu z prodeje rocne osvobozeno vzdy.",
+      "puvod": "estimate"
+    },
+    {
+      "id": "dluhopisy_fondy",
+      "nazev": "Dluhopisové fondy / státní dluhopisy",
+      "ocekavany_vynos_pa_nominal": [0.03, 0.045],
+      "volatilita": "nizka az stredni",
+      "likvidita": "vysoka",
+      "minimalni_horizont_let": 3,
+      "dane_cr": "Casovy test 3 roky jako u akcii.",
+      "puvod": "estimate"
+    },
+    {
+      "id": "nemovitost_prima_pronajem",
+      "nazev": "Přímá investiční nemovitost (pronájem)",
+      "ocekavany_vynos_pa_nominal": [0.05, 0.08],
+      "_rozklad": "Najemni vynos 3-5 % hrubeho + apreciace hodnoty 2-4 % p.a. dlouhodobe (CR prumer).",
+      "volatilita": "stredni (cykly nemovitostniho trhu, 2008/2022 korekce)",
+      "likvidita": "nizka (prodej mesice), vysoke transakcni naklady (dan z nabyti zrusena, ale pravnik/odhad/provize)",
+      "minimalni_horizont_let": 10,
+      "dane_cr": "Prijem z najmu se dani (15 %, pausal 30 % vydaju). Casovy test prodeje nemovitosti 10 let (5 let pro nabyti pred 2021), nebo 2 roky bydliste.",
+      "rizika_navic": ["neobsazenost", "neplatici najemnik", "udrzba 1-1,5 % hodnoty rocne", "koncentrace do jedne adresy"],
+      "puvod": "estimate"
+    },
+    {
+      "id": "nemovitostni_fondy_crowdfunding",
+      "nazev": "Nemovitostní fondy / crowdfunding (Investown apod.)",
+      "ocekavany_vynos_pa_nominal": [0.04, 0.07],
+      "volatilita": "stredni",
+      "likvidita": "stredni az nizka (vystupni lhuty)",
+      "minimalni_horizont_let": 5,
+      "puvod": "estimate"
+    },
+    {
+      "id": "komodity_zlato",
+      "nazev": "Komodity / zlato",
+      "ocekavany_vynos_pa_nominal": [0.03, 0.05],
+      "_pozn": "Dlouhodobe drzi krok s inflaci, slouzi jako pojistka portfolia (5-10 % alokace), ne jako hlavni motor vynosu.",
+      "volatilita": "vysoka",
+      "likvidita": "vysoka (ETF/fyzicke s prirazkou)",
+      "minimalni_horizont_let": 5,
+      "dane_cr": "Fyzicke zlato osvobozeno po 3 letech drzeni (movita vec).",
+      "puvod": "estimate"
+    },
+    {
+      "id": "sporici_ucty",
+      "nazev": "Spořicí účty / termínované vklady",
+      "ocekavany_vynos_pa_nominal": [0.025, 0.04],
+      "_pozn": "Sleduje repo sazbu CNB (aktualne 3,50 %). Realne po inflaci casto kolem nuly - vhodne jen pro rezervu, ne dlouhodobe zhodnoceni.",
+      "volatilita": "zadna (pojisteno do 100k EUR)",
+      "likvidita": "okamzita",
+      "puvod": "estimate"
+    }
+  ],
+  "strategie_pravidla": {
+    "hypoteka_vs_investice": {
+      "popis": "Kdy se vyplati investovat misto mimoradnych splatek hypoteky.",
+      "pravidlo": "Pokud ocekavany dlouhodoby vynos investice (po danich) prevysuje urokovou sazbu hypoteky o rizikovou premii alespon 2-3 p.b., matematicky vychazi lepe investovat rozdil. Pri sazbe hypoteky ~4,5-5 % a ocekavani akcii 6-9 % je rozdil tesny - zalezi na rizikove toleranci a horizontu.",
+      "podminky": ["horizont 10+ let", "stabilni prijem", "nouzova rezerva uz existuje", "klient unese volatilitu"],
+      "upozorneni": "Splatka hypoteky je GARANTOVANY 'vynos' ve vysi urokove sazby. Investice garantovana neni.",
+      "puvod": "estimate"
+    },
+    "equity_release": {
+      "popis": "Vytazeni kapitalu z nemovitosti, ktere vzrostla hodnota.",
+      "kdy_zvazit": "LTV headroom = hodnota x 0,7-0,8 minus zbyvajici dluh. Pokud headroom > ~1,5 mil. Kc, stoji za uvahu.",
+      "varianty": [
+        "Koupe investicni nemovitosti na pronajem (najem castecne plati novou splatku; CNB: LTV investicni max 70 %, DTI max 7)",
+        "Navyseni hypoteky + roztazeni splatnosti -> snizeni mesicni splatky + uvolneny kapital investovat (jen pri horizontu 10+ let a rizikove toleranci)",
+        "Refinancovani s navysenim na rekonstrukci (zvysi hodnotu nemovitosti - ucelova cast levnejsi nez neucelova)"
+      ],
+      "upozorneni": [
+        "Neucelova cast uveru (americka hypoteka) miva sazbu o 1-2 p.b. vyssi a nizsi max LTV.",
+        "Pakova investice (pujcene penize) nasobi zisky I ztraty.",
+        "Prodlouzeni splatnosti zvysuje celkove zaplacene uroky - musi to kompenzovat vynos investice."
+      ],
+      "puvod": "estimate"
+    },
+    "byznys_roi": {
+      "popis": "Kdyz klient zvazuje financovat podnikani z nemovitosti/hypoteky.",
+      "metodika": "ROI = rocni cisty zisk / vlozena investice. Srovnavat s naklady kapitalu = sazba hypoteky/uveru + rizikova premie podnikani min. 5-10 p.b. (vetsina malych byznysu nedozije 5 let). Smysl dava az ROI vyrazne nad 15-20 % p.a. s konzervativnim odhadem trzeb.",
+      "upozorneni": [
+        "Zastavovat bydleni rodiny kvuli podnikani je vysoce rizikove - oddelit rodinne finance od byznysu, kde to jde.",
+        "Pocitat varianty: pesimisticky / realisticky / optimisticky scenar trzeb.",
+        "Alternativa: podnikatelsky uver bez zastavy nemovitosti je drazsi, ale nerizikuje strechu nad hlavou."
+      ],
+      "puvod": "estimate"
+    },
+    "rychlejsi_splaceni": {
+      "popis": "Kombinace hypoteky s investicnimi nastroji pro drivejsi splaceni.",
+      "pravidlo": "Misto mimoradnych splatek budovat paralelni portfolio (ETF/DIP); az portfolio dosahne zbyvajici jistiny, jednorazove splatit (pokud to vychazi po danich a sazbach lepe nez drzet). Vyhoda: likvidita behem cesty + casovy test 3 roky. Od 2024 lze mimoradne splatky hypoteky zdarma az 25 % rocne.",
+      "puvod": "estimate"
+    }
+  }
+}

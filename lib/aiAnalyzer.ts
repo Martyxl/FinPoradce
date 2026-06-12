@@ -56,10 +56,39 @@ const ScenarSchema = z.object({
     ),
 });
 
+const ChytraStrategieSchema = z.object({
+  typ: z.enum([
+    "equity_release",
+    "hypoteka_plus_investice",
+    "investicni_nemovitost",
+    "rychlejsi_splaceni",
+    "byznys_roi",
+    "jine",
+  ]),
+  nazev: z.string().describe("Kratky cesky nazev strategie"),
+  popis: z
+    .string()
+    .describe("2-4 vety cesky: co strategie znamena pro tohoto klienta"),
+  cisla: z
+    .string()
+    .describe(
+      "Konkretni vypocet s cisly klienta (LTV headroom, ocekavane vynosy vs. sazba, mesicni dopad). Vzdy uvest, ze jde o orientacni modelovani.",
+    ),
+  rizika: z.array(z.string()).describe("2-4 hlavni rizika strategie"),
+  doporuceni: z
+    .string()
+    .describe("1-2 vety: za jakych podminek strategii zvazit / nezvazovat"),
+});
+
 const Scenare3Schema = z.object({
   scenare: z
     .array(ScenarSchema)
     .describe("Presne 3 scenare v poradi: nejlevnejsi, standard, luxus"),
+  chytre_strategie: z
+    .array(ChytraStrategieSchema)
+    .describe(
+      "0-3 pokrocile strategie NAD ramec balicku — POUZE pokud u tohoto klienta davaji smysl (napr. velky LTV headroom, vysoky prijem vs. nizke zavazky). Prazdne pole, pokud zadna nesedi.",
+    ),
   celkovy_komentar: z
     .string()
     .describe("3-5 vet cesky: shrnuti a doporuceni, ktery balicek zvolit a proc"),
@@ -92,6 +121,13 @@ PRAVIDLA (závazná):
 6. Respektuj produkty, které klient UŽ MÁ — nedoporučuj duplicitně; pokud má nevhodný produkt (IŽP, bankovní pojištění schopnosti splácet), navrhni výměnu v "standard" a "luxus".
 7. Vše česky, srozumitelně, bez prodejního tlaku. Vždy zmiň, že odhady cen jsou orientační a finální cenu určí pojišťovna/banka.
 
+CHYTRÉ STRATEGIE (role finančního stratéga):
+Kromě 3 balíčků jsi i stratég, který umí kombinovat hypotéku s investičními nástroji a znalostí akciového, komoditního a nemovitostního trhu (tržní očekávání níže). Do pole chytre_strategie přidej 0-3 strategie, KTERÉ U TOHOTO KLIENTA DÁVAJÍ SMYSL:
+a) EQUITY RELEASE — pokud má klient nemovitost s výrazným LTV headroomem (hodnota × 0,7-0,8 minus zbývající dluh > ~1,5 mil. Kč), spočítej kolik lze vytáhnout a navrhni: koupi investiční nemovitosti na pronájem (nájem částečně platí splátku; CNB limity: LTV 70 %, DTI 7), NEBO navýšení hypotéky s roztažením splatnosti a investováním rozdílu + kapitálu (jen horizont 10+ let).
+b) HYPOTÉKA + INVESTICE — srovnej sazbu hypotéky s očekávanými výnosy tříd aktiv (po daních, vč. časového testu 3 roky); pokud rozdíl > 2-3 p.b., navrhni budovat paralelní portfolio místo mimořádných splátek (rychlejší splacení: až portfolio dosáhne zbývající jistiny, jednorázově splatit).
+c) BYZNYS ROI — pokud profil naznačuje podnikání (OSVČ, dotaz na byznys), spočítej rámec: ROI podnikání vs. náklady kapitálu (sazba hypotéky + riziková prémie 5-10 p.b.); varuj před zastavením rodinného bydlení kvůli byznysu.
+Pravidla pro strategie: VŽDY konkrétní čísla klienta (headroom, sazby, měsíční dopad), VŽDY rizika (pákový efekt násobí ztráty, výnosy nejsou garantované, splátka hypotéky je garantovaný „výnos" ve výši sazby), VŽDY podmínky (nouzová rezerva existuje, horizont 10+ let, riziková tolerance). Pokud žádná strategie nesedí (napjatý rozpočet, krátký horizont), vrať prázdné pole — nevymýšlej.
+
 ETIKA (nikdy neporušuj):
 - Nikdy nedoporučuj investiční ani kapitálové životní pojištění jako nový produkt (vysoká nákladovost).
 - Nikdy nedoporučuj bankovní pojištění schopnosti splácet — vždy samostatné rizikové ŽP s klesající pojistnou částkou.
@@ -112,6 +148,8 @@ ETIKA (nikdy neporušuj):
     readData("produkty_penze.json"),
     "=== STAVEBNI SPORENI ===",
     readData("produkty_stavebni_sporeni.json"),
+    "=== TRZNI OCEKAVANI (akcie, dluhopisy, nemovitosti, komodity) + PRAVIDLA STRATEGII ===",
+    readData("trzni_ocekavani.json"),
   ].join("\n\n");
 
   cachedSystemBlocks = [

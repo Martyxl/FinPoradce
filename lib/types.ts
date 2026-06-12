@@ -173,8 +173,26 @@ export interface Scenar {
   vhodnost_pro_klienta: string;
 }
 
+export type ChytraStrategieTyp =
+  | "equity_release"
+  | "hypoteka_plus_investice"
+  | "investicni_nemovitost"
+  | "rychlejsi_splaceni"
+  | "byznys_roi"
+  | "jine";
+
+export interface ChytraStrategie {
+  typ: ChytraStrategieTyp;
+  nazev: string;
+  popis: string;
+  cisla: string;
+  rizika: string[];
+  doporuceni: string;
+}
+
 export interface Scenare3 {
   scenare: Scenar[];
+  chytre_strategie?: ChytraStrategie[];
   celkovy_komentar: string;
 }
 

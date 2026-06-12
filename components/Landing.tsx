@@ -363,7 +363,7 @@ export default function Landing() {
           <p className="ld-perex">
             Jeden nezávislý poradce a AI, která porovná celý trh — hypotéky,
             pojištění, investice i penzi. Doporučí jen to, co se vyplatí vám.
-            Ne bance.
+            Ne poradci podle provize.
           </p>
 
           <HeroPanel />

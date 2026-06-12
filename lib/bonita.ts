@@ -282,9 +282,9 @@ export class BonitaCalculator {
       "ČNB má od 2024 DSTI a DTI pro standardní bydlení deaktivované — závazný je jen LTV.",
     ];
 
-    if (sumaUverovychProduktu > profile.stavajici_splatky_mesicne) {
+    if (sumaUverovychProduktu > 0) {
       upozorneni.push(
-        `Použili jsme ${Math.round(sumaUverovychProduktu).toLocaleString("cs-CZ")} Kč/měs splátek (suma z kroku 3), protože je vyšší než zadaná hodnota v kroku 2.`,
+        `Stávající splátky ${Math.round(sumaUverovychProduktu).toLocaleString("cs-CZ")} Kč/měs jsme spočítali automaticky z vašich úvěrů ve stávajících produktech.`,
       );
     }
     if (prijemMesicne > profile.cisty_prijem_mesicne) {

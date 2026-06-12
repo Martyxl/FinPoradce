@@ -34,7 +34,6 @@ type FormState = {
   // Krok 2
   pocet_osob_domacnost: string;
   pocet_deti: string;
-  stavajici_splatky_mesicne: string;
   // Krok 4 (Nemovitost)
   typ_pozadavku: TypPozadavku;
   ucel: Ucel;
@@ -75,7 +74,6 @@ const initialState: FormState = {
   osvc_rocni_obrat_czk: "",
   pocet_osob_domacnost: "1",
   pocet_deti: "0",
-  stavajici_splatky_mesicne: "0",
   // --- TESTOVACI PREDVYPLNENI (odstranit pred ostrym provozem) ---
   typ_pozadavku: "uver_proti_nemovitosti",
   ucel: "vlastni_bydleni",
@@ -324,8 +322,6 @@ export default function HypoForm() {
       if (num(data.pocet_osob_domacnost) < 1)
         e.pocet_osob_domacnost = "Min. 1 osoba.";
       if (num(data.pocet_deti) < 0) e.pocet_deti = "Nemůže být záporné.";
-      if (num(data.stavajici_splatky_mesicne) < 0)
-        e.stavajici_splatky_mesicne = "Nemůže být záporné.";
     }
     if (s === 3) {
       // Pro každou zapnutou instanci vyžadujeme platnou částku.
@@ -438,7 +434,8 @@ export default function HypoForm() {
       vek: Number(data.vek),
       pocet_osob_domacnost: Number(data.pocet_osob_domacnost),
       pocet_deti: Number(data.pocet_deti),
-      stavajici_splatky_mesicne: Number(data.stavajici_splatky_mesicne),
+      // Splatky se pocitaji automaticky ze souctu uveru v kroku 3
+      stavajici_splatky_mesicne: 0,
       ucel: data.ucel,
       hodnota_nemovitosti: Number(data.hodnota_nemovitosti),
       vlastni_zdroje: protiNemovitosti ? 0 : Number(data.vlastni_zdroje),
@@ -653,31 +650,10 @@ export default function HypoForm() {
               )}
             </div>
           </div>
-          <div className="field">
-            <label htmlFor="splatky">
-              Stávající měsíční splátky závazků (CZK)
-            </label>
-            <input
-              id="splatky"
-              type="number"
-              inputMode="numeric"
-              value={data.stavajici_splatky_mesicne}
-              onChange={(e) =>
-                update("stavajici_splatky_mesicne", e.target.value)
-              }
-              placeholder="např. 3000"
-            />
-            <span className="hint">
-              Souhrn měsíčních splátek úvěrů, leasingu a kreditních karet.
-              Použije se pro výpočet DSTI. Detailní rozpis vyplníte v dalším
-              kroku.
-            </span>
-            {errors.stavajici_splatky_mesicne && (
-              <span className="error">
-                {errors.stavajici_splatky_mesicne}
-              </span>
-            )}
-          </div>
+          <p className="hint" style={{ marginTop: 4 }}>
+            Splátky stávajících úvěrů nezadáváte ručně — spočítáme je
+            automaticky z produktů, které vyplníte v dalším kroku.
+          </p>
         </>
       )}
 
@@ -957,8 +933,9 @@ function ProduktyKrok({
       <p className="hint" style={{ marginBottom: 16 }}>
         Vyberte produkty, které už máte. Společnost a název jsou volitelné,
         <strong> měsíční částku potřebujeme vždy</strong> (vklad / splátka /
-        pojistné). Stávající produkty se použijí pro pozdější doporučení, kde
-        máte mezery v zajištění.
+        pojistné). Splátky úvěrů odtud automaticky započítáme do výpočtu
+        bonity (DSTI) a produkty použijeme pro doporučení, kde máte mezery
+        v zajištění.
         {pocetAktivnich > 0 && (
           <>
             <br />
