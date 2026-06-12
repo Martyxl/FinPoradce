@@ -109,6 +109,15 @@ export async function POST(req: Request) {
     }
     if (err instanceof Anthropic.APIError) {
       console.error("Anthropic APIError:", err.status, err.message);
+      if (err.message.includes("credit balance")) {
+        return NextResponse.json(
+          {
+            detail:
+              "AI služba není aktivní — na účtu Anthropic chybí kredit (Console → Plans & Billing).",
+          },
+          { status: 503 },
+        );
+      }
       return NextResponse.json(
         { detail: `AI služba vrátila chybu (${err.status}): ${err.message}` },
         { status: 502 },
