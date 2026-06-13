@@ -28,8 +28,10 @@ export default function AppShell({
       <footer className="footer">
         <div className="container">
           <small>
-            Výpočty jsou předběžné odhady. Závazné podmínky určí banka po
-            posouzení. Sazby = snapshot jaro 2026, mění se měsíčně.
+            Výpočty jsou předběžné odhady, ne licencované finanční poradenství.
+            Závazné podmínky určí banka po posouzení. Sazby = snapshot jaro
+            2026, mění se měsíčně.{" "}
+            <Link href="/podminky">Podmínky a ochrana údajů</Link>.
           </small>
         </div>
       </footer>

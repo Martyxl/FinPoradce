@@ -494,7 +494,12 @@ export default function Landing() {
           <span className="fin">Fin</span>
           <span className="sei">Sei</span>
         </span>
-        <span>© 2026 · AI finanční poradenství</span>
+        <span>
+          © 2026 · AI finanční poradenství ·{" "}
+          <Link href="/podminky" style={{ color: "inherit" }}>
+            Podmínky
+          </Link>
+        </span>
       </footer>
     </div>
   );

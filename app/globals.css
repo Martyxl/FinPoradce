@@ -1623,3 +1623,47 @@ p.lead {
   .ld-footer { padding: 22px 24px 30px; }
 }
 .ld-footer .ld-logo { font-size: 20px; }
+
+/* ---- Cookie / GDPR lista ---- */
+.cookie-lista {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  z-index: 100;
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.45);
+  padding: 16px 18px;
+}
+[data-theme="light"] .cookie-lista {
+  box-shadow: 0 18px 44px rgba(22, 24, 29, 0.16);
+}
+.cookie-lista p {
+  flex: 1;
+  min-width: 220px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.55;
+}
+.cookie-lista a {
+  color: var(--brand-orange);
+}
+.cookie-lista .btn {
+  width: auto;
+  flex-shrink: 0;
+}
+
+/* Odkazy v patickach */
+.footer a,
+.podminky-content a {
+  color: var(--brand-orange);
+}

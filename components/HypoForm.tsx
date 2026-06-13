@@ -74,14 +74,12 @@ const initialState: FormState = {
   osvc_rocni_obrat_czk: "",
   pocet_osob_domacnost: "1",
   pocet_deti: "0",
-  // --- TESTOVACI PREDVYPLNENI (odstranit pred ostrym provozem) ---
-  typ_pozadavku: "uver_proti_nemovitosti",
+  typ_pozadavku: "koupe",
   ucel: "vlastni_bydleni",
-  hodnota_nemovitosti: "10000000",
+  hodnota_nemovitosti: "",
   vlastni_zdroje: "0",
-  zbyvajici_dluh: "3900000",
+  zbyvajici_dluh: "",
   pozadovana_castka: "",
-  // --- KONEC TESTOVACIHO PREDVYPLNENI ---
   splatnost_roky: "25",
   fixace_roky: "5",
 };
@@ -104,58 +102,6 @@ function initProduktyState(): ProduktyState {
   for (const k of VSECHNY_KATEGORIE) {
     out[k.id] = [prazdnyProdukt()];
   }
-
-  // --- TESTOVACI PREDVYPLNENI (odstranit pred ostrym provozem) ---
-  out.hypoteka_jina = [
-    {
-      ...prazdnyProdukt(),
-      aktivni: true,
-      instituce_id: "moneta",
-      mesicni_castka: "22700",
-    },
-  ];
-  out.spotrebitelsky_uver = [
-    {
-      ...prazdnyProdukt(),
-      aktivni: true,
-      instituce_id: "csas",
-      mesicni_castka: "21000",
-    },
-  ];
-  out.stavebni_sporeni = [
-    {
-      ...prazdnyProdukt(),
-      aktivni: true,
-      instituce_id: "ss_modra_pyramida",
-      mesicni_castka: "1370",
-    },
-  ];
-  out.zp_rizikove = [
-    {
-      ...prazdnyProdukt(),
-      aktivni: true,
-      instituce_id: "kooperativa",
-      nazev_produktu: "Flexi",
-      mesicni_castka: "4300",
-    },
-  ];
-  out.poj_nemovitosti = [
-    {
-      ...prazdnyProdukt(),
-      aktivni: true,
-      mesicni_castka: "5500",
-      frekvence: "rocne",
-      vcetne_domacnosti: true,
-      vcetne_odpovednosti: true,
-    },
-  ];
-  out.investice = [
-    { ...prazdnyProdukt(), aktivni: true, instituce_id: "investown" },
-    { ...prazdnyProdukt(), aktivni: true, instituce_id: "xtb" },
-    { ...prazdnyProdukt(), aktivni: true, instituce_id: "etoro" },
-  ];
-  // --- KONEC TESTOVACIHO PREDVYPLNENI ---
-
   return out;
 }
 

@@ -151,6 +151,18 @@ npm run dev
 Otevři <http://localhost:3000>. Žádný separátní Python proces — Route Handlers
 běží přímo v Next.js dev serveru.
 
+### Testy
+
+```bash
+npm test     # vitest run — 21 unit testů výpočetní logiky
+```
+
+Pokrývá `BonitaCalculator` (LTV 80/90/70 %, DSTI limit, anuita, OSVČ příjem
+z obratu, úvěr proti nemovitosti, auto-sync splátek) a `RecommendationEngine`
+(rizikové ŽP k hypotéce ve všech 3 stavech, balíčkové pojištění nemovitosti,
+DPS, stavební spoření pro děti, IŽP varování, řazení). Testy běží proti
+reálným `data/*.json`, takže odhalí i nevalidní data.
+
 ---
 
 ## Nasazení na Vercel
