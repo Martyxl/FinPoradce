@@ -163,6 +163,20 @@ z obratu, úvěr proti nemovitosti, auto-sync splátek) a `RecommendationEngine`
 DPS, stavební spoření pro děti, IŽP varování, řazení). Testy běží proti
 reálným `data/*.json`, takže odhalí i nevalidní data.
 
+### Sdílení a export výsledků
+
+- **PDF / tisk**: tlačítko „⭳ Stáhnout PDF" na výsledcích volá `window.print()`;
+  `@media print` v `globals.css` skryje navigaci a tlačítka, vynutí světlý
+  podklad, doplní hlavičku/patičku a zabrání lámání karet přes stránky
+  (vektorový text, žádná závislost).
+- **Sdílení odkazem**: „🔗 Sdílet odkaz" zakóduje **profil** (vstup, ne výsledek)
+  do URL hashe `#p=<base64>` (`lib/share.ts`). Příjemce otevře
+  `/vysledky#p=…`, stránka profil dekóduje a přepočítá přes `/api/calculate`.
+  Hash se neposílá na server v Refereru.
+- **Přístupnost**: skip link, viditelný `:focus-visible` outline,
+  `prefers-reduced-motion` (vypne particle field i animace), kroky formuláře
+  jako `<ol>` s `aria-current="step"`.
+
 ---
 
 ## Nasazení na Vercel

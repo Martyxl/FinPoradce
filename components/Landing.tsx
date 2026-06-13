@@ -26,6 +26,13 @@ function ParticleField() {
   useEffect(() => {
     const cv = ref.current;
     if (!cv) return;
+    // Respektuj prani omezeneho pohybu — nespoustej rAF smycku vubec
+    if (
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
     const ctx = cv.getContext("2d");
     if (!ctx) return;
 
@@ -312,6 +319,9 @@ function HeroPanel() {
 export default function Landing() {
   return (
     <div className="ld-page">
+      <a href="#jak" className="skip-link">
+        Přeskočit na obsah
+      </a>
       {/* Header pres hero */}
       <header className="ld-header">
         <Link href="/" className="ld-logo">

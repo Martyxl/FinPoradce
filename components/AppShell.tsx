@@ -14,6 +14,9 @@ export default function AppShell({
 }) {
   return (
     <>
+      <a href="#obsah" className="skip-link">
+        Přeskočit na obsah
+      </a>
       <header className="topbar">
         <div className="container topbar-inner">
           <Link href="/" className="brand">
@@ -24,7 +27,9 @@ export default function AppShell({
           <ThemeToggle />
         </div>
       </header>
-      <main className="container">{children}</main>
+      <main className="container" id="obsah">
+        {children}
+      </main>
       <footer className="footer">
         <div className="container">
           <small>

@@ -8,14 +8,26 @@ import DoporuceniKarta from "@/components/DoporuceniKarta";
 import AiScenare from "@/components/AiScenare";
 import LeadForm from "@/components/LeadForm";
 import AppShell from "@/components/AppShell";
-import { formatCZK } from "@/lib/api";
+import { formatCZK, vypocitej } from "@/lib/api";
 import { najdiKategorii } from "@/lib/categories";
+import { decodeProfilFromHash, shareUrlForProfil } from "@/lib/share";
 
 export default function VysledkyPage() {
   const [result, setResult] = useState<CalculationResult | null>(null);
   const [loaded, setLoaded] = useState(false);
+  const [kopirovano, setKopirovano] = useState(false);
 
   useEffect(() => {
+    // 1) Sdileny odkaz: hash #p=<profil> -> prepocitat
+    const sdileny = decodeProfilFromHash(window.location.hash);
+    if (sdileny) {
+      vypocitej(sdileny)
+        .then((r) => setResult(r))
+        .catch(() => setResult(null))
+        .finally(() => setLoaded(true));
+      return;
+    }
+    // 2) Standardni cesta: vysledek ze sessionStorage
     const raw = sessionStorage.getItem("hypoResult");
     if (raw) {
       try {
@@ -26,6 +38,19 @@ export default function VysledkyPage() {
     }
     setLoaded(true);
   }, []);
+
+  async function zkopirovatOdkaz() {
+    if (!result) return;
+    const url = shareUrlForProfil(result.profile_echo);
+    try {
+      await navigator.clipboard.writeText(url);
+      setKopirovano(true);
+      setTimeout(() => setKopirovano(false), 2500);
+    } catch {
+      // fallback: prompt s URL
+      window.prompt("Zkopírujte odkaz:", url);
+    }
+  }
 
   const stavajiciProdukty = useMemo(
     () => result?.profile_echo.existujici_produkty ?? [],
@@ -61,6 +86,23 @@ export default function VysledkyPage() {
         <strong>{formatCZK(result.max_loan)}</strong> (měsíční splátka{" "}
         <strong>{formatCZK(result.max_monthly_payment)}</strong>).
       </p>
+
+      <div className="vysledky-akce no-print">
+        <button
+          type="button"
+          className="btn secondary"
+          onClick={() => window.print()}
+        >
+          ⭳ Stáhnout PDF
+        </button>
+        <button
+          type="button"
+          className="btn secondary"
+          onClick={zkopirovatOdkaz}
+        >
+          {kopirovano ? "✓ Odkaz zkopírován" : "🔗 Sdílet odkaz"}
+        </button>
+      </div>
 
       {fh && (
         <div className="fh-card">

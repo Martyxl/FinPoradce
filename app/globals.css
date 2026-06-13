@@ -236,6 +236,9 @@ p.lead {
 .step-circles {
   display: flex;
   gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 .step-circle {
   width: 30px;
@@ -1663,6 +1666,18 @@ p.lead {
   color: var(--brand-orange);
 }
 
+.vysledky-akce {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin: 8px 0 20px;
+}
+@media (max-width: 600px) {
+  .vysledky-akce .btn {
+    flex: 1;
+  }
+}
+
 /* ---- Cookie / GDPR lista ---- */
 .cookie-lista {
   position: fixed;
@@ -1705,4 +1720,125 @@ p.lead {
 .footer a,
 .podminky-content a {
   color: var(--brand-orange);
+}
+
+/* ============================================================
+   Pristupnost (A11y)
+   ============================================================ */
+/* Viditelny focus pro klavesnici (nezasahuje mys diky :focus-visible) */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.ld-chip:focus-visible,
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--brand-orange);
+  outline-offset: 2px;
+}
+
+/* Skip link — skryty, objevi se pri Tab */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 200;
+  background: var(--brand-orange);
+  color: var(--on-accent);
+  padding: 10px 16px;
+  border-radius: 0 0 var(--radius-field) 0;
+  font-weight: 600;
+  text-decoration: none;
+}
+.skip-link:focus {
+  left: 0;
+}
+
+/* Respektuj prani omezeneho pohybu — vypni particle/float/pulse animace */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .ld-canvas {
+    display: none;
+  }
+}
+
+/* ============================================================
+   Tisk / PDF export (window.print)
+   ============================================================ */
+@media print {
+  /* Vzdy svetly podklad pro tisk — uspora inkoustu + citelnost */
+  :root {
+    --bg-page: #ffffff;
+    --bg-surface: #ffffff;
+    --bg-elevated: #ffffff;
+    --text-primary: #16181d;
+    --text-secondary: #444b56;
+    --text-muted: #6b7280;
+    --border: #c9ccd3;
+    --border-soft: #e0e2e7;
+    --card-shadow: none;
+    --brand-orange: #c25600;
+  }
+  html,
+  body {
+    background: #ffffff;
+  }
+
+  /* Schovat interaktivni / navigacni chrome */
+  .topbar,
+  .footer,
+  .theme-toggle,
+  .cookie-lista,
+  .no-print,
+  .lead-box,
+  .btn,
+  button {
+    display: none !important;
+  }
+
+  /* Karty se nesmi lamat pres stranky */
+  .bank-card,
+  .doporuceni-karta,
+  .scenar-karta,
+  .strategie-karta,
+  .fh-card,
+  .osvc-metoda,
+  .produkty-prehled li {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    box-shadow: none !important;
+  }
+
+  /* Hlavicka tiskoveho dokumentu */
+  main.container::before {
+    content: "FinSei — orientační analýza hypotéky";
+    display: block;
+    font-weight: 700;
+    font-size: 18px;
+    color: #c25600;
+    margin-bottom: 4px;
+  }
+  main.container::after {
+    content: "Předběžný odhad, ne licencované poradenství. Sazby snapshot jaro 2026.";
+    display: block;
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 24px;
+    border-top: 1px solid #c9ccd3;
+    padding-top: 8px;
+  }
+
+  .container {
+    max-width: 100%;
+    padding: 0;
+  }
+  a[href]::after {
+    content: "";
+  }
 }

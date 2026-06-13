@@ -417,20 +417,21 @@ export default function HypoForm() {
   return (
     <div className="form-card">
       <div className="step-indicator">
-        <div className="step-circles">
+        <ol className="step-circles" aria-label="Postup formuláře">
           {Array.from({ length: TOTAL_STEPS }, (_, i) => i + 1).map((s) => (
-            <span
+            <li
               key={s}
               className={
                 "step-circle " +
                 (s === step ? "active" : s < step ? "done" : "")
               }
-              aria-label={`Krok ${s}`}
+              aria-current={s === step ? "step" : undefined}
+              aria-label={`Krok ${s}${s < step ? " (hotovo)" : ""}`}
             >
               {s < step ? "✓" : s}
-            </span>
+            </li>
           ))}
-        </div>
+        </ol>
         <span className="step-label">
           Krok {step} z {TOTAL_STEPS}
         </span>
