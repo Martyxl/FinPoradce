@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
+import ChatPanel from "@/components/ChatPanel";
 
 // ----------------------------------------------------------------
 // Particle field (hero pozadi) — 85 castic, ~14 % menove glyfy,
@@ -189,8 +190,6 @@ const TYPER_FRAZE = [
   "Jaké pojištění dává smysl pro rodinu?",
 ];
 
-const AI_ODPOVED =
-  "Porovnal jsem 1 824 produktů od 46 institucí. Nejvýhodnější řešení vám oproti průměrné nabídce na trhu ušetří 3 840 Kč měsíčně. Připravil jsem tři varianty k porovnání.";
 
 const CHIPS = [
   {
@@ -212,32 +211,27 @@ const CHIPS = [
 ];
 
 // ----------------------------------------------------------------
-// Hero AI input flow: idle -> analyzing (2100 ms) -> answered
+// Hero AI vstup — vstupni input spusti realny chat (ChatPanel)
 // ----------------------------------------------------------------
 function HeroPanel() {
   const [query, setQuery] = useState("");
-  const [phase, setPhase] = useState<"idle" | "analyzing" | "answered">(
-    "idle",
-  );
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const [zahajeno, setZahajeno] = useState<string | null>(null);
   const placeholder = useTypewriter(TYPER_FRAZE);
-  const odpoved = useTypewriter(
-    phase === "answered" ? [AI_ODPOVED] : [""],
-    { speed: 14, loop: false, startDelay: 200 },
-  );
 
-  const submit = useCallback(
-    (q?: string) => {
-      const dotaz = (q ?? query).trim();
-      if (!dotaz || phase === "analyzing") return;
-      setPhase("analyzing");
-      clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(() => setPhase("answered"), 2100);
-    },
-    [query, phase],
-  );
+  function submit(q?: string) {
+    const dotaz = (q ?? query).trim();
+    if (!dotaz) return;
+    setZahajeno(dotaz);
+  }
 
-  useEffect(() => () => clearTimeout(timerRef.current), []);
+  // Po zahajeni: realny chat s AI
+  if (zahajeno) {
+    return (
+      <div className="ld-panel ld-panel-chat">
+        <ChatPanel initialMessage={zahajeno} />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -251,10 +245,7 @@ function HeroPanel() {
               className="ld-input"
               type="text"
               value={query}
-              onChange={(e) => {
-                setQuery(e.target.value);
-                setPhase("idle");
-              }}
+              onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") submit();
               }}
@@ -275,23 +266,6 @@ function HeroPanel() {
             Analyzovat ✦
           </button>
         </div>
-
-        {phase === "analyzing" && (
-          <div className="ld-analyzing">
-            <span className="ld-analyzing-dot" />
-            Porovnávám 2 400+ produktů na trhu…
-          </div>
-        )}
-
-        {phase === "answered" && (
-          <div className="ld-answer">
-            <div className="ld-answer-label">AI NÁVRH ŘEŠENÍ</div>
-            <div className="ld-answer-text">{odpoved}</div>
-            <Link href="/kalkulacka" className="ld-cta">
-              Pokračovat k detailní analýze →
-            </Link>
-          </div>
-        )}
       </div>
 
       <div className="ld-chips">
@@ -300,10 +274,7 @@ function HeroPanel() {
             key={chip.label}
             type="button"
             className="ld-chip"
-            onClick={() => {
-              setQuery(chip.fill);
-              submit(chip.fill);
-            }}
+            onClick={() => submit(chip.fill)}
           >
             {chip.label}
           </button>

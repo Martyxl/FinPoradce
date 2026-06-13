@@ -196,8 +196,9 @@ Projekt je čistý Next.js. Po importu repozitáře Vercel automaticky:
 | Proměnná | Povinná | Popis |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | jen pro AI balíčky | API klíč pro Claude (tlačítko „Co doporučuje AI?" na výsledcích). Bez něj vše ostatní funguje, AI sekce vrátí srozumitelnou hlášku. Nastavit ve Vercel → Project Settings → Environment Variables. |
-| `AI_MODEL` | ne | Override modelu (default `claude-opus-4-8`). |
-| `AI_DISABLED` | ne | `1` = kill switch pro AI doporučení (např. při explozi nákladů). |
+| `AI_MODEL` | ne | Override modelu pro balíčky (default `claude-opus-4-8`). |
+| `AI_CHAT_MODEL` | ne | Override modelu pro chat na landingu (default = `AI_MODEL`). Pro svižnost lze nastavit `claude-haiku-4-5`. |
+| `AI_DISABLED` | ne | `1` = kill switch pro AI balíčky i chat. |
 | `RESEND_API_KEY` + `LEAD_NOTIFY_EMAIL` | jen pro lead handoff | E-mail poradci přes [Resend](https://resend.com) (tlačítko „Chci to probrat s poradcem"). `LEAD_FROM_EMAIL` volitelné (default `onboarding@resend.dev`). Bez konfigurace vrátí lead endpoint srozumitelnou hlášku. |
 | `LEAD_WEBHOOK_URL` | alternativa k e-mailu | POST JSON s leadem na libovolný webhook (Slack/Make/Zapier…). Stačí jeden z kanálů (e-mail nebo webhook). |
 
@@ -226,6 +227,25 @@ luxus) ušité na situaci klienta.
 - **Ochrany**: rate limit 5 volání / IP / 10 min, cache odpovědí podle hashe
   profilu (24 h), kill switch `AI_DISABLED=1`, české chybové hlášky pro
   všechny stavy (chybějící klíč, rate limit, výpadek API).
+
+## AI chat na landingu (Fáze 11)
+
+Hero input na úvodní stránce je **reálný konverzační AI** (ne demo). Klient
+napíše situaci vlastními slovy → `POST /api/chat` (Claude, structured output)
+vrací odpověď + postupně **extrahovaný profil** + příznak `pripraveno`. Jakmile
+má AI minimum (příjem / OSVČ obor+obrat, věk, hodnota nemovitosti, zdroje nebo
+dluh), nabídne tlačítko **„Spustit detailní analýzu →"**, které profil uloží do
+`sessionStorage` a přejde na `/kalkulacka`, kde se formulář **předvyplní**.
+
+- `components/ChatPanel.tsx` — konverzační UI (bubliny, doptávání, loading).
+- `lib/types.ts` → `ChatProfil` (částečný), `ChatOdpoved`. `HypoForm` načte chat
+  profil a převede ho na `FormState` (`chatProfilToFormState`), chat profil má
+  přednost před uloženým draftem.
+- Etika a logika dotazování v system promptu route handleru (jedna věc po druhé,
+  rozliší koupi vs. úvěr proti nemovitosti, OSVČ obor+obrat).
+- Ochrany: rate limit 30 zpráv / IP / 10 min, historie ořezaná na 20 zpráv,
+  `effort: low` pro svižnost, kill switch `AI_DISABLED=1`, české hlášky.
+  Uzavírá slib landingu „Žádné formuláře".
 
 ---
 

@@ -196,6 +196,38 @@ export interface Scenare3 {
   celkovy_komentar: string;
 }
 
+// ---- AI chat (Faze 11) ----
+export interface ChatZprava {
+  role: "user" | "assistant";
+  text: string;
+}
+
+/** Castecny profil extrahovany z konverzace — vse volitelne. */
+export type ChatProfil = Partial<{
+  cisty_prijem_mesicne: number;
+  typ_prijmu: TypPrijmu;
+  vek: number;
+  pocet_osob_domacnost: number;
+  pocet_deti: number;
+  ucel: Ucel;
+  hodnota_nemovitosti: number;
+  vlastni_zdroje: number;
+  splatnost_roky: number;
+  fixace_roky: number;
+  typ_pozadavku: TypPozadavku;
+  zbyvajici_dluh_nemovitost_czk: number;
+  pozadovana_castka_czk: number;
+  osvc_obor: OsvcObor;
+  osvc_rocni_obrat_czk: number;
+}>;
+
+export interface ChatOdpoved {
+  odpoved: string;
+  profil: ChatProfil;
+  pripraveno: boolean;
+  chybi_klicove: string[];
+}
+
 export interface CalculationResult {
   max_loan: number;
   max_monthly_payment: number;

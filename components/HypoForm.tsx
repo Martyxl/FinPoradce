@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type {
+  ChatProfil,
   CustomerProfile,
   ExistingProduct,
   Instituce,
@@ -14,6 +15,7 @@ import type {
 } from "@/lib/types";
 import { fetchInstituce, vypocitej } from "@/lib/api";
 import { SEKCE, VSECHNY_KATEGORIE, type KategoriiDef } from "@/lib/categories";
+import { CHAT_PROFIL_KEY } from "@/components/ChatPanel";
 
 const OSVC_OBORY: { id: OsvcObor; label: string }[] = [
   { id: "it_programovani", label: "IT, programování, datová analytika" },
@@ -105,6 +107,31 @@ function initProduktyState(): ProduktyState {
   return out;
 }
 
+/** Prevede profil extrahovany z AI chatu na castecny FormState (string pole). */
+function chatProfilToFormState(p: ChatProfil): Partial<FormState> {
+  const s: Partial<FormState> = {};
+  const num = (v: number | undefined) =>
+    typeof v === "number" ? String(Math.round(v)) : undefined;
+
+  if (p.typ_prijmu) s.typ_prijmu = p.typ_prijmu;
+  if (num(p.cisty_prijem_mesicne)) s.cisty_prijem_mesicne = num(p.cisty_prijem_mesicne);
+  if (num(p.vek)) s.vek = num(p.vek);
+  if (p.osvc_obor) s.osvc_obor = p.osvc_obor;
+  if (num(p.osvc_rocni_obrat_czk)) s.osvc_rocni_obrat_czk = num(p.osvc_rocni_obrat_czk);
+  if (num(p.pocet_osob_domacnost)) s.pocet_osob_domacnost = num(p.pocet_osob_domacnost);
+  if (num(p.pocet_deti)) s.pocet_deti = num(p.pocet_deti);
+  if (p.ucel) s.ucel = p.ucel;
+  if (p.typ_pozadavku) s.typ_pozadavku = p.typ_pozadavku;
+  if (num(p.hodnota_nemovitosti)) s.hodnota_nemovitosti = num(p.hodnota_nemovitosti);
+  if (num(p.vlastni_zdroje)) s.vlastni_zdroje = num(p.vlastni_zdroje);
+  if (num(p.zbyvajici_dluh_nemovitost_czk))
+    s.zbyvajici_dluh = num(p.zbyvajici_dluh_nemovitost_czk);
+  if (num(p.pozadovana_castka_czk)) s.pozadovana_castka = num(p.pozadovana_castka_czk);
+  if (num(p.splatnost_roky)) s.splatnost_roky = num(p.splatnost_roky);
+  if (num(p.fixace_roky)) s.fixace_roky = num(p.fixace_roky);
+  return s;
+}
+
 const TOTAL_STEPS = 5;
 
 export default function HypoForm() {
@@ -162,6 +189,21 @@ export default function HypoForm() {
       }
     } catch {
       // poskozeny draft ignorujeme
+    }
+    // Profil z AI chatu (sessionStorage) ma prednost — klient prisel s novym
+    // zadanim. Aplikujeme navrch a klic smazeme (jednorazove predvyplneni).
+    try {
+      const chatRaw = sessionStorage.getItem(CHAT_PROFIL_KEY);
+      if (chatRaw) {
+        const chatProfil = JSON.parse(chatRaw) as ChatProfil;
+        const patch = chatProfilToFormState(chatProfil);
+        if (Object.keys(patch).length > 0) {
+          setData((d) => ({ ...d, ...patch }));
+        }
+        sessionStorage.removeItem(CHAT_PROFIL_KEY);
+      }
+    } catch {
+      // ignorujeme
     }
     setDraftLoaded(true);
   }, []);
