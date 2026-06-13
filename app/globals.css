@@ -1624,6 +1624,45 @@ p.lead {
 }
 .ld-footer .ld-logo { font-size: 20px; }
 
+/* ---- Lead handoff ---- */
+.lead-box {
+  margin-top: 40px;
+  padding: 24px;
+  background: var(--bg-surface);
+  border: 1px solid var(--brand-orange);
+  border-radius: var(--radius-card);
+  box-shadow: var(--card-shadow);
+}
+.lead-box h2 {
+  margin-top: 0;
+}
+.lead-box.lead-hotovo {
+  border-color: var(--ok);
+}
+.lead-fields {
+  margin-top: 8px;
+}
+.lead-souhlas {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 14px 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  cursor: pointer;
+}
+.lead-souhlas input[type="checkbox"] {
+  margin-top: 3px;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--brand-orange);
+}
+.lead-souhlas a {
+  color: var(--brand-orange);
+}
+
 /* ---- Cookie / GDPR lista ---- */
 .cookie-lista {
   position: fixed;

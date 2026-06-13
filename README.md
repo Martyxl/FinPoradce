@@ -184,6 +184,8 @@ Projekt je čistý Next.js. Po importu repozitáře Vercel automaticky:
 | `ANTHROPIC_API_KEY` | jen pro AI balíčky | API klíč pro Claude (tlačítko „Co doporučuje AI?" na výsledcích). Bez něj vše ostatní funguje, AI sekce vrátí srozumitelnou hlášku. Nastavit ve Vercel → Project Settings → Environment Variables. |
 | `AI_MODEL` | ne | Override modelu (default `claude-opus-4-8`). |
 | `AI_DISABLED` | ne | `1` = kill switch pro AI doporučení (např. při explozi nákladů). |
+| `RESEND_API_KEY` + `LEAD_NOTIFY_EMAIL` | jen pro lead handoff | E-mail poradci přes [Resend](https://resend.com) (tlačítko „Chci to probrat s poradcem"). `LEAD_FROM_EMAIL` volitelné (default `onboarding@resend.dev`). Bez konfigurace vrátí lead endpoint srozumitelnou hlášku. |
+| `LEAD_WEBHOOK_URL` | alternativa k e-mailu | POST JSON s leadem na libovolný webhook (Slack/Make/Zapier…). Stačí jeden z kanálů (e-mail nebo webhook). |
 
 ---
 

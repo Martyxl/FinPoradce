@@ -6,6 +6,7 @@ import type { CalculationResult } from "@/lib/types";
 import VysledekKarta from "@/components/VysledekKarta";
 import DoporuceniKarta from "@/components/DoporuceniKarta";
 import AiScenare from "@/components/AiScenare";
+import LeadForm from "@/components/LeadForm";
 import AppShell from "@/components/AppShell";
 import { formatCZK } from "@/lib/api";
 import { najdiKategorii } from "@/lib/categories";
@@ -150,6 +151,8 @@ export default function VysledkyPage() {
       )}
 
       <AiScenare result={result} />
+
+      <LeadForm result={result} />
 
       {stavajiciProdukty.length > 0 && (
         <section style={{ marginTop: 32 }}>

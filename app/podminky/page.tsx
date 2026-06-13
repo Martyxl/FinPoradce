@@ -42,11 +42,19 @@ export default function PodminkyPage() {
         a nesdílíme je s třetími stranami.
       </p>
       <p>
-        Výjimka: funkce <strong>„Co doporučuje AI?"</strong> odešle
+        Výjimka 1: funkce <strong>„Co doporučuje AI?"</strong> odešle
         anonymizovaný profil (bez jména, kontaktu či IP nad rámec technicky
         nutného) ke zpracování modelem Claude (Anthropic) pro sestavení
         balíčků. Tento přenos proběhne jen na vaše vyžádání kliknutím na
         tlačítko.
+      </p>
+      <p>
+        Výjimka 2: pokud sami zvolíte <strong>„Chci to probrat s poradcem"</strong>{" "}
+        a udělíte souhlas, odešleme váš e-mail (a volitelně jméno, telefon,
+        poznámku) spolu se shrnutím výpočtu nezávislému poradci za účelem
+        kontaktu. Tento krok je <strong>výhradně dobrovolný</strong> a údaje se
+        použijí jen pro vaše oslovení a navazující poradenství; souhlas můžete
+        kdykoli odvolat na kontaktu uvedeném v komunikaci.
       </p>
 
       <h2>Cookies a úložiště</h2>
