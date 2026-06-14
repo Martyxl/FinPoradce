@@ -302,10 +302,10 @@ export default function Landing() {
         <nav className="ld-nav">
           <a href="#jak">Jak to funguje</a>
           <a href="#srovnani">Srovnání</a>
-          <Link href="/kalkulacka">Produkty</Link>
+          <Link href="/start">Co řeším</Link>
         </nav>
         <ThemeToggle />
-        <Link href="/kalkulacka" className="ld-cta">
+        <Link href="/start" className="ld-cta">
           Spustit analýzu
         </Link>
       </header>
@@ -464,7 +464,7 @@ export default function Landing() {
       <section className="ld-final">
         <h2>Přestaňte platit provize, o kterých nevíte.</h2>
         <p>První AI analýza je zdarma a bez závazků.</p>
-        <Link href="/kalkulacka" className="ld-cta">
+        <Link href="/start" className="ld-cta">
           Vyzkoušet zdarma
         </Link>
       </section>

@@ -226,6 +226,38 @@ export interface ChatOdpoved {
   profil: ChatProfil;
   pripraveno: boolean;
   chybi_klicove: string[];
+  /** Klasifikovana potreba — kam smerovat (bydleni/zajisteni/sporeni) */
+  potreba?: "bydleni" | "zajisteni" | "sporeni" | null;
+}
+
+// ---- Analyza potreb zajisteni / sporeni (rozcestnik) ----
+export interface RychlyProfil {
+  typ_prijmu: TypPrijmu;
+  cisty_prijem_mesicne: number;
+  vek: number;
+  pocet_osob_domacnost: number;
+  pocet_deti: number;
+  osvc_obor?: OsvcObor | null;
+  osvc_rocni_obrat_czk?: number | null;
+  cil_text: string;
+  co_uz_mam?: string | null;
+  // jen sporeni
+  castka_mesicne_czk?: number | null;
+  horizont_let?: number | null;
+}
+
+export interface PotrebaKrok {
+  nadpis: string;
+  popis: string;
+  produkty: string[];
+  odhad_mesicne_czk: number | null;
+}
+
+export interface PotrebaPlan {
+  shrnuti: string;
+  kroky: PotrebaKrok[];
+  doporucene_produkty: ScenarProdukt[];
+  upozorneni: string[];
 }
 
 export interface CalculationResult {

@@ -55,20 +55,38 @@ const ChatSchema = z.object({
     .describe(
       "Odpověď klientovi česky, přátelsky, 1-3 věty. Doptej se na chybějící klíčový údaj nebo potvrď shrnutí. Žádný prodejní tlak.",
     ),
+  potreba: z
+    .enum(["bydleni", "zajisteni", "sporeni"])
+    .nullable()
+    .describe(
+      "Klasifikuj, co klient řeší: bydleni (hypotéka, koupě/refinancování/úvěr proti nemovitosti), zajisteni (pojištění rizik — život, majetek, příjem, odpovědnost), sporeni (rezerva, investice, penze, spoření na cíl). null, dokud to z konverzace nelze určit.",
+    ),
   profil: ProfilSchema.describe(
     "Vše, co se zatím podařilo z konverzace zjistit. Pole, která klient nezmínil, nech null. Částky v CZK, věk v letech.",
   ),
   pripraveno: z
     .boolean()
     .describe(
-      "true, jakmile máš MINIMUM pro hrubý výpočet: příjem (nebo OSVČ obor+obrat), věk, hodnotu nemovitosti a zdroje (vlastní zdroje u koupě / zbývající dluh u úvěru proti nemovitosti).",
+      "true, jakmile máš pro danou potřebu MINIMUM. Bydlení: příjem (nebo OSVČ obor+obrat), věk, hodnotu nemovitosti a zdroje/dluh. Zajištění a spoření: stačí příjem a věk (zbytek doladí formulář).",
     ),
   chybi_klicove: z
     .array(z.string())
-    .describe("Lidský seznam klíčových údajů, které ještě chybí pro výpočet."),
+    .describe("Lidský seznam klíčových údajů, které ještě chybí."),
 });
 
-const SYSTEM = `Jsi přátelský asistent FinSei — nezávislého finančního poradce pro český trh. Tvým úkolem je z volného rozhovoru s klientem zjistit parametry pro orientační výpočet hypotéky a postupně je vyplnit do struktury.
+const SYSTEM = `Jsi přátelský asistent FinSei — nezávislého finančního poradce pro český trh. Z volného rozhovoru s klientem nejdřív rozpoznáš, CO ŘEŠÍ, a podle toho posbíráš parametry.
+
+TŘI POTŘEBY (pole potreba):
+- bydleni — hypotéka, koupě nebo refinancování nemovitosti, úvěr proti stávající nemovitosti
+- zajisteni — pojištění rizik (život, invalidita, příjem, majetek, odpovědnost)
+- sporeni — budování rezervy, investice, penze, spoření na cíl
+Pokud klient řeší víc věcí, vyber tu hlavní, kterou zmínil první / nejvíc. Dokud to nejde určit, nech potreba=null a zeptej se.
+
+Podle potřeby sbíráš parametry:
+- Pro BYDLENÍ pokračuj jako hypoteční asistent (viz níže).
+- Pro ZAJIŠTĚNÍ a SPOŘENÍ stačí zjistit příjem a věk; detaily (rodina, co už má, cíl, u spoření kolik odkládá a horizont) doladí krátký formulář — neptej se na všechno, jen orámuj situaci a nastav pripraveno=true.
+
+HYPOTÉČNÍ ČÁST (jen když potreba=bydleni):
 
 JAK VEDEŠ ROZHOVOR:
 - Piš česky, lidsky, stručně (1-3 věty). Žádné formuláře, žádný prodejní tlak.
@@ -85,7 +103,7 @@ MINIMUM PRO VÝPOČET (pak nastav pripraveno=true):
 - vlastní zdroje (u koupě) / zbývající dluh (u úvěru proti nemovitosti)
 Vše ostatní (počet osob, děti, fixace, splatnost, účel) je volitelné — má rozumné defaulty, doptej se jen pokud to klient sám nakousne nebo když je vše hlavní hotové.
 
-Když je pripraveno=true, v odpovědi krátce shrň, co jsi pochopil, a vyzvi klienta, ať pokračuje k detailní analýze (tlačítko se objeví samo). Do profilu vždy vrať VŠE, co už víš z celé konverzace (ne jen z poslední zprávy).`;
+Když je pripraveno=true, v odpovědi krátce shrň, co jsi pochopil, a vyzvi klienta, ať pokračuje k detailní analýze (tlačítko se objeví samo). Do profilu vždy vrať VŠE, co už víš z celé konverzace (ne jen z poslední zprávy), a vždy nastav pole potreba.`;
 
 export async function POST(req: Request) {
   if (process.env.AI_DISABLED === "1") {
@@ -159,6 +177,7 @@ export async function POST(req: Request) {
       profil,
       pripraveno: parsed.pripraveno,
       chybi_klicove: parsed.chybi_klicove ?? [],
+      potreba: parsed.potreba ?? null,
     });
   } catch (err) {
     if (err instanceof Anthropic.AuthenticationError) {

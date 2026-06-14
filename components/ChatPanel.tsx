@@ -5,11 +5,20 @@ import { useRouter } from "next/navigation";
 import type { ChatOdpoved, ChatProfil, ChatZprava } from "@/lib/types";
 
 export const CHAT_PROFIL_KEY = "finsei_chat_profil";
+export const CHAT_RYCHLY_KEY = "finsei_rychly_profil";
+
+type Potreba = "bydleni" | "zajisteni" | "sporeni";
+
+const POTREBA_CTA: Record<Potreba, string> = {
+  bydleni: "Spustit detailní analýzu →",
+  zajisteni: "Pokračovat k plánu zajištění →",
+  sporeni: "Pokračovat k plánu spoření →",
+};
 
 /**
- * Reálný AI chat na landingu (Fáze 11). Z volné konverzace AI postupně
- * extrahuje parametry hypotéky; když má minimum, nabídne přechod na
- * kalkulačku s předvyplněnými hodnotami.
+ * Reálný AI chat na landingu (Fáze 11). Z volné konverzace AI rozpozná
+ * potřebu (bydlení/zajištění/spoření), extrahuje parametry a když má minimum,
+ * nabídne přechod do správného toku s předvyplněnými hodnotami.
  */
 export default function ChatPanel({
   initialMessage,
@@ -21,6 +30,7 @@ export default function ChatPanel({
     { role: "user", text: initialMessage },
   ]);
   const [profil, setProfil] = useState<ChatProfil>({});
+  const [potreba, setPotreba] = useState<Potreba | null>(null);
   const [pripraveno, setPripraveno] = useState(false);
   const [loading, setLoading] = useState(true);
   const [vstup, setVstup] = useState("");
@@ -47,6 +57,7 @@ export default function ChatPanel({
       setZpravy((z) => [...z, { role: "assistant", text: odp.odpoved }]);
       setProfil((p) => ({ ...p, ...odp.profil }));
       setPripraveno(odp.pripraveno);
+      if (odp.potreba) setPotreba(odp.potreba);
     } catch (err) {
       setChyba(err instanceof Error ? err.message : "Neznámá chyba.");
     } finally {
@@ -77,12 +88,31 @@ export default function ChatPanel({
   }
 
   function spustitAnalyzu() {
+    const cil = potreba ?? "bydleni";
     try {
-      sessionStorage.setItem(CHAT_PROFIL_KEY, JSON.stringify(profil));
+      if (cil === "bydleni") {
+        sessionStorage.setItem(CHAT_PROFIL_KEY, JSON.stringify(profil));
+      } else {
+        // Zajisteni/sporeni: preved chat profil na rychly profil
+        sessionStorage.setItem(
+          CHAT_RYCHLY_KEY,
+          JSON.stringify({
+            typ_prijmu: profil.typ_prijmu,
+            cisty_prijem_mesicne: profil.cisty_prijem_mesicne,
+            vek: profil.vek,
+            pocet_osob_domacnost: profil.pocet_osob_domacnost,
+            pocet_deti: profil.pocet_deti,
+            osvc_obor: profil.osvc_obor,
+            osvc_rocni_obrat_czk: profil.osvc_rocni_obrat_czk,
+            cil_text: zpravy.find((z) => z.role === "user")?.text ?? "",
+          }),
+        );
+      }
     } catch {
       /* ignore */
     }
-    router.push("/kalkulacka");
+    if (cil === "bydleni") router.push("/kalkulacka");
+    else router.push("/potreba/" + cil);
   }
 
   return (
@@ -106,7 +136,7 @@ export default function ChatPanel({
 
       {pripraveno && (
         <button type="button" className="ld-cta chat-cta" onClick={spustitAnalyzu}>
-          Spustit detailní analýzu →
+          {POTREBA_CTA[potreba ?? "bydleni"]}
         </button>
       )}
 

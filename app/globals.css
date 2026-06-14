@@ -1817,6 +1817,98 @@ p.lead {
   color: var(--brand-orange);
 }
 
+/* ---- Rozcestnik potreb (/start) ---- */
+.potreby-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-top: 20px;
+}
+@media (min-width: 760px) {
+  .potreby-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.potreba-karta {
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--card-shadow);
+  padding: 26px 24px;
+  text-decoration: none;
+  color: var(--text-primary);
+  transition: border-color 0.2s, transform 0.15s;
+}
+.potreba-karta:hover {
+  border-color: var(--brand-orange);
+  transform: translateY(-2px);
+}
+.potreba-ikona {
+  font-size: 34px;
+  line-height: 1;
+  margin-bottom: 14px;
+}
+.potreba-karta h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+}
+.potreba-podnadpis {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--brand-orange);
+  margin-bottom: 12px;
+}
+.potreba-karta p {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  margin: 0 0 16px;
+  flex: 1;
+}
+.potreba-sip {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--brand-orange);
+}
+
+/* ---- Tok potreby (zajisteni / sporeni) ---- */
+.potreba-plan-shrnuti {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--brand-orange);
+  border-radius: 0 var(--radius-card) var(--radius-card) 0;
+  padding: 16px 18px;
+  margin: 16px 0;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.potreba-krok {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--card-shadow);
+  padding: 16px 18px;
+  margin-bottom: 12px;
+}
+.potreba-krok h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+.potreba-krok p {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+.potreba-krok-naklad {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--brand-orange);
+}
+
 /* GDPR sekce na /podminky */
 .gdpr-list {
   margin: 8px 0 14px;

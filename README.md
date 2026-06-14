@@ -228,6 +228,22 @@ luxus) ušité na situaci klienta.
   profilu (24 h), kill switch `AI_DISABLED=1`, české chybové hlášky pro
   všechny stavy (chybějící klíč, rate limit, výpadek API).
 
+## Rozcestník finančních potřeb (Fáze 12)
+
+FinSei nezačíná hypotékou. „Spustit analýzu" vede na `/start` — rozcestník 3
+potřeb (`lib/potreby.ts`):
+
+- **Chci bydlení** → `/kalkulacka` (plný hypoteční tok, `BonitaCalculator`).
+- **Chci zajištění** → `/potreba/zajisteni` — AI analýza rizik.
+- **Chci si našetřit** → `/potreba/sporeni` — AI plán rezervy a investic.
+
+Zajištění a spoření sdílejí lehký formulář `RychlaAnalyza` (cíl, příjem, věk,
+rodina, OSVČ, u spoření i částka + horizont) → `POST /api/analyza-potreby`
+(Claude, structured output: shrnutí + kroky + doporučené produkty + upozornění).
+Endpoint má dva cachované system prompty (zajištění vs. spoření) nad relevantní
+datovou vrstvou (pojištění/penze/spoření/stavební spoření/tržní očekávání/matice
+situací). Vyžaduje `ANTHROPIC_API_KEY`.
+
 ## AI chat na landingu (Fáze 11)
 
 Hero input na úvodní stránce je **reálný konverzační AI** (ne demo). Klient
@@ -241,6 +257,9 @@ dluh), nabídne tlačítko **„Spustit detailní analýzu →"**, které profil
 - `lib/types.ts` → `ChatProfil` (částečný), `ChatOdpoved`. `HypoForm` načte chat
   profil a převede ho na `FormState` (`chatProfilToFormState`), chat profil má
   přednost před uloženým draftem.
+- Chat napřed **klasifikuje potřebu** (bydlení/zajištění/spoření) a podle ní
+  směřuje: bydlení → `/kalkulacka`, zajištění/spoření → `/potreba/[typ]`,
+  vždy s předvyplněním (sessionStorage).
 - Etika a logika dotazování v system promptu route handleru (jedna věc po druhé,
   rozliší koupi vs. úvěr proti nemovitosti, OSVČ obor+obrat).
 - Ochrany: rate limit 30 zpráv / IP / 10 min, historie ořezaná na 20 zpráv,
@@ -374,6 +393,15 @@ Tyto mezery neblokují AI analyzátor, ale snižují přesnost. Vedeno zde, aby 
 | 5 | **IŽP poplatkovost jen orientačně** | argument „rozdělte na RŽP + DIP" je odhad 20–40 % | doplnit reálné nákladové ukazatele (PER/TER) z dokumentů pojišťoven |
 | 6 | **Vlajkové produkty s jistotou „nízká"** (`produkty_vlajkove.json`) | AI je nesmí jmenovat, dokud se neověří | ověřit názvy na webech pojišťoven (UNIQA, ČSOB Poj., ČPP majetek, KP) |
 | 7 | **LTV přirážky nad 80 % u bank kromě KB/UniCredit** | mírně nepřesná sazba pro LTV 80–90 % | ověřit sazebníky |
+
+## Backlog před ostrým provozem (právní / provozní)
+
+| # | Úkol | Stav |
+|---|---|---|
+| **GDPR** | Doplnit `[DOPLNIT]` v `app/podminky/page.tsx` — **správce** (obchodní firma / jméno, IČO, sídlo) a **kontaktní e-mail** pro uplatnění práv. Bez nich je dokument právně nekompletní. Sekce „Ochrana osobních údajů (GDPR)" je hotová (EU 2016/679 + zák. 110/2019 Sb., práva subjektu, ÚOOÚ) — chybí jen identifikace provozovatele. **Doplní provozovatel.** | ⏳ čeká |
+| Právní revize | Před spuštěním nechat podmínky + GDPR projít právníkem na ochranu osobních údajů. | ⏳ |
+| `RESEND_API_KEY` | Nastavit pro doručování leadů (jinak lead endpoint vrací hlášku). | ⏳ |
+| Anthropic kredit | Pro AI chat, balíčky a analýzu potřeb. | ⏳ |
 
 ### Budoucí migrace na PostgreSQL
 
