@@ -1817,6 +1817,21 @@ p.lead {
   color: var(--brand-orange);
 }
 
+/* GDPR sekce na /podminky */
+.gdpr-list {
+  margin: 8px 0 14px;
+  padding-left: 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.gdpr-list li {
+  margin: 6px 0;
+}
+.gdpr-list strong {
+  color: var(--text-primary);
+}
+
 /* ============================================================
    Pristupnost (A11y)
    ============================================================ */
