@@ -5,6 +5,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import type { RychlyProfil } from "@/lib/types";
+import { najdiPotrebu, type PotrebaTyp } from "@/lib/potreby";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -52,9 +53,8 @@ const PlanSchema = z.object({
   upozorneni: z.array(z.string()).describe("Důležité poznámky a rizika"),
 });
 
-// Cachovany staticky kontext per potreba
-let cacheZajisteni: Anthropic.TextBlockParam[] | null = null;
-let cacheSporeni: Anthropic.TextBlockParam[] | null = null;
+// Cachovany staticky kontext per potreba (klic = typ potreby)
+const systemCache = new Map<PotrebaTyp, Anthropic.TextBlockParam[]>();
 
 const ETIKA = `ETIKA (nikdy neporušuj):
 - Nikdy nedoporučuj investiční ani kapitálové životní pojištění jako nový produkt (vysoká nákladovost).
@@ -64,9 +64,11 @@ const ETIKA = `ETIKA (nikdy neporušuj):
 - Instituce uváděj jen z databáze (instituce_id musí existovat, jinak prázdný řetězec). Obchodní názvy jen z číselníku vlajkových produktů s jistotou vysoká/střední.
 - Ceny odhaduj jen z cenových koeficientů / tržních očekávání. Vše orientační — finální cenu určí instituce. Nejsi licencovaný poradce.`;
 
-function systemZajisteni(): Anthropic.TextBlockParam[] {
-  if (cacheZajisteni) return cacheZajisteni;
-  const instrukce = `Jsi nezávislý český finanční poradce FinSei se zaměřením na ZAJIŠTĚNÍ rizik. Z profilu klienta sestav konkrétní plán, jak ochránit příjem, rodinu a majetek — bez zbytečně drahých produktů.
+// Instrukce (system prompt) per potreba. Seznam datovych souboru se NEbere
+// odtud, ale z lib/potreby.ts (dataZdroje) — jediny zdroj pravdy pro relaci
+// potreba -> data. Tady je jen text role/priorit.
+const INSTRUKCE: Record<"zajisteni" | "sporeni", string> = {
+  zajisteni: `Jsi nezávislý český finanční poradce FinSei se zaměřením na ZAJIŠTĚNÍ rizik. Z profilu klienta sestav konkrétní plán, jak ochránit příjem, rodinu a majetek — bez zbytečně drahých produktů.
 
 PRIORITY (přizpůsob situaci klienta z matice životních situací):
 1. Rizikové životní pojištění úměrné příjmu/závazkům (živitel rodiny 5-10× roční příjem; klesající PČ u úvěrů). OSVČ: pracovní neschopnost je kritická (nemá nemocenskou).
@@ -75,29 +77,8 @@ PRIORITY (přizpůsob situaci klienta z matice životních situací):
 4. Pojištění dlouhodobé péče u starších.
 Respektuj, co klient UŽ MÁ (nepřidávej duplicitně; nevhodné produkty navrhni vyměnit).
 
-${ETIKA}`;
-  const kontext = [
-    "=== DATABAZE INSTITUCI ===",
-    readData("instituce.json"),
-    "=== TYPY POJISTENI, DOPORUCENA KRYTI, TRZNI PODILY ===",
-    readData("produkty_pojisteni.json"),
-    "=== MATICE ZIVOTNICH SITUACI ===",
-    readData("zivotni_situace.json"),
-    "=== CENOVE KOEFICIENTY (pojistne) ===",
-    readData("scoring_pravidla.json"),
-    "=== VLAJKOVE PRODUKTY POJISTOVEN ===",
-    readData("produkty_vlajkove.json"),
-  ].join("\n\n");
-  cacheZajisteni = [
-    { type: "text", text: instrukce },
-    { type: "text", text: kontext, cache_control: { type: "ephemeral" } },
-  ];
-  return cacheZajisteni;
-}
-
-function systemSporeni(): Anthropic.TextBlockParam[] {
-  if (cacheSporeni) return cacheSporeni;
-  const instrukce = `Jsi nezávislý český finanční poradce FinSei se zaměřením na SPOŘENÍ A INVESTICE. Z profilu klienta sestav plán, jak budovat rezervu a zhodnocovat peníze podle jeho cíle a horizontu.
+${ETIKA}`,
+  sporeni: `Jsi nezávislý český finanční poradce FinSei se zaměřením na SPOŘENÍ A INVESTICE. Z profilu klienta sestav plán, jak budovat rezervu a zhodnocovat peníze podle jeho cíle a horizontu.
 
 PRIORITY (v tomto pořadí):
 1. Nouzová rezerva 3-6 měsíců výdajů na spořicím účtu (likvidní), než cokoli dalšího.
@@ -106,26 +87,28 @@ PRIORITY (v tomto pořadí):
 4. Pravidlo: investovat až po vytvoření rezervy; čím delší horizont, tím vyšší podíl akcií.
 Pokud klient zmíní podnikání / nemovitost, můžeš stručně nastínit i ROI úvahu. Respektuj, co už má.
 
-${ETIKA}`;
-  const kontext = [
-    "=== DATABAZE INSTITUCI (vc. investicnich platforem) ===",
-    readData("instituce.json"),
-    "=== SPORICI UCTY A TERMINOVANE VKLADY ===",
-    readData("produkty_sporeni.json"),
-    "=== PENZE (DPS, DIP) ===",
-    readData("produkty_penze.json"),
-    "=== STAVEBNI SPORENI ===",
-    readData("produkty_stavebni_sporeni.json"),
-    "=== TRZNI OCEKAVANI (akcie, dluhopisy, nemovitosti, komodity) ===",
-    readData("trzni_ocekavani.json"),
-    "=== MATICE ZIVOTNICH SITUACI + SCORING ===",
-    readData("zivotni_situace.json"),
-  ].join("\n\n");
-  cacheSporeni = [
-    { type: "text", text: instrukce },
+${ETIKA}`,
+};
+
+function systemProPotrebu(
+  potreba: "zajisteni" | "sporeni",
+): Anthropic.TextBlockParam[] {
+  const hotovo = systemCache.get(potreba);
+  if (hotovo) return hotovo;
+
+  const def = najdiPotrebu(potreba);
+  const soubory = def?.dataZdroje ?? [];
+  // Kontext se sklada z dataZdroje definovanych v lib/potreby.ts
+  const kontext = soubory
+    .map((f) => `=== ${f} ===\n${readData(f)}`)
+    .join("\n\n");
+
+  const blocks: Anthropic.TextBlockParam[] = [
+    { type: "text", text: INSTRUKCE[potreba] },
     { type: "text", text: kontext, cache_control: { type: "ephemeral" } },
   ];
-  return cacheSporeni;
+  systemCache.set(potreba, blocks);
+  return blocks;
 }
 
 export async function POST(req: Request) {
@@ -160,7 +143,7 @@ export async function POST(req: Request) {
   try {
     const client = new Anthropic();
     const model = process.env.AI_MODEL ?? "claude-opus-4-8";
-    const system = body.potreba === "zajisteni" ? systemZajisteni() : systemSporeni();
+    const system = systemProPotrebu(body.potreba);
 
     const response = await client.messages.parse({
       model,
