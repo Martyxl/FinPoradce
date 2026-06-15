@@ -30,6 +30,13 @@ export default function RootLayout({
 }) {
   return (
     <html lang="cs">
+      <head>
+        {/* Bez JS: orb intro nepobezi — schovej boot veil a ukaz hero obsah,
+            jinak by stranka zustala tmava (veil je v SSR HTML). */}
+        <noscript>
+          <style>{`.ld-boot-veil{display:none!important}.ld-hero-inner>*{opacity:1!important}`}</style>
+        </noscript>
+      </head>
       <body
         className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
         style={{

@@ -339,6 +339,10 @@ export default function Landing() {
 
   return (
     <div className="ld-page">
+      {/* Tmava vrstva od prvniho renderu — drzi obraz tmavy, nez orb prevezme.
+          Zmizi po dokonceni intro (revealed). reduced-motion / noscript ji
+          schovaji (CSS). */}
+      {!revealed && <div className="ld-boot-veil" aria-hidden="true" />}
       {overlay && (
         <OrbScene
           key={overlay.key}

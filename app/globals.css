@@ -1231,15 +1231,14 @@ p.lead {
 }
 
 /* Progresivni reveal hero po rozpadu intro orbu (handoff).
-   Pred revealem jsou prvky skryte a posunute; po pridani .ld-revealed
-   nabihaji staggered fade-up. Bez JS (no .ld-revealed nikdy) ber jako
-   fallback: pokud orb nebezi (reduced-motion), Landing nastavi revealed
-   hned, takze obsah je videt. */
+   Hero obsah je SKRYTY od prvniho renderu (i SSR), aby se texty
+   neobjevily pred orbem. Ukaze se az po pridani .ld-revealed (orb dobehl
+   k disperse) staggered fade-up. Fallbacky: reduced-motion + <noscript>
+   ho zobrazi rovnou (viz layout.tsx noscript + media query nize). */
 .ld-hero-inner > * {
-  opacity: 1;
+  opacity: 0;
 }
 .ld-hero-inner.ld-revealed > * {
-  opacity: 0;
   animation: revealUp 1s ease forwards;
 }
 .ld-hero-inner.ld-revealed > *:nth-child(1) { animation-delay: 0ms; }
@@ -1260,9 +1259,30 @@ p.lead {
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .ld-hero-inner > *,
   .ld-hero-inner.ld-revealed > * {
     animation: none;
     opacity: 1;
+  }
+}
+
+/* Boot veil — solidni tmava vrstva viditelna OD PRVNIHO RENDERU (i SSR),
+   nez orb prevezme. Zajisti, ze stranka startuje jako tmava prazdnota
+   (zacatek big bangu), ne jako hero texty / ambient pole. Orb (z-index
+   9999) je nad ni; po dokonceni intra ji Landing odmountuje. */
+.ld-boot-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  background: #08090c;
+  pointer-events: none;
+}
+[data-theme="light"] .ld-boot-veil {
+  background: #f6f5f2;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ld-boot-veil {
+    display: none;
   }
 }
 
