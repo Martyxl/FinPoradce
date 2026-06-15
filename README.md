@@ -127,9 +127,16 @@ Tokeny v [app/globals.css](app/globals.css), landing v
   `/kalkulacka` = formulář, `/vysledky` = výsledky — obě v `AppShell`
   (tmavý topbar s logem FinSei).
 - **Landing interakce**: canvas particle field (85 částic, měnové glyfy
-  Kč/€/$, spojnice do 145 px), typewriter placeholder, AI input flow
-  idle → analyzing (2,1 s) → answered, plovoucí fin-karty (skryté pod
-  1220 px), pulzující badge, srovnávací tabulka s oranžovým FinSei sloupcem.
+  Kč/€/$, spojnice do 145 px), typewriter placeholder, plovoucí fin-karty
+  (skryté pod 1220 px), pulzující badge, srovnávací tabulka s oranžovým
+  FinSei sloupcem.
+- **OrbScene** (`components/OrbScene.tsx`) — částicový „big bang" orb overlay
+  (handoff). Mód `intro` (jednou na načtení: singularita → výbuch → rotující
+  orb „FinSei / Financial Sensei" → rozpad do ambientního pole + progresivní
+  reveal hero) a `action` (při odeslání dotazu: gather → „Analyzuji celý trh"
+  → rozpad → otevře chat). 120 částic na Fibonacci sféře, timeline
+  form/hold/disperse, theme-aware, klik přeskočí intro, `prefers-reduced-motion`
+  efekt vypne (hero rovnou viditelný). Řízeno stavem v `Landing.tsx`.
 - `Landing Page.dc.html` + `support.js` v rootu projektu jsou designové
   reference (prototyp), neimportují se do produkce.
 

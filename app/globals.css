@@ -1230,6 +1230,42 @@ p.lead {
   max-width: 860px;
 }
 
+/* Progresivni reveal hero po rozpadu intro orbu (handoff).
+   Pred revealem jsou prvky skryte a posunute; po pridani .ld-revealed
+   nabihaji staggered fade-up. Bez JS (no .ld-revealed nikdy) ber jako
+   fallback: pokud orb nebezi (reduced-motion), Landing nastavi revealed
+   hned, takze obsah je videt. */
+.ld-hero-inner > * {
+  opacity: 1;
+}
+.ld-hero-inner.ld-revealed > * {
+  opacity: 0;
+  animation: revealUp 1s ease forwards;
+}
+.ld-hero-inner.ld-revealed > *:nth-child(1) { animation-delay: 0ms; }
+.ld-hero-inner.ld-revealed > *:nth-child(2) { animation-delay: 130ms; }
+.ld-hero-inner.ld-revealed > *:nth-child(3) { animation-delay: 260ms; }
+.ld-hero-inner.ld-revealed > *:nth-child(4) { animation-delay: 390ms; }
+.ld-hero-inner.ld-revealed > *:nth-child(5) { animation-delay: 520ms; }
+.ld-hero-inner.ld-revealed > *:nth-child(6) { animation-delay: 650ms; }
+
+@keyframes revealUp {
+  from {
+    opacity: 0;
+    transform: translateY(26px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ld-hero-inner.ld-revealed > * {
+    animation: none;
+    opacity: 1;
+  }
+}
+
 .ld-badge {
   display: inline-flex;
   align-items: center;

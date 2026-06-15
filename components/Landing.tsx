@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import ChatPanel from "@/components/ChatPanel";
+import OrbScene from "@/components/OrbScene";
 
 // ----------------------------------------------------------------
 // Particle field (hero pozadi) — 85 castic, ~14 % menove glyfy,
@@ -211,24 +212,30 @@ const CHIPS = [
 ];
 
 // ----------------------------------------------------------------
-// Hero AI vstup — vstupni input spusti realny chat (ChatPanel)
+// Hero AI vstup — vstupni input. Submit jde nahoru do Landing (kvuli
+// action orb prechodu); chatQuery (kdyz je) prepne na realny chat.
 // ----------------------------------------------------------------
-function HeroPanel() {
+function HeroPanel({
+  onStart,
+  chatQuery,
+}: {
+  onStart: (q: string) => void;
+  chatQuery: string | null;
+}) {
   const [query, setQuery] = useState("");
-  const [zahajeno, setZahajeno] = useState<string | null>(null);
   const placeholder = useTypewriter(TYPER_FRAZE);
 
   function submit(q?: string) {
     const dotaz = (q ?? query).trim();
     if (!dotaz) return;
-    setZahajeno(dotaz);
+    onStart(dotaz);
   }
 
-  // Po zahajeni: realny chat s AI
-  if (zahajeno) {
+  // Po dokonceni action orbu: realny chat s AI
+  if (chatQuery) {
     return (
       <div className="ld-panel ld-panel-chat">
-        <ChatPanel initialMessage={zahajeno} />
+        <ChatPanel initialMessage={chatQuery} />
       </div>
     );
   }
@@ -285,11 +292,61 @@ function HeroPanel() {
 }
 
 // ----------------------------------------------------------------
-// Landing page — varianta A (dark-first)
+// Landing page — varianta A (dark-first) + OrbScene big-bang efekt
 // ----------------------------------------------------------------
 export default function Landing() {
+  // overlay: null | { key, mode } ; revealed: hero progresivni reveal
+  const [overlay, setOverlay] = useState<{
+    key: number;
+    mode: "intro" | "action";
+  } | null>(null);
+  const [revealed, setRevealed] = useState(false);
+  const [chatQuery, setChatQuery] = useState<string | null>(null);
+  const pendingRef = useRef<string | null>(null);
+  const keyRef = useRef(1);
+  const motionOkRef = useRef(true);
+
+  // Intro orb na nacteni (jen kdyz neni reduced-motion)
+  useEffect(() => {
+    const reduced =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    motionOkRef.current = !reduced;
+    if (reduced) {
+      setRevealed(true); // bez animace rovnou ukaz obsah
+      return;
+    }
+    setOverlay({ key: keyRef.current++, mode: "intro" });
+  }, []);
+
+  function handleStart(q: string) {
+    if (!motionOkRef.current) {
+      setChatQuery(q); // reduced-motion: rovnou chat, bez orb
+      return;
+    }
+    pendingRef.current = q;
+    setOverlay({ key: keyRef.current++, mode: "action" });
+  }
+
+  function handleDone(mode: "intro" | "action") {
+    setOverlay(null);
+    if (mode === "intro") {
+      setRevealed(true);
+    } else {
+      setChatQuery(pendingRef.current);
+    }
+  }
+
   return (
     <div className="ld-page">
+      {overlay && (
+        <OrbScene
+          key={overlay.key}
+          mode={overlay.mode}
+          onReveal={() => setRevealed(true)}
+          onDone={handleDone}
+        />
+      )}
       <a href="#jak" className="skip-link">
         Přeskočit na obsah
       </a>
@@ -332,7 +389,7 @@ export default function Landing() {
           </div>
         </aside>
 
-        <div className="ld-hero-inner">
+        <div className={"ld-hero-inner" + (revealed ? " ld-revealed" : "")}>
           <div className="ld-badge">
             <span className="ld-badge-dot" />
             KONEC PROVIZNÍCH PORADCŮ
@@ -347,7 +404,7 @@ export default function Landing() {
             Ne poradci podle provize.
           </p>
 
-          <HeroPanel />
+          <HeroPanel onStart={handleStart} chatQuery={chatQuery} />
 
           <div className="ld-trust">
             Bez provizí od bank<span className="sep">✦</span>2 400+ produktů
