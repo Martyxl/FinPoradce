@@ -18,9 +18,9 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FinSei — finanční poradce, který neprodává. Radí.",
+  title: "FinSei — finanční sensei, který neprodává. Radí.",
   description:
-    "Jeden nezávislý poradce a AI, která porovná celý trh — hypotéky, pojištění, investice i penzi. Doporučí jen to, co se vyplatí vám. Ne poradci podle provize.",
+    "AI finanční sensei, který porovná celý trh — hypotéky, pojištění, investice i penzi — a navrhne řešení na míru vám. Doporučí jen to, co se vyplatí vám. Ne poradci podle provize.",
 };
 
 export default function RootLayout({

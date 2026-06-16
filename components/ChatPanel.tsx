@@ -1,25 +1,23 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { ChatOdpoved, ChatProfil, ChatZprava } from "@/lib/types";
+import type { ChatOdpoved, ChatProfil, ChatZprava, PotrebaPlan } from "@/lib/types";
+import { formatCZK } from "@/lib/api";
 
 export const CHAT_PROFIL_KEY = "finsei_chat_profil";
 export const CHAT_RYCHLY_KEY = "finsei_rychly_profil";
+export const CHAT_QUERY_KEY = "finsei_landing_query";
 
 type Potreba = "bydleni" | "zajisteni" | "sporeni";
 
 const POTREBA_CTA: Record<Potreba, string> = {
   bydleni: "Spustit detailní analýzu →",
-  zajisteni: "Pokračovat k plánu zajištění →",
-  sporeni: "Pokračovat k plánu spoření →",
+  zajisteni: "Sestavit plán zajištění ✦",
+  sporeni: "Sestavit plán spoření ✦",
 };
 
-/**
- * Reálný AI chat na landingu (Fáze 11). Z volné konverzace AI rozpozná
- * potřebu (bydlení/zajištění/spoření), extrahuje parametry a když má minimum,
- * nabídne přechod do správného toku s předvyplněnými hodnotami.
- */
 export default function ChatPanel({
   initialMessage,
 }: {
@@ -35,6 +33,8 @@ export default function ChatPanel({
   const [loading, setLoading] = useState(true);
   const [vstup, setVstup] = useState("");
   const [chyba, setChyba] = useState<string | null>(null);
+  const [plan, setPlan] = useState<PotrebaPlan | null>(null);
+  const [analyzaLoading, setAnalyzaLoading] = useState(false);
   const odeslanoRef = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -47,13 +47,19 @@ export default function ChatPanel({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ zpravy: historie }),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: Record<string, unknown> = {};
+      try {
+        data = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        throw new Error("Server vrátil neočekávanou odpověď — zkuste to znovu.");
+      }
       if (!res.ok) {
         throw new Error(
           typeof data?.detail === "string" ? data.detail : `Chyba ${res.status}`,
         );
       }
-      const odp = data as ChatOdpoved;
+      const odp = data as unknown as ChatOdpoved;
       setZpravy((z) => [...z, { role: "assistant", text: odp.odpoved }]);
       setProfil((p) => ({ ...p, ...odp.profil }));
       setPripraveno(odp.pripraveno);
@@ -65,7 +71,6 @@ export default function ChatPanel({
     }
   }
 
-  // Prvni zprava (z hero inputu) — jen jednou
   useEffect(() => {
     if (odeslanoRef.current) return;
     odeslanoRef.current = true;
@@ -73,10 +78,9 @@ export default function ChatPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto-scroll dolu
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
-  }, [zpravy, loading]);
+  }, [zpravy, loading, plan]);
 
   function odeslatVstup() {
     const t = vstup.trim();
@@ -87,19 +91,30 @@ export default function ChatPanel({
     poslat(nove);
   }
 
-  function spustitAnalyzu() {
+  async function spustitAnalyzu() {
     const cil = potreba ?? "bydleni";
-    try {
-      if (cil === "bydleni") {
+
+    if (cil === "bydleni") {
+      try {
         sessionStorage.setItem(CHAT_PROFIL_KEY, JSON.stringify(profil));
-      } else {
-        // Zajisteni/sporeni: preved chat profil na rychly profil
+      } catch {}
+      router.push("/kalkulacka");
+      return;
+    }
+
+    // Pro zajisteni/sporeni: ukaz analyzu rovnou bez formu
+    const cistyPrijem = profil.cisty_prijem_mesicne;
+    const vek = profil.vek;
+
+    // Bez zakladnich dat — presmeruj na formular s predvyplnenim
+    if (!cistyPrijem || !vek) {
+      try {
         sessionStorage.setItem(
           CHAT_RYCHLY_KEY,
           JSON.stringify({
             typ_prijmu: profil.typ_prijmu,
-            cisty_prijem_mesicne: profil.cisty_prijem_mesicne,
-            vek: profil.vek,
+            cisty_prijem_mesicne: cistyPrijem,
+            vek,
             pocet_osob_domacnost: profil.pocet_osob_domacnost,
             pocet_deti: profil.pocet_deti,
             osvc_obor: profil.osvc_obor,
@@ -107,12 +122,47 @@ export default function ChatPanel({
             cil_text: zpravy.find((z) => z.role === "user")?.text ?? "",
           }),
         );
-      }
-    } catch {
-      /* ignore */
+      } catch {}
+      router.push("/potreba/" + cil);
+      return;
     }
-    if (cil === "bydleni") router.push("/kalkulacka");
-    else router.push("/potreba/" + cil);
+
+    setAnalyzaLoading(true);
+    setChyba(null);
+    try {
+      const rychlyProfil = {
+        typ_prijmu: profil.typ_prijmu ?? "zamestnanec",
+        cisty_prijem_mesicne: cistyPrijem,
+        vek,
+        pocet_osob_domacnost: profil.pocet_osob_domacnost ?? 1,
+        pocet_deti: profil.pocet_deti ?? 0,
+        osvc_obor: profil.osvc_obor ?? null,
+        osvc_rocni_obrat_czk: profil.osvc_rocni_obrat_czk ?? null,
+        cil_text: zpravy.find((z) => z.role === "user")?.text ?? "",
+      };
+      const res = await fetch("/api/analyza-potreby", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ potreba: cil, profil: rychlyProfil }),
+      });
+      const text = await res.text();
+      let d: Record<string, unknown> = {};
+      try {
+        d = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        throw new Error("Neplatná odpověď serveru — zkuste to znovu.");
+      }
+      if (!res.ok) {
+        throw new Error(
+          typeof d?.detail === "string" ? d.detail : `Chyba ${res.status}`,
+        );
+      }
+      setPlan(d as unknown as PotrebaPlan);
+    } catch (err) {
+      setChyba(err instanceof Error ? err.message : "Neznámá chyba.");
+    } finally {
+      setAnalyzaLoading(false);
+    }
   }
 
   return (
@@ -130,37 +180,129 @@ export default function ChatPanel({
             <span className="chat-dot" />
           </div>
         )}
+
+        {/* Inline plán pro zajisteni/sporeni */}
+        {plan && potreba !== "bydleni" && (
+          <ChatPlan plan={plan} potreba={potreba ?? "zajisteni"} />
+        )}
       </div>
 
       {chyba && <div className="error chat-chyba">{chyba}</div>}
 
-      {pripraveno && (
-        <button type="button" className="ld-cta chat-cta" onClick={spustitAnalyzu}>
+      {analyzaLoading && (
+        <div className="chat-analyza-loading">
+          <span className="chat-dot" />
+          <span className="chat-dot" />
+          <span className="chat-dot" />
+          <span>SenSei analyzuje vaši situaci…</span>
+        </div>
+      )}
+
+      {pripraveno && !plan && !analyzaLoading && (
+        <button
+          type="button"
+          className="ld-cta chat-cta"
+          onClick={spustitAnalyzu}
+        >
           {POTREBA_CTA[potreba ?? "bydleni"]}
         </button>
       )}
 
-      <div className="chat-vstup">
-        <input
-          type="text"
-          value={vstup}
-          onChange={(e) => setVstup(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") odeslatVstup();
-          }}
-          placeholder="Napište odpověď…"
-          aria-label="Zpráva do chatu"
-          disabled={loading}
-        />
-        <button
-          type="button"
-          className="ld-cta"
-          onClick={odeslatVstup}
-          disabled={loading}
-          aria-label="Odeslat zprávu"
-        >
-          ↑
-        </button>
+      {!plan && (
+        <div className="chat-vstup">
+          <input
+            type="text"
+            value={vstup}
+            onChange={(e) => setVstup(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") odeslatVstup();
+            }}
+            placeholder="Napište odpověď…"
+            aria-label="Zpráva do chatu"
+            disabled={loading || analyzaLoading}
+          />
+          <button
+            type="button"
+            className="ld-cta"
+            onClick={odeslatVstup}
+            disabled={loading || analyzaLoading}
+            aria-label="Odeslat zprávu"
+          >
+            ↑
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ChatPlan({
+  plan,
+  potreba,
+}: {
+  plan: PotrebaPlan;
+  potreba: "zajisteni" | "sporeni";
+}) {
+  return (
+    <div className="chat-plan">
+      <div className="chat-plan-badge">✦ Plán od SenSei</div>
+      <p className="chat-plan-shrnuti">{plan.shrnuti}</p>
+
+      <div className="chat-plan-kroky">
+        {plan.kroky.map((k, i) => (
+          <div key={i} className="chat-plan-krok">
+            <div className="chat-plan-krok-cislo">{i + 1}</div>
+            <div className="chat-plan-krok-obsah">
+              <strong>{k.nadpis}</strong>
+              <p>{k.popis}</p>
+              {k.produkty.length > 0 && (
+                <span className="hint">Produkty: {k.produkty.join(", ")}</span>
+              )}
+              {typeof k.odhad_mesicne_czk === "number" &&
+                k.odhad_mesicne_czk > 0 && (
+                  <span className="chat-plan-castka">
+                    ~{formatCZK(k.odhad_mesicne_czk)} / měs
+                  </span>
+                )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {plan.doporucene_produkty.length > 0 && (
+        <div className="chat-plan-produkty">
+          <h4>Doporučené produkty</h4>
+          {plan.doporucene_produkty.map((p, i) => (
+            <div key={i} className="chat-plan-produkt">
+              <div className="chat-plan-produkt-radek">
+                <strong>{p.nazev}</strong>
+                <span>{formatCZK(p.mesicni_naklad_czk)} / měs</span>
+              </div>
+              <span className="hint">{p.proc}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {plan.upozorneni.length > 0 && (
+        <div className="chat-plan-upozorneni">
+          {plan.upozorneni.map((u, i) => (
+            <p key={i}>⚠ {u}</p>
+          ))}
+        </div>
+      )}
+
+      <p className="hint" style={{ marginTop: 12 }}>
+        Plán je orientační. Finální podmínky určí instituce.
+      </p>
+
+      <div className="chat-plan-akce">
+        <Link href={"/potreba/" + potreba} className="btn secondary">
+          Upřesnit zadání →
+        </Link>
+        <Link href="/start" className="btn secondary">
+          Jiná potřeba
+        </Link>
       </div>
     </div>
   );

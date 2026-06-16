@@ -419,7 +419,7 @@ export class RecommendationEngine {
         "V prvních 2 letech jde až 80 % pojistného na počáteční náklady smlouvy.",
         "Levnější varianta: samostatné rizikové ŽP + samostatný DIP nebo podílový fond.",
         "Při rozdělení na čisté RŽP + DIP klient typicky ušetří 20–40 % při stejném krytí.",
-        "Tuto úvahu doporučujeme zkonzultovat nezávisle (mimo banku a mimo pojišťovnu).",
+        "Rozdělení vám sensei spočítá nezávisle na bance i pojišťovně — žádný provizní zájem.",
       ],
       doporucena_akce:
         "Spočítat, zda by rozdělení na samostatné rizikové ŽP + DIP nebylo výhodnější.",

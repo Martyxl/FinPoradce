@@ -27,7 +27,13 @@ export default function AiScenare({ result }: { result: CalculationResult }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(result),
       });
-      const data = await res.json();
+      const text = await res.text();
+      let data: Record<string, unknown> = {};
+      try {
+        data = JSON.parse(text) as Record<string, unknown>;
+      } catch {
+        throw new Error("Server vrátil neočekávanou odpověď — zkuste to znovu.");
+      }
       if (!res.ok) {
         throw new Error(
           typeof data?.detail === "string"
@@ -35,7 +41,7 @@ export default function AiScenare({ result }: { result: CalculationResult }) {
             : `Chyba ${res.status}`,
         );
       }
-      setScenare(data as Scenare3);
+      setScenare(data as unknown as Scenare3);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Neznámá chyba.");
     } finally {

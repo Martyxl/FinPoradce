@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
-import ChatPanel from "@/components/ChatPanel";
 import OrbScene from "@/components/OrbScene";
+import { CHAT_QUERY_KEY } from "@/components/ChatPanel";
 
 // ----------------------------------------------------------------
 // Particle field (hero pozadi) — 85 castic, ~14 % menove glyfy,
@@ -213,15 +214,9 @@ const CHIPS = [
 
 // ----------------------------------------------------------------
 // Hero AI vstup — vstupni input. Submit jde nahoru do Landing (kvuli
-// action orb prechodu); chatQuery (kdyz je) prepne na realny chat.
+// action orb prechodu).
 // ----------------------------------------------------------------
-function HeroPanel({
-  onStart,
-  chatQuery,
-}: {
-  onStart: (q: string) => void;
-  chatQuery: string | null;
-}) {
+function HeroPanel({ onStart }: { onStart: (q: string) => void }) {
   const [query, setQuery] = useState("");
   const placeholder = useTypewriter(TYPER_FRAZE);
 
@@ -229,15 +224,6 @@ function HeroPanel({
     const dotaz = (q ?? query).trim();
     if (!dotaz) return;
     onStart(dotaz);
-  }
-
-  // Po dokonceni action orbu: realny chat s AI
-  if (chatQuery) {
-    return (
-      <div className="ld-panel ld-panel-chat">
-        <ChatPanel initialMessage={chatQuery} />
-      </div>
-    );
   }
 
   return (
@@ -295,13 +281,13 @@ function HeroPanel({
 // Landing page — varianta A (dark-first) + OrbScene big-bang efekt
 // ----------------------------------------------------------------
 export default function Landing() {
+  const router = useRouter();
   // overlay: null | { key, mode } ; revealed: hero progresivni reveal
   const [overlay, setOverlay] = useState<{
     key: number;
     mode: "intro" | "action";
   } | null>(null);
   const [revealed, setRevealed] = useState(false);
-  const [chatQuery, setChatQuery] = useState<string | null>(null);
   const pendingRef = useRef<string | null>(null);
   const keyRef = useRef(1);
   const motionOkRef = useRef(true);
@@ -313,15 +299,22 @@ export default function Landing() {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     motionOkRef.current = !reduced;
     if (reduced) {
-      setRevealed(true); // bez animace rovnou ukaz obsah
+      setRevealed(true);
       return;
     }
     setOverlay({ key: keyRef.current++, mode: "intro" });
   }, []);
 
+  function navigateToChat(q: string) {
+    try {
+      sessionStorage.setItem(CHAT_QUERY_KEY, q);
+    } catch {}
+    router.push("/chat");
+  }
+
   function handleStart(q: string) {
     if (!motionOkRef.current) {
-      setChatQuery(q); // reduced-motion: rovnou chat, bez orb
+      navigateToChat(q);
       return;
     }
     pendingRef.current = q;
@@ -333,7 +326,7 @@ export default function Landing() {
     if (mode === "intro") {
       setRevealed(true);
     } else {
-      setChatQuery(pendingRef.current);
+      navigateToChat(pendingRef.current ?? "");
     }
   }
 
@@ -399,20 +392,20 @@ export default function Landing() {
             KONEC PROVIZNÍCH PORADCŮ
           </div>
           <h1 className="ld-h1">
-            Finanční poradce, který{" "}
+            Finanční sensei, který{" "}
             <span className="akcent">neprodává</span>. Radí.
           </h1>
           <p className="ld-perex">
-            Jeden nezávislý poradce a AI, která porovná celý trh — hypotéky,
-            pojištění, investice i penzi. Doporučí jen to, co se vyplatí vám.
-            Ne poradci podle provize.
+            AI, která porovná celý trh — hypotéky, pojištění, investice i
+            penzi — a navrhne řešení na míru vám. Doporučí jen to, co se
+            vyplatí vám. Ne poradci podle provize.
           </p>
 
-          <HeroPanel onStart={handleStart} chatQuery={chatQuery} />
+          <HeroPanel onStart={handleStart} />
 
           <div className="ld-trust">
             Bez provizí od bank<span className="sep">✦</span>2 400+ produktů
-            z celého trhu<span className="sep">✦</span>Lidský poradce na konci
+            z celého trhu<span className="sep">✦</span>Smlouvy podepíšete online
           </div>
         </div>
       </section>
@@ -459,10 +452,10 @@ export default function Landing() {
           </div>
           <div className="ld-krok">
             <div className="ld-krok-cislo">03</div>
-            <h3>Vyberete si — zbytek za vás</h3>
+            <h3>Vyberete si — sensei to zařídí</h3>
             <p>
-              Z doporučení AI si vyberete sami. Papírování s bankami a
-              institucemi dotáhneme za vás.
+              Z návrhů AI si vyberete sami. Smlouvy, které sensei navrhl, vám
+              zprostředkuje zástupce instituce — vy jen podepíšete.
             </p>
           </div>
         </div>

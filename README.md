@@ -206,7 +206,7 @@ Projekt je čistý Next.js. Po importu repozitáře Vercel automaticky:
 | `AI_MODEL` | ne | Override modelu pro balíčky (default `claude-opus-4-8`). |
 | `AI_CHAT_MODEL` | ne | Override modelu pro chat na landingu (default = `AI_MODEL`). Pro svižnost lze nastavit `claude-haiku-4-5`. |
 | `AI_DISABLED` | ne | `1` = kill switch pro AI balíčky i chat. |
-| `RESEND_API_KEY` + `LEAD_NOTIFY_EMAIL` | jen pro lead handoff | E-mail poradci přes [Resend](https://resend.com) (tlačítko „Chci to probrat s poradcem"). `LEAD_FROM_EMAIL` volitelné (default `onboarding@resend.dev`). Bez konfigurace vrátí lead endpoint srozumitelnou hlášku. |
+| `RESEND_API_KEY` + `LEAD_NOTIFY_EMAIL` | jen pro zprostředkování | E-mail zástupci instituce přes [Resend](https://resend.com) (tlačítko „Chci zprostředkovat uzavření" na výsledcích). `LEAD_FROM_EMAIL` volitelné (default `onboarding@resend.dev`). Bez konfigurace vrátí endpoint srozumitelnou hlášku. |
 | `LEAD_WEBHOOK_URL` | alternativa k e-mailu | POST JSON s leadem na libovolný webhook (Slack/Make/Zapier…). Stačí jeden z kanálů (e-mail nebo webhook). |
 
 ---

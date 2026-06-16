@@ -110,7 +110,7 @@ let cachedSystemBlocks: Anthropic.TextBlockParam[] | null = null;
 function buildSystemBlocks(): Anthropic.TextBlockParam[] {
   if (cachedSystemBlocks) return cachedSystemBlocks;
 
-  const instrukce = `Jsi nezavislý český finanční poradce. Z profilu klienta a produktové databáze sestavíš PŘESNĚ 3 balíčky řešení: "nejlevnejsi" (minimum, které banka vyžaduje + absolutní must-have), "standard" (rozumný kompromis cena/krytí) a "luxus" (kompletní finanční zdraví).
+  const instrukce = `Jsi FinSei — AI finanční sensei pro český trh, nezávislý na bankách a pojišťovnách (žádná provize). Vše vyřešíš sám; lidský zásah je až úplně poslední možnost. Z profilu klienta a produktové databáze sestavíš PŘESNĚ 3 balíčky řešení: "nejlevnejsi" (minimum, které banka vyžaduje + absolutní must-have), "standard" (rozumný kompromis cena/krytí) a "luxus" (kompletní finanční zdraví).
 
 PRAVIDLA (závazná):
 1. Každý balíček začíná hypotékou — použij nejlepší banku a měsíční splátku z výpočtu klienta (kategorie "hypoteka", instituce_id = id banky z výpočtu).
@@ -257,7 +257,6 @@ export class AIScenarioBuilder {
     const response = await this.client.messages.parse({
       model: this.model,
       max_tokens: 16000,
-      thinking: { type: "adaptive" },
       system: buildSystemBlocks(),
       messages: [{ role: "user", content: userPrompt }],
       output_config: {

@@ -61,9 +61,9 @@ export default function LeadForm({ result }: { result: CalculationResult }) {
       <section className="lead-box lead-hotovo">
         <h2>Hotovo — ozveme se vám</h2>
         <p className="lead">
-          Vaše shrnutí jsme předali nezávislému poradci. Spojí se s vámi na{" "}
-          <strong>{email}</strong> a probere s vámi konkrétní kroky. Žádný
-          prodejní tlak — rozhodujete se sami.
+          Vaše shrnutí jsme zařadili ke zprostředkování. Zástupce instituce vás
+          kontaktuje na <strong>{email}</strong> a zařídí podpis smluv, které
+          sensei navrhl. Žádný prodejní tlak — rozhodujete se sami.
         </p>
       </section>
     );
@@ -71,16 +71,16 @@ export default function LeadForm({ result }: { result: CalculationResult }) {
 
   return (
     <section className="lead-box">
-      <h2>Probrat výsledek s poradcem</h2>
+      <h2>Zprostředkovat uzavření smluv</h2>
       <p className="lead">
-        Chcete to dotáhnout? Nezávislý poradce s vámi projde doporučení a
-        papírování s institucemi zařídí za vás. Bez provize od bank — platíte
-        jen vy a víte kolik.
+        Líbí se vám návrh sensei? Předáme ho zástupci instituce, který za vás
+        zařídí jen samotný podpis — papírování vyřídíte online, bez schůzek.
+        Bez provize od bank, platíte jen vy a víte kolik.
       </p>
 
       {!otevreno ? (
         <button type="button" className="btn" onClick={() => setOtevreno(true)}>
-          Chci to probrat s poradcem
+          Chci zprostředkovat uzavření
         </button>
       ) : (
         <div className="lead-fields">
@@ -134,9 +134,9 @@ export default function LeadForm({ result }: { result: CalculationResult }) {
               onChange={(e) => setSouhlas(e.target.checked)}
             />
             <span>
-              Souhlasím, aby mě poradce kontaktoval a zpracoval mé údaje a
-              výsledek analýzy za tímto účelem. Podrobnosti v{" "}
-              <Link href="/podminky">podmínkách</Link>.
+              Souhlasím, aby mě zástupce instituce kontaktoval za účelem
+              zprostředkování smluv a zpracoval mé údaje a výsledek analýzy.
+              Podrobnosti v <Link href="/podminky">podmínkách</Link>.
             </span>
           </label>
 
@@ -148,7 +148,7 @@ export default function LeadForm({ result }: { result: CalculationResult }) {
             onClick={odeslat}
             disabled={stav === "odesilam"}
           >
-            {stav === "odesilam" ? "Odesílám…" : "Odeslat poradci"}
+            {stav === "odesilam" ? "Odesílám…" : "Odeslat ke zprostředkování"}
           </button>
         </div>
       )}

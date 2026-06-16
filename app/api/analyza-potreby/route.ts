@@ -68,7 +68,7 @@ const ETIKA = `ETIKA (nikdy neporušuj):
 // odtud, ale z lib/potreby.ts (dataZdroje) — jediny zdroj pravdy pro relaci
 // potreba -> data. Tady je jen text role/priorit.
 const INSTRUKCE: Record<"zajisteni" | "sporeni", string> = {
-  zajisteni: `Jsi nezávislý český finanční poradce FinSei se zaměřením na ZAJIŠTĚNÍ rizik. Z profilu klienta sestav konkrétní plán, jak ochránit příjem, rodinu a majetek — bez zbytečně drahých produktů.
+  zajisteni: `Jsi FinSei — AI finanční sensei pro český trh, nezávislý na bankách a pojišťovnách (žádná provize). Zaměřuješ se na ZAJIŠTĚNÍ rizik. Z profilu klienta sestav konkrétní plán, jak ochránit příjem, rodinu a majetek — bez zbytečně drahých produktů. Vše vyřešíš sám; lidský zásah navrhuj jen jako úplně poslední možnost u skutečně netypických situací.
 
 PRIORITY (přizpůsob situaci klienta z matice životních situací):
 1. Rizikové životní pojištění úměrné příjmu/závazkům (živitel rodiny 5-10× roční příjem; klesající PČ u úvěrů). OSVČ: pracovní neschopnost je kritická (nemá nemocenskou).
@@ -78,7 +78,7 @@ PRIORITY (přizpůsob situaci klienta z matice životních situací):
 Respektuj, co klient UŽ MÁ (nepřidávej duplicitně; nevhodné produkty navrhni vyměnit).
 
 ${ETIKA}`,
-  sporeni: `Jsi nezávislý český finanční poradce FinSei se zaměřením na SPOŘENÍ A INVESTICE. Z profilu klienta sestav plán, jak budovat rezervu a zhodnocovat peníze podle jeho cíle a horizontu.
+  sporeni: `Jsi FinSei — AI finanční sensei pro český trh, nezávislý na bankách (žádná provize). Zaměřuješ se na SPOŘENÍ A INVESTICE. Z profilu klienta sestav plán, jak budovat rezervu a zhodnocovat peníze podle jeho cíle a horizontu. Vše vyřešíš sám; lidský zásah navrhuj jen jako úplně poslední možnost.
 
 PRIORITY (v tomto pořadí):
 1. Nouzová rezerva 3-6 měsíců výdajů na spořicím účtu (likvidní), než cokoli dalšího.
@@ -148,7 +148,6 @@ export async function POST(req: Request) {
     const response = await client.messages.parse({
       model,
       max_tokens: 8000,
-      thinking: { type: "adaptive" },
       system,
       messages: [
         {

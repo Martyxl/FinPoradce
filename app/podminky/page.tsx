@@ -60,12 +60,13 @@ export default function PodminkyPage() {
         tlačítko.
       </p>
       <p>
-        Výjimka 2: pokud sami zvolíte <strong>„Chci to probrat s poradcem"</strong>{" "}
-        a udělíte souhlas, odešleme váš e-mail (a volitelně jméno, telefon,
-        poznámku) spolu se shrnutím výpočtu nezávislému poradci za účelem
-        kontaktu. Tento krok je <strong>výhradně dobrovolný</strong> a údaje se
-        použijí jen pro vaše oslovení a navazující poradenství; souhlas můžete
-        kdykoli odvolat na kontaktu uvedeném v komunikaci.
+        Výjimka 2: pokud sami zvolíte{" "}
+        <strong>„Zprostředkovat uzavření smluv"</strong> a udělíte souhlas,
+        odešleme váš e-mail (a volitelně jméno, telefon, poznámku) spolu se
+        shrnutím výpočtu zástupci instituce za účelem zprostředkování smluv,
+        které navrhl FinSei. Tento krok je <strong>výhradně dobrovolný</strong>{" "}
+        a údaje se použijí jen pro vaše oslovení a zprostředkování; souhlas
+        můžete kdykoli odvolat na kontaktu uvedeném v komunikaci.
       </p>
 
       <h2>Cookies a úložiště</h2>
@@ -90,9 +91,9 @@ export default function PodminkyPage() {
         Rady (EU) 2016/679 (<strong>GDPR</strong>) a zákonem č. 110/2019 Sb.,
         o zpracování osobních údajů. Většina dat zůstává jen ve vašem
         prohlížeči (viz výše) — k předání osobních údajů dochází pouze ve
-        dvou dobrovolných případech: při použití funkce „Co doporučuje AI?"
-        (anonymizovaný profil) a při vyžádání kontaktu poradcem (e-mail a
-        volitelné kontaktní údaje).
+        dvou dobrovolných případech: při použití AI funkcí (anonymizovaný
+        profil) a při vyžádání zprostředkování smluv (e-mail a volitelné
+        kontaktní údaje pro zástupce instituce).
       </p>
 
       <h3>Správce údajů</h3>
@@ -116,11 +117,11 @@ export default function PodminkyPage() {
           výpočtu).
         </li>
         <li>
-          <strong>Předání poradci</strong> — účel: kontaktování a navazující
-          poradenství; právní základ: váš výslovný souhlas (čl. 6 odst. 1 písm.
-          a GDPR); rozsah: e-mail, volitelně jméno, telefon, poznámka a shrnutí
-          výpočtu; doba: po dobu vyřízení poptávky, nejdéle do odvolání
-          souhlasu.
+          <strong>Zprostředkování smluv</strong> — účel: kontaktování
+          zástupcem instituce a zprostředkování smluv navržených FinSei; právní
+          základ: váš výslovný souhlas (čl. 6 odst. 1 písm. a GDPR); rozsah:
+          e-mail, volitelně jméno, telefon, poznámka a shrnutí výpočtu; doba: po
+          dobu vyřízení poptávky, nejdéle do odvolání souhlasu.
         </li>
         <li>
           <strong>Technické úložiště v prohlížeči</strong> — účel: funkčnost
@@ -134,7 +135,7 @@ export default function PodminkyPage() {
         Při AI funkci je zpracovatelem společnost{" "}
         <strong>Anthropic</strong> (poskytovatel modelu Claude); přenos může
         zahrnovat zpracování mimo EU na základě standardních smluvních doložek.
-        E-mail poradci doručujeme přes službu pro odesílání e-mailů
+        E-mail zástupci instituce doručujeme přes službu pro odesílání e-mailů
         (zpracovatel). Údaje <strong>neprodáváme</strong> a nepředáváme je pro
         marketing třetích stran.
       </p>
@@ -162,8 +163,8 @@ export default function PodminkyPage() {
         </li>
       </ul>
       <p>
-        Práva uplatníte na kontaktu správce uvedeném výše. Souhlas s předáním
-        poradci lze odvolat i prostým e-mailem.
+        Práva uplatníte na kontaktu správce uvedeném výše. Souhlas se
+        zprostředkováním lze odvolat i prostým e-mailem.
       </p>
 
       <p className="hint" style={{ marginTop: 24 }}>

@@ -89,7 +89,7 @@ function sestavShrnuti(b: LeadBody): { text: string; html: string } {
   }
   radky.push(`Stávajících produktů: ${p.existujici_produkty.length}`);
   radky.push("");
-  radky.push("Klient odsouhlasil kontakt poradcem a zpracování údajů za tímto účelem.");
+  radky.push("Klient odsouhlasil kontakt za účelem zprostředkování smluv a zpracování údajů.");
 
   const text = radky.join("\n");
   const html = `<pre style="font-family:ui-monospace,monospace;font-size:13px;line-height:1.5">${text
@@ -178,7 +178,7 @@ export async function POST(req: Request) {
   }
   if (!body.souhlas) {
     return NextResponse.json(
-      { detail: "Pro předání poradci je nutný souhlas se zpracováním údajů." },
+      { detail: "Pro zprostředkování je nutný souhlas se zpracováním údajů." },
       { status: 422 },
     );
   }

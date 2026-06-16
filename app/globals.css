@@ -2100,3 +2100,198 @@ select:focus-visible,
     content: "";
   }
 }
+
+/* ---------------------------------------------------------------- */
+/* /chat — dedikovaná chat stránka                                   */
+/* ---------------------------------------------------------------- */
+.chat-pg-wrap {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-base);
+  color: var(--text-primary);
+}
+.chat-pg-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-base);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.chat-pg-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.chat-pg-zpet {
+  font-size: 14px;
+  padding: 8px 18px;
+  min-height: unset;
+}
+.chat-pg-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  max-width: 700px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 36px 20px 48px;
+}
+.chat-pg-intro {
+  margin-bottom: 28px;
+}
+.chat-pg-nadpis {
+  font-size: clamp(22px, 4vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+}
+.chat-pg-panel .chat-okno {
+  max-height: 55vh;
+}
+.chat-pg-skip {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+.chat-pg-skip a {
+  color: var(--brand-orange);
+  text-decoration: none;
+}
+.chat-pg-skip a:hover {
+  text-decoration: underline;
+}
+.chat-pg-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  text-align: center;
+}
+
+/* Inline AI plán v chatu */
+.chat-plan {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-soft);
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.chat-plan-badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--brand-orange);
+}
+.chat-plan-shrnuti {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  margin: 0;
+}
+.chat-plan-kroky {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.chat-plan-krok {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+.chat-plan-krok-cislo {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--brand-orange);
+  color: var(--on-accent);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.chat-plan-krok-obsah {
+  flex: 1;
+  font-size: 13px;
+  line-height: 1.5;
+}
+.chat-plan-krok-obsah p {
+  margin: 3px 0 4px;
+  color: var(--text-secondary);
+}
+.chat-plan-castka {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--brand-orange);
+  margin-top: 3px;
+}
+.chat-plan-produkty {
+  border-top: 1px solid var(--border-soft);
+  padding-top: 12px;
+}
+.chat-plan-produkty h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.chat-plan-produkt {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-size: 13px;
+}
+.chat-plan-produkt:last-child {
+  border-bottom: none;
+}
+.chat-plan-produkt-radek {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+.chat-plan-upozorneni {
+  background: rgba(255, 122, 26, 0.06);
+  border-left: 3px solid var(--brand-orange);
+  border-radius: 0 8px 8px 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.chat-plan-upozorneni p {
+  margin: 4px 0;
+}
+.chat-plan-akce {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+.chat-plan-akce .btn {
+  font-size: 13px;
+  padding: 8px 16px;
+  min-height: unset;
+}
+.chat-analyza-loading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
