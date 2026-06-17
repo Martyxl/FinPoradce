@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 import OrbScene from "@/components/OrbScene";
-import { OrbMark } from "@/components/Logo";
+import { LogoLockup } from "@/components/Logo";
 import { CHAT_QUERY_KEY } from "@/components/ChatPanel";
 
 // ----------------------------------------------------------------
@@ -351,9 +351,7 @@ export default function Landing() {
       {/* Header pres hero */}
       <header className="ld-header">
         <Link href="/" className="ld-logo">
-          <OrbMark size={34} />
-          <span className="fin">Fin</span>
-          <span className="sei">Sei</span>
+          <LogoLockup orbSize={48} />
         </Link>
         <nav className="ld-nav">
           <a href="#jak">Jak to funguje</a>
@@ -528,9 +526,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="ld-footer">
         <span className="ld-logo">
-          <OrbMark size={26} frozen />
-          <span className="fin">Fin</span>
-          <span className="sei">Sei</span>
+          <LogoLockup orbSize={32} tagline={false} frozen />
         </span>
         <span>
           © 2026 · AI finanční poradenství ·{" "}

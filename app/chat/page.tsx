@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ChatPanel, { CHAT_QUERY_KEY } from "@/components/ChatPanel";
 import ThemeToggle from "@/components/ThemeToggle";
-import { OrbMark } from "@/components/Logo";
+import { LogoLockup } from "@/components/Logo";
 
 export default function ChatPage() {
   const [query, setQuery] = useState<string | null>(null);
@@ -27,9 +27,7 @@ export default function ChatPage() {
     <div className="chat-pg-wrap">
       <header className="chat-pg-header">
         <Link href="/" className="ld-logo">
-          <OrbMark size={30} />
-          <span className="fin">Fin</span>
-          <span className="sei">Sei</span>
+          <LogoLockup orbSize={42} />
         </Link>
         <div className="chat-pg-header-right">
           <ThemeToggle />

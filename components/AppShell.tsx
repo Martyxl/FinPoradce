@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
-import { OrbMark } from "@/components/Logo";
+import { LogoLockup } from "@/components/Logo";
 
 /**
  * Shell pro aplikacni stranky (/kalkulacka, /vysledky) — tmava hlavicka
@@ -21,9 +21,7 @@ export default function AppShell({
       <header className="topbar">
         <div className="container topbar-inner">
           <Link href="/" className="brand">
-            <OrbMark theme="dark" size={26} />
-            <span className="brand-fin">Fin</span>
-            <span className="brand-sei">Sei</span>
+            <LogoLockup theme="dark" orbSize={34} tagline={false} />
           </Link>
           <span className="brand-sub">nezávislá analýza hypotéky</span>
           <ThemeToggle />
