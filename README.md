@@ -140,33 +140,37 @@ Tokeny v [app/globals.css](app/globals.css), landing v
 - `Landing Page.dc.html` + `support.js` v rootu projektu jsou designové
   reference (prototyp), neimportují se do produkce.
 
-### Logo systém (`PROMPT_logo.md`)
+### Logo systém (`PROMPT_logo_final.md`)
 
-Znovupoužitelné, themeable značky. Geometrie a barvy mají jediný zdroj pravdy
-v [lib/brand.ts](lib/brand.ts) (paths monogramu, tokeny, vrcholy souhvězdí).
+Značka = **částicový orb** (jeden engine, živý i frozen) + typografické „FS"
+(Space Grotesk 700, F = barva textu, S = akcent). Žádný geometrický monogram —
+finální prompt ho zavrhl („četl se jako F5"). Tokeny v
+[lib/brand.ts](lib/brand.ts).
 
-- **[components/Logo.tsx](components/Logo.tsx)** — `Wordmark` (nápis FinSei),
-  `MonogramFS` (geometrický monogram F+S na gridu 64×64, primární značka),
-  `MonogramTile` (knockout v oranžové dlaždici), `ConstellationFS` (nody + linky)
-  a `Logo` (lockup monogram + wordmark). Bez `theme` propu sledují živý
-  light/dark přes CSS proměnné.
-- **[components/OrbLogo.tsx](components/OrbLogo.tsx)** — živá značka (canvas):
-  rotující sféra 72 částic (Fibonacci) + typografické „FS". DPR-aware, rAF,
-  úklid na unmount, `prefers-reduced-motion` = statický snímek. Připraveno
-  k použití jako „signature" (splash/loading/about); landing už má velký
-  intro orb v `OrbScene`, takže se v hlavičce nepoužívá.
-- **Hlavičky/patička** (`Landing.tsx`, `app/chat/page.tsx`) nově ukazují
-  `MonogramFS` + wordmark přes třídu `.ld-logo` (flex lockup).
-- **Favicon**: vektorový [app/icon.svg](app/icon.svg) (oranžová knockout
-  dlaždice) — Next ho servíruje jako `icon` pro všechny moderní prohlížeče;
-  jako vektor pokrývá všechny velikosti. Statické SVG exporty v
-  [public/logo/](public/logo/).
+- **[components/Orb.tsx](components/Orb.tsx)** — jeden parametrizovatelný engine
+  (`count`, `rFrac`, `accent`, `accentRGB`, `neutral`, `frozen`). Částice na
+  Fibonacci sféře, rotace kolem Y, hloubka řídí scale+alfu, link linky, radial
+  glow. DPR-aware, rAF + resize listener, úklid na unmount. `frozen`
+  (a `prefers-reduced-motion`) = jediný snímek při `angle = 2.1` (statická ikona
+  je týž orb, jen neanimuje).
+- **[components/Logo.tsx](components/Logo.tsx)** — kompozice nad `<Orb>`:
+  `OrbMark` (orb + „FS"), `LogoLockup` (orb + wordmark + tagline FINANCIAL
+  SENSEI), `PrimaryLogo` (full-bleed orb + velké „FS"), `AppIconDark` (frozen
+  orb na tmavé dlaždici), `OrangeIcon` (oranžová dlaždice s „FS"), `Wordmark`.
+  Bez `theme` propu sledují živý light/dark (`useDataTheme` přes `data-theme`).
+- **Hlavičky/patička** ukazují `OrbMark` + wordmark přes `.ld-logo` / `.brand`:
+  živý orb v hlavičkách (`Landing`, `app/chat`, `AppShell`), **frozen** v patičce
+  landingu.
+- **Favicon**: vektorový [app/icon.svg](app/icon.svg) (oranžová „FS" dlaždice,
+  composition #4) — Next ho servíruje jako `icon` pro všechny prohlížeče; jako
+  vektor pokrývá všechny velikosti. Statické exporty v
+  [public/logo/](public/logo/) (`icon-orange.svg`, `icon-dark.svg`).
 - **Binární PNG favicony** (32/52/116/512 + `app/apple-icon.png` pro iOS):
   `npm i -D sharp && npm run gen:favicons`
   ([scripts/gen-favicons.mjs](scripts/gen-favicons.mjs)). Bez nich funguje
   vektorový favicon; `sharp` se nepřidává automaticky, aby nezatěžoval deploy.
-  Reference `FinSei Geometric.dc.html` z promptu nebyla v rootu — vše
-  potřebné je v promptu samotném (přesné paths + algoritmus orbu).
+  Reference `FinSei Logo Final.dc.html` z promptu nebyla v rootu — vše potřebné
+  (přesný orb algoritmus + parametry kompozic) je v promptu samotném.
 
 ---
 

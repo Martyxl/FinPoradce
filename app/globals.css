@@ -131,6 +131,9 @@ body {
   gap: 10px;
 }
 .brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   font-weight: 600;
   font-size: 20px;
   text-decoration: none;
@@ -1160,10 +1163,6 @@ p.lead {
 }
 .ld-logo .fin { color: var(--text-primary); }
 .ld-logo .sei { color: var(--brand-orange); }
-.ld-logo-mark {
-  display: block;
-  flex: 0 0 auto;
-}
 .ld-nav {
   display: flex;
   gap: 22px;

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 import OrbScene from "@/components/OrbScene";
-import { MonogramFS } from "@/components/Logo";
+import { OrbMark } from "@/components/Logo";
 import { CHAT_QUERY_KEY } from "@/components/ChatPanel";
 
 // ----------------------------------------------------------------
@@ -351,7 +351,7 @@ export default function Landing() {
       {/* Header pres hero */}
       <header className="ld-header">
         <Link href="/" className="ld-logo">
-          <MonogramFS className="ld-logo-mark" size={28} />
+          <OrbMark size={34} />
           <span className="fin">Fin</span>
           <span className="sei">Sei</span>
         </Link>
@@ -528,7 +528,7 @@ export default function Landing() {
       {/* Footer */}
       <footer className="ld-footer">
         <span className="ld-logo">
-          <MonogramFS className="ld-logo-mark" size={22} />
+          <OrbMark size={26} frozen />
           <span className="fin">Fin</span>
           <span className="sei">Sei</span>
         </span>

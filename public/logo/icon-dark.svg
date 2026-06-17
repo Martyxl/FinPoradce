@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" role="img" aria-label="FinSei">
+  <defs>
+    <radialGradient id="finsei-bg" cx="50%" cy="45%" r="75%">
+      <stop offset="0" stop-color="#1a1206"/>
+      <stop offset="0.74" stop-color="#0d0f13"/>
+    </radialGradient>
+  </defs>
+  <rect width="64" height="64" rx="15.36" ry="15.36" fill="url(#finsei-bg)"/>
+  <text x="32" y="42" text-anchor="middle" font-family="'Space Grotesk','Arial Black','Helvetica Neue',Arial,sans-serif" font-weight="700" font-size="30" letter-spacing="-1.5"><tspan fill="#f2f3f5">F</tspan><tspan fill="#ff7a1a">S</tspan></text>
+</svg>
