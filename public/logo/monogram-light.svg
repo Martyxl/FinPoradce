@@ -1,0 +1,4 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-label="FinSei">
+  <path d="M33 13 H15 V51 M15 31 H30" stroke="#16181d" stroke-width="6.6" stroke-linejoin="miter" stroke-linecap="butt"/>
+  <path d="M50 13 H30 V31 H50 V49 H30" stroke="#ee6a0e" stroke-width="6.6" stroke-linejoin="miter" stroke-linecap="butt"/>
+</svg>

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import ChatPanel, { CHAT_QUERY_KEY } from "@/components/ChatPanel";
 import ThemeToggle from "@/components/ThemeToggle";
+import { MonogramFS } from "@/components/Logo";
 
 export default function ChatPage() {
   const [query, setQuery] = useState<string | null>(null);
@@ -26,6 +27,7 @@ export default function ChatPage() {
     <div className="chat-pg-wrap">
       <header className="chat-pg-header">
         <Link href="/" className="ld-logo">
+          <MonogramFS className="ld-logo-mark" size={26} />
           <span className="fin">Fin</span>
           <span className="sei">Sei</span>
         </Link>

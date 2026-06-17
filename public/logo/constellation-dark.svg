@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none" role="img" aria-label="FinSei">
+  <path d="M33 13 H15 V51 M15 31 H30 M50 13 H30 V31 H50 V49 H30" stroke="#f2f3f5" stroke-opacity="0.6" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <g fill="#f2f3f5">
+    <circle cx="33" cy="13" r="1.5"/>
+    <circle cx="15" cy="13" r="1.5"/>
+    <circle cx="15" cy="31" r="1.5"/>
+    <circle cx="15" cy="51" r="1.5"/>
+    <circle cx="50" cy="13" r="1.5"/>
+    <circle cx="30" cy="13" r="1.5"/>
+    <circle cx="50" cy="31" r="1.5"/>
+    <circle cx="50" cy="49" r="1.5"/>
+    <circle cx="30" cy="49" r="1.5"/>
+  </g>
+  <circle cx="30" cy="31" r="2.5" fill="#ff7a1a"/>
+</svg>

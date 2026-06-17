@@ -1150,6 +1150,9 @@ p.lead {
   .ld-header { padding: 16px 24px; gap: 14px; }
 }
 .ld-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
   font-size: 26px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -1157,6 +1160,10 @@ p.lead {
 }
 .ld-logo .fin { color: var(--text-primary); }
 .ld-logo .sei { color: var(--brand-orange); }
+.ld-logo-mark {
+  display: block;
+  flex: 0 0 auto;
+}
 .ld-nav {
   display: flex;
   gap: 22px;

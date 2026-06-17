@@ -140,6 +140,34 @@ Tokeny v [app/globals.css](app/globals.css), landing v
 - `Landing Page.dc.html` + `support.js` v rootu projektu jsou designové
   reference (prototyp), neimportují se do produkce.
 
+### Logo systém (`PROMPT_logo.md`)
+
+Znovupoužitelné, themeable značky. Geometrie a barvy mají jediný zdroj pravdy
+v [lib/brand.ts](lib/brand.ts) (paths monogramu, tokeny, vrcholy souhvězdí).
+
+- **[components/Logo.tsx](components/Logo.tsx)** — `Wordmark` (nápis FinSei),
+  `MonogramFS` (geometrický monogram F+S na gridu 64×64, primární značka),
+  `MonogramTile` (knockout v oranžové dlaždici), `ConstellationFS` (nody + linky)
+  a `Logo` (lockup monogram + wordmark). Bez `theme` propu sledují živý
+  light/dark přes CSS proměnné.
+- **[components/OrbLogo.tsx](components/OrbLogo.tsx)** — živá značka (canvas):
+  rotující sféra 72 částic (Fibonacci) + typografické „FS". DPR-aware, rAF,
+  úklid na unmount, `prefers-reduced-motion` = statický snímek. Připraveno
+  k použití jako „signature" (splash/loading/about); landing už má velký
+  intro orb v `OrbScene`, takže se v hlavičce nepoužívá.
+- **Hlavičky/patička** (`Landing.tsx`, `app/chat/page.tsx`) nově ukazují
+  `MonogramFS` + wordmark přes třídu `.ld-logo` (flex lockup).
+- **Favicon**: vektorový [app/icon.svg](app/icon.svg) (oranžová knockout
+  dlaždice) — Next ho servíruje jako `icon` pro všechny moderní prohlížeče;
+  jako vektor pokrývá všechny velikosti. Statické SVG exporty v
+  [public/logo/](public/logo/).
+- **Binární PNG favicony** (32/52/116/512 + `app/apple-icon.png` pro iOS):
+  `npm i -D sharp && npm run gen:favicons`
+  ([scripts/gen-favicons.mjs](scripts/gen-favicons.mjs)). Bez nich funguje
+  vektorový favicon; `sharp` se nepřidává automaticky, aby nezatěžoval deploy.
+  Reference `FinSei Geometric.dc.html` z promptu nebyla v rootu — vše
+  potřebné je v promptu samotném (přesné paths + algoritmus orbu).
+
 ---
 
 ## Spuštění lokálně
