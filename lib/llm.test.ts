@@ -1,8 +1,16 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { z } from "zod";
-import { LlmError, extractJson, generateStructured, llmProvider } from "./llm";
+import {
+  DEFAULT_SPARK_BASE,
+  LlmError,
+  extractJson,
+  generateStructured,
+  isPrivateBase,
+  llmProvider,
+} from "./llm";
 
 const ENV_KEYS = [
+  "VERCEL",
   "LLM_PROVIDER",
   "LLM_API_BASE",
   "LLM_API_KEY",
@@ -59,25 +67,56 @@ describe("extractJson", () => {
   });
 });
 
-describe("llmProvider", () => {
-  it("LLM_API_BASE → spark", () => {
-    process.env.LLM_API_BASE = "http://spark:4000/v1";
+describe("llmProvider (jako Tradezer: vždy Spark)", () => {
+  it("nic nastaveno → spark s výchozí bránou", async () => {
+    expect(llmProvider()).toBe("spark");
+    process.env.LLM_API_KEY = "k";
+    const fetchMock = vi.fn().mockResolvedValue(gatewayReply('{"odpoved":"a","skore":1}'));
+    vi.stubGlobal("fetch", fetchMock);
+    await call();
+    expect(fetchMock.mock.calls[0][0]).toBe(`${DEFAULT_SPARK_BASE}/chat/completions`);
+  });
+  it("samotný ANTHROPIC_API_KEY placené API nezapne", () => {
     process.env.ANTHROPIC_API_KEY = "x";
     expect(llmProvider()).toBe("spark");
   });
-  it("jen ANTHROPIC_API_KEY → anthropic", () => {
-    process.env.ANTHROPIC_API_KEY = "x";
-    expect(llmProvider()).toBe("anthropic");
-  });
-  it("LLM_PROVIDER=anthropic přebije Spark", () => {
-    process.env.LLM_API_BASE = "http://spark:4000/v1";
+  it("LLM_PROVIDER=anthropic + klíč → anthropic (ruční rollback)", () => {
     process.env.ANTHROPIC_API_KEY = "x";
     process.env.LLM_PROVIDER = "anthropic";
     expect(llmProvider()).toBe("anthropic");
   });
-  it("nic nastaveno → null a 503", async () => {
+  it("LLM_PROVIDER=anthropic bez klíče → null a 503", async () => {
+    process.env.LLM_PROVIDER = "anthropic";
     expect(llmProvider()).toBeNull();
     await expect(call()).rejects.toMatchObject({ status: 503 });
+  });
+});
+
+describe("Vercel × LAN brána", () => {
+  it("isPrivateBase pozná LAN adresy", () => {
+    expect(isPrivateBase(DEFAULT_SPARK_BASE)).toBe(true);
+    expect(isPrivateBase("http://10.0.0.5:4000/v1")).toBe(true);
+    expect(isPrivateBase("http://172.20.1.1/v1")).toBe(true);
+    expect(isPrivateBase("https://spark.example.com/v1")).toBe(false);
+  });
+  it("na Vercelu s LAN bránou → hned 503, bez volání sítě", async () => {
+    process.env.VERCEL = "1";
+    process.env.LLM_API_KEY = "k";
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(call()).rejects.toMatchObject({
+      status: 503,
+      message: expect.stringMatching(/lokálním serveru/),
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+  it("na Vercelu s veřejnou bránou (tunel) normálně volá", async () => {
+    process.env.VERCEL = "1";
+    process.env.LLM_API_BASE = "https://spark.example.com/v1";
+    process.env.LLM_API_KEY = "k";
+    const fetchMock = vi.fn().mockResolvedValue(gatewayReply('{"odpoved":"a","skore":1}'));
+    vi.stubGlobal("fetch", fetchMock);
+    await expect(call()).resolves.toEqual({ odpoved: "a", skore: 1 });
   });
 });
 

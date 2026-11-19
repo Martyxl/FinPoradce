@@ -234,12 +234,12 @@ Projekt je čistý Next.js. Po importu repozitáře Vercel automaticky:
 
 | Proměnná | Povinná | Popis |
 |---|---|---|
-| `LLM_API_BASE` | pro Spark | OpenAI-kompatibilní brána lokálního DGX Spark (LiteLLM), např. `http://192.168.50.47:4000/v1`. Když je nastavená, AI jede přes Spark (viz sekce „AI poskytovatel"). |
-| `LLM_API_KEY` | pro Spark | Master klíč LiteLLM brány. |
+| `LLM_API_BASE` | ne | OpenAI-kompatibilní brána lokálního DGX Spark (LiteLLM), default `http://192.168.50.47:4000/v1` (stejně jako Tradezer). Viz sekce „AI poskytovatel". |
+| `LLM_API_KEY` | pro AI | Master klíč LiteLLM brány. |
 | `LLM_MODEL` | ne | Alias modelu na bráně (default `heavy` = gpt-oss:120b). |
-| `LLM_TIMEOUT_S` / `LLM_NUM_CTX` | ne | Timeout volání (default 240 s) / okno kontextu Ollamy (prompt balíčků ~18k tokenů). |
-| `LLM_PROVIDER` | ne | Vynucení `spark` / `anthropic` (jinak auto). |
-| `ANTHROPIC_API_KEY` | pro cloud AI | API klíč pro Claude — záloha, když není nastavený Spark. Bez AI konfigurace vše ostatní funguje, AI sekce vrátí srozumitelnou hlášku. Nastavit ve Vercel → Project Settings → Environment Variables. |
+| `LLM_TIMEOUT_S` / `LLM_NUM_CTX` | ne | Timeout volání (default 600 s) / okno kontextu Ollamy (prompt balíčků ~24k tokenů, vejde se bez nastavení). |
+| `LLM_PROVIDER` | ne | Jen `anthropic` = ruční rollback na placené API; jinak vždy Spark. |
+| `ANTHROPIC_API_KEY` | ne | Použije se **jen** s `LLM_PROVIDER=anthropic` — sám od sebe placené API nikdy nezapne. |
 | `AI_MODEL` | ne | Override Anthropic modelu pro balíčky (default `claude-opus-4-8`). |
 | `AI_CHAT_MODEL` | ne | Override modelu pro chat na landingu (default = `AI_MODEL`). Pro svižnost lze nastavit `claude-haiku-4-5`. |
 | `AI_DISABLED` | ne | `1` = kill switch pro AI balíčky i chat. |
@@ -253,14 +253,15 @@ Projekt je čistý Next.js. Po importu repozitáře Vercel automaticky:
 Všechna AI místa (`/api/scenare`, `/api/chat`, `/api/analyza-potreby`) volají
 jednu vrstvu [lib/llm.ts](lib/llm.ts) → `generateStructured({ schema, system, messages })`.
 
-- **Spark** (`LLM_API_BASE` nastavené): lokální DGX Spark přes LiteLLM bránu,
+- **Spark** (vždy, jako Tradezer): lokální DGX Spark přes LiteLLM bránu,
   stejný princip jako Tradezer news-impact-agent — OpenAI-kompatibilní
   `POST /chat/completions`, alias `heavy` (gpt-oss:120b), `Bearer LLM_API_KEY`,
   bere se čistý `content` (reasoning vrací brána zvlášť). gpt-oss nemá
   structured outputs → JSON schéma (ze Zodu) jde do promptu, výstup se ořeže
   od ```json plotů, validuje Zodem a při chybě se jednou požádá o opravu.
   Zdarma, data neopouštějí síť.
-- **Anthropic** (záloha): `messages.parse` + `zodOutputFormat` + prompt cache.
+- **Anthropic** (jen ruční rollback `LLM_PROVIDER=anthropic`): `messages.parse`
+  + `zodOutputFormat` + prompt cache. Žádná tichá cloud útrata.
 - **Chyby** mapuje vrstva na české hlášky (`LlmError` + HTTP status): brána
   nedostupná (503), špatný klíč — LiteLLM bez DB vrací pro ne-master klíč
   `400 No connected db.` (503), timeout (504), nevalidní výstup (502).
@@ -268,8 +269,12 @@ jednu vrstvu [lib/llm.ts](lib/llm.ts) → `generateStructured({ schema, system, 
   i pro ne-JSON odpověď (timeout serverless funkce = HTTP 504).
 
 **Omezení:** brána je v LAN (`192.168.50.47`), takže na ni dosáhne jen server
-ve stejné síti — lokální `npm run dev`/`start` ano, **Vercel ne**. Produkce na
-Vercelu proto zatím jede přes Anthropic (pokud je `ANTHROPIC_API_KEY`).
+ve stejné síti — lokální `npm run dev`/`start` ano, **Vercel ne** (stejně jako
+u Tradezeru). Na Vercelu (`VERCEL=1`) s LAN adresou brány proto AI sekce hned
+vrátí srozumitelnou hlášku „AI poradce běží na lokálním serveru…" místo čekání
+na timeout; zbytek webu (výpočty, rule-based doporučení) funguje normálně.
+Kdyby brána později dostala veřejnou adresu (tunel), stačí ji dát do
+`LLM_API_BASE` na Vercelu a kontrola se vypne sama.
 Lokálně: `cp .env.local.example .env.local`, doplnit `LLM_API_KEY`.
 
 ## AI analyzátor (Fáze 10)
@@ -310,7 +315,7 @@ rodina, OSVČ, u spoření i částka + horizont) → `POST /api/analyza-potreby
 (Claude, structured output: shrnutí + kroky + doporučené produkty + upozornění).
 Endpoint má dva cachované system prompty (zajištění vs. spoření) nad relevantní
 datovou vrstvou (pojištění/penze/spoření/stavební spoření/tržní očekávání/matice
-situací). Vyžaduje AI konfiguraci (Spark nebo `ANTHROPIC_API_KEY`).
+situací). Vyžaduje Spark bránu (`LLM_API_KEY`).
 
 ## AI chat na landingu (Fáze 11)
 

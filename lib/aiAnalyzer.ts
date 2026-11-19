@@ -185,7 +185,7 @@ function getValidniInstituce(): Set<string> {
 }
 
 export class AIScenarioBuilder {
-  /** Spark (LLM_API_BASE) nebo Anthropic (ANTHROPIC_API_KEY) — viz lib/llm.ts. */
+  /** Spark (výchozí) nebo Anthropic jen při LLM_PROVIDER=anthropic — viz lib/llm.ts. */
   static isConfigured(): boolean {
     return llmProvider() !== null;
   }

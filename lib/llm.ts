@@ -12,10 +12,15 @@
  *                  ořežeme od ```json plotů, validujeme zodem a při chybě
  *                  jednou požádáme o opravu.
  *  - "anthropic" — Claude API (messages.parse + zodOutputFormat + prompt cache),
- *                  záloha / cloud varianta.
+ *                  jen ruční rollback.
  *
- * Výběr: LLM_PROVIDER=spark|anthropic; bez něj automaticky — je-li nastavené
- * LLM_API_BASE → spark, jinak ANTHROPIC_API_KEY → anthropic.
+ * Výběr (stejně jako Tradezer): VŽDY Spark — brána má výchozí adresu
+ * (LLM_API_BASE ji jen přepisuje), placené API se samo nikdy nepoužije
+ * („žádná tichá cloud útrata"). Anthropic jen při explicitním
+ * LLM_PROVIDER=anthropic + ANTHROPIC_API_KEY.
+ *
+ * Brána je jen v LAN → na Vercelu (VERCEL=1) s privátní adresou brány hned
+ * vrátíme srozumitelnou 503 místo čekání na timeout.
  */
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
@@ -37,19 +42,35 @@ export class LlmError extends Error {
   }
 }
 
+/** Výchozí Spark brána (LiteLLM na DGX Sparku) — stejná jako v Tradezeru. */
+export const DEFAULT_SPARK_BASE = "http://192.168.50.47:4000/v1";
+
 export function llmProvider(): LlmProvider | null {
   const forced = process.env.LLM_PROVIDER?.trim().toLowerCase();
-  if (forced === "spark") return process.env.LLM_API_BASE ? "spark" : null;
   if (forced === "anthropic") return process.env.ANTHROPIC_API_KEY ? "anthropic" : null;
-  if (process.env.LLM_API_BASE) return "spark";
-  if (process.env.ANTHROPIC_API_KEY) return "anthropic";
-  return null;
+  return "spark";
 }
 
 /** Česká hláška, když není nakonfigurovaný žádný poskytovatel (jinak null). */
 export function llmConfigError(): string | null {
   if (llmProvider()) return null;
-  return "AI není nakonfigurovaná — nastavte LLM_API_BASE (+ LLM_API_KEY) pro Spark, nebo ANTHROPIC_API_KEY.";
+  return "AI není nakonfigurovaná — LLM_PROVIDER=anthropic vyžaduje ANTHROPIC_API_KEY.";
+}
+
+function sparkBase(): string {
+  return (process.env.LLM_API_BASE || DEFAULT_SPARK_BASE).replace(/\/+$/, "");
+}
+
+/** Adresa jen z lokální sítě (Vercel na ni nedosáhne). */
+export function isPrivateBase(base: string): boolean {
+  let host: string;
+  try {
+    host = new URL(base).hostname;
+  } catch {
+    return false;
+  }
+  return /^(localhost|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.)/.test(host) ||
+    host.endsWith(".local") || host.endsWith(".lan");
 }
 
 type StructuredOpts<S extends z.ZodType> = {
@@ -98,7 +119,13 @@ async function sparkChat(
   messages: { role: "system" | "user" | "assistant"; content: string }[],
   maxTokens: number,
 ): Promise<string> {
-  const base = (process.env.LLM_API_BASE ?? "").replace(/\/+$/, "");
+  const base = sparkBase();
+  if (process.env.VERCEL && isPrivateBase(base)) {
+    throw new LlmError(
+      "AI poradce běží na lokálním serveru (Spark) a na veřejném webu zatím není dostupný.",
+      503,
+    );
+  }
   const key = process.env.LLM_API_KEY;
   if (!key) {
     throw new LlmError(
