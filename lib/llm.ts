@@ -106,7 +106,9 @@ async function sparkChat(
       503,
     );
   }
-  const timeoutMs = Number(process.env.LLM_TIMEOUT_S ?? 240) * 1000;
+  // gpt-oss:120b: balíčky ~24k tokenů promptu + ~7k výstupu ≈ 215 s (změřeno),
+  // takže rezerva i na opravné kolo.
+  const timeoutMs = Number(process.env.LLM_TIMEOUT_S ?? 600) * 1000;
   const body: Record<string, unknown> = {
     model: process.env.LLM_MODEL ?? "heavy",
     messages,

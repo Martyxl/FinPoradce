@@ -148,7 +148,14 @@ export async function POST(req: Request) {
         {
           role: "user",
           content:
-            "Sestav plán pro tohoto klienta.\n\n=== PROFIL ===\n" +
+            "Sestav plán pro tohoto klienta.\n\n" +
+            "=== VÝZNAM POLÍ PROFILU ===\n" +
+            "cisty_prijem_mesicne = čistý měsíční příjem domácnosti (Kč); " +
+            "castka_mesicne_czk = kolik klient CHCE/MŮŽE měsíčně odkládat (Kč) — NEJSOU to jeho výdaje; " +
+            "horizont_let = investiční horizont v letech; cil_text = cíl vlastními slovy; " +
+            "co_uz_mam = produkty, které už má. Výdaje domácnosti neznáš — rezervu " +
+            "odhadni z příjmu (3–6 měsíců ~ 50–70 % čistého příjmu) a uveď, že jde o odhad.\n\n" +
+            "=== PROFIL ===\n" +
             JSON.stringify(body.profil),
         },
       ],

@@ -53,8 +53,8 @@ export default function AiScenare({ result }: { result: CalculationResult }) {
 
       {loading && (
         <p className="hint" style={{ marginTop: 8 }}>
-          Může to trvat až několik desítek sekund. Sestavujeme balíčky přesně
-          pro vaši domácnost.
+          Může to trvat i 3–4 minuty — AI prochází celou produktovou databázi
+          a sestavuje balíčky přesně pro vaši domácnost. Nechte stránku otevřenou.
         </p>
       )}
 
