@@ -13,10 +13,9 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import type { CalculationResult, Scenare3 } from "./types";
+import { generateStructured, llmProvider, type SystemBlock } from "./llm";
 
 // ---- Zod schema pro strukturovany vystup ----
 const ScenarProduktSchema = z.object({
@@ -101,13 +100,13 @@ function readData(filename: string): string {
   return fs.readFileSync(path.join(DATA_DIR, filename), "utf-8");
 }
 
-let cachedSystemBlocks: Anthropic.TextBlockParam[] | null = null;
+let cachedSystemBlocks: SystemBlock[] | null = null;
 
 /**
  * System prompt je zamerne deterministicky (zadne timestampy, zadna
  * nahodna data) — jinak by se prompt cache nikdy netrefila.
  */
-function buildSystemBlocks(): Anthropic.TextBlockParam[] {
+function buildSystemBlocks(): SystemBlock[] {
   if (cachedSystemBlocks) return cachedSystemBlocks;
 
   const instrukce = `Jsi FinSei — AI finanční sensei pro český trh, nezávislý na bankách a pojišťovnách (žádná provize). Vše vyřešíš sám; lidský zásah je až úplně poslední možnost. Z profilu klienta a produktové databáze sestavíš PŘESNĚ 3 balíčky řešení: "nejlevnejsi" (minimum, které banka vyžaduje + absolutní must-have), "standard" (rozumný kompromis cena/krytí) a "luxus" (kompletní finanční zdraví).
@@ -153,13 +152,9 @@ ETIKA (nikdy neporušuj):
   ].join("\n\n");
 
   cachedSystemBlocks = [
-    { type: "text", text: instrukce },
-    {
-      type: "text",
-      text: kontext,
-      // Breakpoint na konci statickeho prefixu — vse nad nim se cachuje.
-      cache_control: { type: "ephemeral" },
-    },
+    { text: instrukce },
+    // Breakpoint na konci statickeho prefixu — vse nad nim se cachuje (Anthropic).
+    { text: kontext, cache: true },
   ];
   return cachedSystemBlocks;
 }
@@ -190,17 +185,9 @@ function getValidniInstituce(): Set<string> {
 }
 
 export class AIScenarioBuilder {
-  private client: Anthropic;
-  private model: string;
-
-  constructor() {
-    // Konstruktor vyhodi, pokud chybi ANTHROPIC_API_KEY — route to osetri.
-    this.client = new Anthropic();
-    this.model = process.env.AI_MODEL ?? "claude-opus-4-8";
-  }
-
+  /** Spark (LLM_API_BASE) nebo Anthropic (ANTHROPIC_API_KEY) — viz lib/llm.ts. */
   static isConfigured(): boolean {
-    return !!process.env.ANTHROPIC_API_KEY;
+    return llmProvider() !== null;
   }
 
   /** Sestavi 3 balicky pro dany vysledek vypoctu. */
@@ -254,20 +241,12 @@ export class AIScenarioBuilder {
       ),
     ].join("\n");
 
-    const response = await this.client.messages.parse({
-      model: this.model,
-      max_tokens: 16000,
+    const parsed = await generateStructured({
+      schema: Scenare3Schema,
       system: buildSystemBlocks(),
       messages: [{ role: "user", content: userPrompt }],
-      output_config: {
-        format: zodOutputFormat(Scenare3Schema),
-      },
+      maxTokens: 16000,
     });
-
-    const parsed = response.parsed_output;
-    if (!parsed) {
-      throw new Error("AI nevrátila platný strukturovaný výstup.");
-    }
 
     return this.postValidate(parsed as Scenare3);
   }

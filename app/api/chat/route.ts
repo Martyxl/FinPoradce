@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import type { ChatZprava } from "@/lib/types";
+import { LlmError, generateStructured, llmConfigError } from "@/lib/llm";
 
 export const runtime = "nodejs";
 export const maxDuration = 45;
@@ -112,14 +111,9 @@ export async function POST(req: Request) {
       { status: 503 },
     );
   }
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json(
-      {
-        detail:
-          "AI chat není nakonfigurovaný (chybí ANTHROPIC_API_KEY na serveru).",
-      },
-      { status: 503 },
-    );
+  const configErr = llmConfigError();
+  if (configErr) {
+    return NextResponse.json({ detail: configErr }, { status: 503 });
   }
 
   const ip =
@@ -144,27 +138,15 @@ export async function POST(req: Request) {
   const zpravy = body.zpravy.slice(-20);
 
   try {
-    const client = new Anthropic();
-    const model = process.env.AI_CHAT_MODEL ?? process.env.AI_MODEL ?? "claude-opus-4-8";
-
-    const response = await client.messages.parse({
-      model,
-      max_tokens: 1500,
-      system: SYSTEM,
-      messages: zpravy.map((z) => ({
-        role: z.role,
-        content: z.text,
-      })),
-      output_config: {
-        format: zodOutputFormat(ChatSchema),
-        effort: "low",
-      },
+    const parsed = await generateStructured({
+      schema: ChatSchema,
+      system: [{ text: SYSTEM }],
+      messages: zpravy.map((z) => ({ role: z.role, content: z.text })),
+      // Spark (gpt-oss) je reasoning model — reasoning jde do budgetu, proto víc.
+      maxTokens: 4000,
+      anthropicModelEnv: "AI_CHAT_MODEL",
+      effort: "low",
     });
-
-    const parsed = response.parsed_output;
-    if (!parsed) {
-      throw new Error("AI nevrátila platný výstup.");
-    }
 
     // null -> undefined pro cisty ChatProfil
     const profil: Record<string, unknown> = {};
@@ -180,33 +162,10 @@ export async function POST(req: Request) {
       potreba: parsed.potreba ?? null,
     });
   } catch (err) {
-    if (err instanceof Anthropic.AuthenticationError) {
-      return NextResponse.json(
-        { detail: "Neplatný API klíč pro AI službu." },
-        { status: 503 },
-      );
+    if (err instanceof LlmError) {
+      return NextResponse.json({ detail: err.message }, { status: err.status });
     }
-    if (err instanceof Anthropic.RateLimitError) {
-      return NextResponse.json(
-        { detail: "AI služba je vytížená — zkuste to za chvíli." },
-        { status: 503 },
-      );
-    }
-    if (err instanceof Anthropic.APIError) {
-      if (err.message.includes("credit balance")) {
-        return NextResponse.json(
-          {
-            detail:
-              "AI chat není aktivní — na účtu Anthropic chybí kredit (Console → Plans & Billing).",
-          },
-          { status: 503 },
-        );
-      }
-      return NextResponse.json(
-        { detail: `AI služba vrátila chybu (${err.status}).` },
-        { status: 502 },
-      );
-    }
+    console.error("chat error:", err);
     const message = err instanceof Error ? err.message : "Interní chyba";
     return NextResponse.json({ detail: message }, { status: 500 });
   }

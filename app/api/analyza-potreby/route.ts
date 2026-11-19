@@ -1,11 +1,15 @@
 import { NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-import Anthropic from "@anthropic-ai/sdk";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import type { RychlyProfil } from "@/lib/types";
 import { najdiPotrebu, type PotrebaTyp } from "@/lib/potreby";
+import {
+  LlmError,
+  generateStructured,
+  llmConfigError,
+  type SystemBlock,
+} from "@/lib/llm";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -54,7 +58,7 @@ const PlanSchema = z.object({
 });
 
 // Cachovany staticky kontext per potreba (klic = typ potreby)
-const systemCache = new Map<PotrebaTyp, Anthropic.TextBlockParam[]>();
+const systemCache = new Map<PotrebaTyp, SystemBlock[]>();
 
 const ETIKA = `ETIKA (nikdy neporušuj):
 - Nikdy nedoporučuj investiční ani kapitálové životní pojištění jako nový produkt (vysoká nákladovost).
@@ -90,9 +94,7 @@ Pokud klient zmíní podnikání / nemovitost, můžeš stručně nastínit i RO
 ${ETIKA}`,
 };
 
-function systemProPotrebu(
-  potreba: "zajisteni" | "sporeni",
-): Anthropic.TextBlockParam[] {
+function systemProPotrebu(potreba: "zajisteni" | "sporeni"): SystemBlock[] {
   const hotovo = systemCache.get(potreba);
   if (hotovo) return hotovo;
 
@@ -103,9 +105,9 @@ function systemProPotrebu(
     .map((f) => `=== ${f} ===\n${readData(f)}`)
     .join("\n\n");
 
-  const blocks: Anthropic.TextBlockParam[] = [
-    { type: "text", text: INSTRUKCE[potreba] },
-    { type: "text", text: kontext, cache_control: { type: "ephemeral" } },
+  const blocks: SystemBlock[] = [
+    { text: INSTRUKCE[potreba] },
+    { text: kontext, cache: true },
   ];
   systemCache.set(potreba, blocks);
   return blocks;
@@ -115,11 +117,9 @@ export async function POST(req: Request) {
   if (process.env.AI_DISABLED === "1") {
     return NextResponse.json({ detail: "AI analýza je dočasně vypnutá." }, { status: 503 });
   }
-  if (!process.env.ANTHROPIC_API_KEY) {
-    return NextResponse.json(
-      { detail: "AI analýza není nakonfigurovaná (chybí ANTHROPIC_API_KEY na serveru)." },
-      { status: 503 },
-    );
+  const configErr = llmConfigError();
+  if (configErr) {
+    return NextResponse.json({ detail: configErr }, { status: 503 });
   }
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   if (rateLimited(ip)) {
@@ -141,14 +141,9 @@ export async function POST(req: Request) {
   }
 
   try {
-    const client = new Anthropic();
-    const model = process.env.AI_MODEL ?? "claude-opus-4-8";
-    const system = systemProPotrebu(body.potreba);
-
-    const response = await client.messages.parse({
-      model,
-      max_tokens: 8000,
-      system,
+    const parsed = await generateStructured({
+      schema: PlanSchema,
+      system: systemProPotrebu(body.potreba),
       messages: [
         {
           role: "user",
@@ -157,25 +152,14 @@ export async function POST(req: Request) {
             JSON.stringify(body.profil),
         },
       ],
-      output_config: { format: zodOutputFormat(PlanSchema) },
+      maxTokens: 8000,
     });
-
-    const parsed = response.parsed_output;
-    if (!parsed) throw new Error("AI nevrátila platný výstup.");
     return NextResponse.json(parsed);
   } catch (err) {
-    if (err instanceof Anthropic.APIError) {
-      if (err.message.includes("credit balance")) {
-        return NextResponse.json(
-          { detail: "AI analýza není aktivní — na účtu Anthropic chybí kredit." },
-          { status: 503 },
-        );
-      }
-      return NextResponse.json(
-        { detail: `AI služba vrátila chybu (${err.status}).` },
-        { status: 502 },
-      );
+    if (err instanceof LlmError) {
+      return NextResponse.json({ detail: err.message }, { status: err.status });
     }
+    console.error("analyza-potreby error:", err);
     const message = err instanceof Error ? err.message : "Interní chyba";
     return NextResponse.json({ detail: message }, { status: 500 });
   }

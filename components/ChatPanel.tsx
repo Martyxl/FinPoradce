@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { ChatOdpoved, ChatProfil, ChatZprava, PotrebaPlan } from "@/lib/types";
 import { formatCZK } from "@/lib/api";
+import { postJson } from "@/lib/postJson";
 
 export const CHAT_PROFIL_KEY = "finsei_chat_profil";
 export const CHAT_RYCHLY_KEY = "finsei_rychly_profil";
@@ -42,24 +43,7 @@ export default function ChatPanel({
     setLoading(true);
     setChyba(null);
     try {
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ zpravy: historie }),
-      });
-      const text = await res.text();
-      let data: Record<string, unknown> = {};
-      try {
-        data = JSON.parse(text) as Record<string, unknown>;
-      } catch {
-        throw new Error("Server vrátil neočekávanou odpověď — zkuste to znovu.");
-      }
-      if (!res.ok) {
-        throw new Error(
-          typeof data?.detail === "string" ? data.detail : `Chyba ${res.status}`,
-        );
-      }
-      const odp = data as unknown as ChatOdpoved;
+      const odp = await postJson<ChatOdpoved>("/api/chat", { zpravy: historie });
       setZpravy((z) => [...z, { role: "assistant", text: odp.odpoved }]);
       setProfil((p) => ({ ...p, ...odp.profil }));
       setPripraveno(odp.pripraveno);
@@ -140,24 +124,12 @@ export default function ChatPanel({
         osvc_rocni_obrat_czk: profil.osvc_rocni_obrat_czk ?? null,
         cil_text: zpravy.find((z) => z.role === "user")?.text ?? "",
       };
-      const res = await fetch("/api/analyza-potreby", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ potreba: cil, profil: rychlyProfil }),
-      });
-      const text = await res.text();
-      let d: Record<string, unknown> = {};
-      try {
-        d = JSON.parse(text) as Record<string, unknown>;
-      } catch {
-        throw new Error("Neplatná odpověď serveru — zkuste to znovu.");
-      }
-      if (!res.ok) {
-        throw new Error(
-          typeof d?.detail === "string" ? d.detail : `Chyba ${res.status}`,
-        );
-      }
-      setPlan(d as unknown as PotrebaPlan);
+      setPlan(
+        await postJson<PotrebaPlan>("/api/analyza-potreby", {
+          potreba: cil,
+          profil: rychlyProfil,
+        }),
+      );
     } catch (err) {
       setChyba(err instanceof Error ? err.message : "Neznámá chyba.");
     } finally {

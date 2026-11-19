@@ -234,8 +234,13 @@ Projekt je čistý Next.js. Po importu repozitáře Vercel automaticky:
 
 | Proměnná | Povinná | Popis |
 |---|---|---|
-| `ANTHROPIC_API_KEY` | jen pro AI balíčky | API klíč pro Claude (tlačítko „Co doporučuje AI?" na výsledcích). Bez něj vše ostatní funguje, AI sekce vrátí srozumitelnou hlášku. Nastavit ve Vercel → Project Settings → Environment Variables. |
-| `AI_MODEL` | ne | Override modelu pro balíčky (default `claude-opus-4-8`). |
+| `LLM_API_BASE` | pro Spark | OpenAI-kompatibilní brána lokálního DGX Spark (LiteLLM), např. `http://192.168.50.47:4000/v1`. Když je nastavená, AI jede přes Spark (viz sekce „AI poskytovatel"). |
+| `LLM_API_KEY` | pro Spark | Master klíč LiteLLM brány. |
+| `LLM_MODEL` | ne | Alias modelu na bráně (default `heavy` = gpt-oss:120b). |
+| `LLM_TIMEOUT_S` / `LLM_NUM_CTX` | ne | Timeout volání (default 240 s) / okno kontextu Ollamy (prompt balíčků ~18k tokenů). |
+| `LLM_PROVIDER` | ne | Vynucení `spark` / `anthropic` (jinak auto). |
+| `ANTHROPIC_API_KEY` | pro cloud AI | API klíč pro Claude — záloha, když není nastavený Spark. Bez AI konfigurace vše ostatní funguje, AI sekce vrátí srozumitelnou hlášku. Nastavit ve Vercel → Project Settings → Environment Variables. |
+| `AI_MODEL` | ne | Override Anthropic modelu pro balíčky (default `claude-opus-4-8`). |
 | `AI_CHAT_MODEL` | ne | Override modelu pro chat na landingu (default = `AI_MODEL`). Pro svižnost lze nastavit `claude-haiku-4-5`. |
 | `AI_DISABLED` | ne | `1` = kill switch pro AI balíčky i chat. |
 | `RESEND_API_KEY` + `LEAD_NOTIFY_EMAIL` | jen pro zprostředkování | E-mail zástupci instituce přes [Resend](https://resend.com) (tlačítko „Chci zprostředkovat uzavření" na výsledcích). `LEAD_FROM_EMAIL` volitelné (default `onboarding@resend.dev`). Bez konfigurace vrátí endpoint srozumitelnou hlášku. |
@@ -243,10 +248,34 @@ Projekt je čistý Next.js. Po importu repozitáře Vercel automaticky:
 
 ---
 
+## AI poskytovatel — Spark (lokální) / Anthropic (cloud)
+
+Všechna AI místa (`/api/scenare`, `/api/chat`, `/api/analyza-potreby`) volají
+jednu vrstvu [lib/llm.ts](lib/llm.ts) → `generateStructured({ schema, system, messages })`.
+
+- **Spark** (`LLM_API_BASE` nastavené): lokální DGX Spark přes LiteLLM bránu,
+  stejný princip jako Tradezer news-impact-agent — OpenAI-kompatibilní
+  `POST /chat/completions`, alias `heavy` (gpt-oss:120b), `Bearer LLM_API_KEY`,
+  bere se čistý `content` (reasoning vrací brána zvlášť). gpt-oss nemá
+  structured outputs → JSON schéma (ze Zodu) jde do promptu, výstup se ořeže
+  od ```json plotů, validuje Zodem a při chybě se jednou požádá o opravu.
+  Zdarma, data neopouštějí síť.
+- **Anthropic** (záloha): `messages.parse` + `zodOutputFormat` + prompt cache.
+- **Chyby** mapuje vrstva na české hlášky (`LlmError` + HTTP status): brána
+  nedostupná (503), špatný klíč — LiteLLM bez DB vrací pro ne-master klíč
+  `400 No connected db.` (503), timeout (504), nevalidní výstup (502).
+- **Frontend**: [lib/postJson.ts](lib/postJson.ts) — srozumitelná hláška
+  i pro ne-JSON odpověď (timeout serverless funkce = HTTP 504).
+
+**Omezení:** brána je v LAN (`192.168.50.47`), takže na ni dosáhne jen server
+ve stejné síti — lokální `npm run dev`/`start` ano, **Vercel ne**. Produkce na
+Vercelu proto zatím jede přes Anthropic (pokud je `ANTHROPIC_API_KEY`).
+Lokálně: `cp .env.local.example .env.local`, doplnit `LLM_API_KEY`.
+
 ## AI analyzátor (Fáze 10)
 
 Tlačítko **„Co doporučuje AI?"** na výsledkové stránce zavolá `POST /api/scenare`,
-který přes Claude API sestaví **3 balíčky řešení** (nejlevnější / standard /
+který přes AI vrstvu (Spark nebo Claude) sestaví **3 balíčky řešení** (nejlevnější / standard /
 luxus) ušité na situaci klienta.
 
 - **Izolovaný modul** `lib/aiAnalyzer.ts` (`AIScenarioBuilder.build(calculation) → Scenare3`)
@@ -281,7 +310,7 @@ rodina, OSVČ, u spoření i částka + horizont) → `POST /api/analyza-potreby
 (Claude, structured output: shrnutí + kroky + doporučené produkty + upozornění).
 Endpoint má dva cachované system prompty (zajištění vs. spoření) nad relevantní
 datovou vrstvou (pojištění/penze/spoření/stavební spoření/tržní očekávání/matice
-situací). Vyžaduje `ANTHROPIC_API_KEY`.
+situací). Vyžaduje AI konfiguraci (Spark nebo `ANTHROPIC_API_KEY`).
 
 ## AI chat na landingu (Fáze 11)
 

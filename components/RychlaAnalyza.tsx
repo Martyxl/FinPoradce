@@ -9,6 +9,7 @@ import type {
   TypPrijmu,
 } from "@/lib/types";
 import { formatCZK } from "@/lib/api";
+import { postJson } from "@/lib/postJson";
 import type { PotrebaTyp } from "@/lib/potreby";
 import { CHAT_RYCHLY_KEY } from "@/components/ChatPanel";
 
@@ -136,16 +137,9 @@ export default function RychlaAnalyza({
     };
     setLoading(true);
     try {
-      const res = await fetch("/api/analyza-potreby", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ potreba, profil }),
-      });
-      const d = await res.json();
-      if (!res.ok) {
-        throw new Error(typeof d?.detail === "string" ? d.detail : `Chyba ${res.status}`);
-      }
-      setPlan(d as PotrebaPlan);
+      setPlan(
+        await postJson<PotrebaPlan>("/api/analyza-potreby", { potreba, profil }),
+      );
     } catch (err) {
       setChyba(err instanceof Error ? err.message : "Neznámá chyba.");
     } finally {

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { AIScenarioBuilder } from "@/lib/aiAnalyzer";
+import { LlmError, llmConfigError } from "@/lib/llm";
 import type { CalculationResult, Scenare3 } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -46,13 +46,7 @@ export async function POST(req: Request) {
   }
 
   if (!AIScenarioBuilder.isConfigured()) {
-    return NextResponse.json(
-      {
-        detail:
-          "AI doporučení není nakonfigurované (chybí ANTHROPIC_API_KEY na serveru).",
-      },
-      { status: 503 },
-    );
+    return NextResponse.json({ detail: llmConfigError() }, { status: 503 });
   }
 
   const ip =
@@ -95,34 +89,10 @@ export async function POST(req: Request) {
     responseCache.set(key, { at: Date.now(), data: scenare });
     return NextResponse.json(scenare);
   } catch (err) {
-    if (err instanceof Anthropic.AuthenticationError) {
-      return NextResponse.json(
-        { detail: "Neplatný API klíč pro AI službu." },
-        { status: 503 },
-      );
+    if (err instanceof LlmError) {
+      return NextResponse.json({ detail: err.message }, { status: err.status });
     }
-    if (err instanceof Anthropic.RateLimitError) {
-      return NextResponse.json(
-        { detail: "AI služba je momentálně vytížená — zkuste to za chvíli." },
-        { status: 503 },
-      );
-    }
-    if (err instanceof Anthropic.APIError) {
-      console.error("Anthropic APIError:", err.status, err.message);
-      if (err.message.includes("credit balance")) {
-        return NextResponse.json(
-          {
-            detail:
-              "AI služba není aktivní — na účtu Anthropic chybí kredit (Console → Plans & Billing).",
-          },
-          { status: 503 },
-        );
-      }
-      return NextResponse.json(
-        { detail: `AI služba vrátila chybu (${err.status}): ${err.message}` },
-        { status: 502 },
-      );
-    }
+    console.error("scenare error:", err);
     const message = err instanceof Error ? err.message : "Interní chyba";
     return NextResponse.json({ detail: message }, { status: 500 });
   }

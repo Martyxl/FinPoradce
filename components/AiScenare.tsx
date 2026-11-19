@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { CalculationResult, Scenar, Scenare3 } from "@/lib/types";
 import { formatCZK } from "@/lib/api";
+import { postJson } from "@/lib/postJson";
 
 const UROVEN_META: Record<
   Scenar["uroven"],
@@ -22,26 +23,7 @@ export default function AiScenare({ result }: { result: CalculationResult }) {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/scenare", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(result),
-      });
-      const text = await res.text();
-      let data: Record<string, unknown> = {};
-      try {
-        data = JSON.parse(text) as Record<string, unknown>;
-      } catch {
-        throw new Error("Server vrátil neočekávanou odpověď — zkuste to znovu.");
-      }
-      if (!res.ok) {
-        throw new Error(
-          typeof data?.detail === "string"
-            ? data.detail
-            : `Chyba ${res.status}`,
-        );
-      }
-      setScenare(data as unknown as Scenare3);
+      setScenare(await postJson<Scenare3>("/api/scenare", result));
     } catch (err) {
       setError(err instanceof Error ? err.message : "Neznámá chyba.");
     } finally {
@@ -71,8 +53,8 @@ export default function AiScenare({ result }: { result: CalculationResult }) {
 
       {loading && (
         <p className="hint" style={{ marginTop: 8 }}>
-          Obvykle to trvá 10–30 sekund. Sestavujeme balíčky přesně pro vaši
-          domácnost.
+          Může to trvat až několik desítek sekund. Sestavujeme balíčky přesně
+          pro vaši domácnost.
         </p>
       )}
 
